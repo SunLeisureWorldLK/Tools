@@ -231,7 +231,20 @@
                 <div class="space-y-4">
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Adult</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="adult_markup_3star"></span></p><input type="number" id="adjust_adult_3star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_adult_3star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'adult', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_adult_3star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'adult', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('adult', '3star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="adult_thb_3star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="adult_usd_3star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="adult_lkr_3star" class="text-blue-700"></strong></p>
@@ -239,7 +252,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Extra Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_extra_markup_3star"></span></p><input type="number" id="adjust_child_extra_3star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_extra_3star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_extra', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_extra_3star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_extra', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_extra', '3star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_extra_thb_3star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_extra_usd_3star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_extra_lkr_3star" class="text-green-700"></strong></p>
@@ -247,7 +273,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Sharing Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_sharing_markup_3star"></span></p><input type="number" id="adjust_child_sharing_3star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_sharing_3star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_sharing', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_sharing_3star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_sharing', '3star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_sharing', '3star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_sharing_thb_3star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_sharing_usd_3star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_sharing_lkr_3star" class="text-purple-700"></strong></p>
@@ -262,7 +301,20 @@
                 <div class="space-y-4">
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Adult</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="adult_markup_4star"></span></p><input type="number" id="adjust_adult_4star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_adult_4star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'adult', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_adult_4star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'adult', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('adult', '4star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="adult_thb_4star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="adult_usd_4star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="adult_lkr_4star" class="text-blue-700"></strong></p>
@@ -270,7 +322,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Extra Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_extra_markup_4star"></span></p><input type="number" id="adjust_child_extra_4star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_extra_4star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_extra', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_extra_4star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_extra', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_extra', '4star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_extra_thb_4star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_extra_usd_4star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_extra_lkr_4star" class="text-green-700"></strong></p>
@@ -278,7 +343,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Sharing Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_sharing_markup_4star"></span></p><input type="number" id="adjust_child_sharing_4star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_sharing_4star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_sharing', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_sharing_4star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_sharing', '4star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_sharing', '4star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_sharing_thb_4star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_sharing_usd_4star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_sharing_lkr_4star" class="text-purple-700"></strong></p>
@@ -291,7 +369,20 @@
                 <div class="space-y-4">
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Adult</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="adult_markup_5star"></span></p><input type="number" id="adjust_adult_5star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_adult_5star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'adult', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_adult_5star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'adult', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('adult', '5star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="adult_thb_5star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="adult_usd_5star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="adult_lkr_5star" class="text-blue-700"></strong></p>
@@ -299,7 +390,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Extra Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_extra_markup_5star"></span></p><input type="number" id="adjust_child_extra_5star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_extra_5star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_extra', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_extra_5star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_extra', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_extra', '5star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_extra_thb_5star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_extra_usd_5star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_extra_lkr_5star" class="text-green-700"></strong></p>
@@ -307,7 +411,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Sharing Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_sharing_markup_5star"></span></p><input type="number" id="adjust_child_sharing_5star" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_sharing_5star" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_sharing', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_sharing_5star" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_sharing', '5star')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_sharing', '5star')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_sharing_thb_5star"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_sharing_usd_5star" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_sharing_lkr_5star" class="text-purple-700"></strong></p>
@@ -321,7 +438,20 @@
                 <div class="space-y-4">
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Adult</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="adult_markup_mix"></span></p><input type="number" id="adjust_adult_mix" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_adult_mix" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'adult', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_adult_mix" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'adult', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('adult', 'mix')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="adult_thb_mix"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="adult_usd_mix" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="adult_lkr_mix" class="text-blue-700"></strong></p>
@@ -329,7 +459,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Extra Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_extra_markup_mix"></span></p><input type="number" id="adjust_child_extra_mix" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_extra_mix" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_extra', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_extra_mix" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_extra', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_extra', 'mix')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_extra_thb_mix"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_extra_usd_mix" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_extra_lkr_mix" class="text-green-700"></strong></p>
@@ -337,7 +480,20 @@
                     </div>
                     <div class="bg-white p-3 rounded shadow-sm">
                         <p class="font-bold text-gray-700">Child (Sharing Bed)</p>
-                        <div class="flex items-center justify-between mb-1"><p class="text-xs text-gray-500">Markup: <span id="child_sharing_markup_mix"></span></p><input type="number" id="adjust_child_sharing_mix" class="w-16 p-0.5 border border-gray-300 rounded text-xs text-center" placeholder="+/- LKR" onchange="calculate()"></div>
+                        <div class="flex items-center justify-between mb-1 bg-gray-50 p-1 rounded">
+    <span class="text-[11px] text-gray-500 font-semibold">Markup:</span>
+    <div class="flex items-center space-x-1">
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_thb_child_sharing_mix" class="w-14 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="THB" onchange="onMarkupChange('thb', 'child_sharing', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">THB</span>
+        </div>
+        <div class="flex items-center bg-white border border-gray-300 rounded px-1">
+            <input type="number" id="markup_pct_child_sharing_mix" class="w-10 p-0.5 text-[11px] text-right border-none focus:outline-none" placeholder="%" onchange="onMarkupChange('pct', 'child_sharing', 'mix')">
+            <span class="text-[10px] text-gray-400 ml-1">%</span>
+        </div>
+        <button onclick="resetMarkup('child_sharing', 'mix')" class="text-gray-400 hover:text-red-500 ml-1" title="Reset to Global"><i class="fas fa-undo text-[10px]"></i></button>
+    </div>
+</div>
                         <p class="flex justify-between"><span>THB:</span><strong id="child_sharing_thb_mix"></strong></p>
                         <p class="flex justify-between"><span>USD:</span><strong id="child_sharing_usd_mix" class="text-gray-700"></strong></p>
                         <p class="flex justify-between"><span>LKR:</span><strong id="child_sharing_lkr_mix" class="text-purple-700"></strong></p>
@@ -1634,59 +1790,57 @@
             document.getElementById('mix_package_title').innerText = mixTitle;
         }
 
-        // Function to calculate and render a package
         const renderPackage = (suffix, hotelCost, totalMealCost) => {
-            const adjustAdult = parseFloat(document.getElementById(`adjust_adult_${suffix}`)?.value) || 0;
-            const adjustChildExtra = parseFloat(document.getElementById(`adjust_child_extra_${suffix}`)?.value) || 0;
-            const adjustChildSharing = parseFloat(document.getElementById(`adjust_child_sharing_${suffix}`)?.value) || 0;
-
-            // ADULT
+            const getMarkup = (category, subtotal) => {
+                let pctInput = document.getElementById(`markup_pct_${category}_${suffix}`);
+                let thbInput = document.getElementById(`markup_thb_${category}_${suffix}`);
+                thbInput.dataset.subtotal = subtotal;
+                pctInput.dataset.subtotal = subtotal;
+                let markupAmount;
+                if (pctInput.dataset.manual === 'true' || thbInput.dataset.manual === 'true') {
+                    let mPct = parseFloat(pctInput.value) / 100 || 0;
+                    markupAmount = subtotal * mPct;
+                    if (document.activeElement !== thbInput) {
+                        thbInput.value = markupAmount.toFixed(2);
+                    }
+                } else {
+                    markupAmount = subtotal * markupPercent;
+                    if (document.activeElement !== pctInput && document.activeElement !== thbInput) {
+                        pctInput.value = (markupPercent * 100).toFixed(2);
+                        thbInput.value = markupAmount.toFixed(2);
+                    }
+                }
+                return markupAmount;
+            };
             const subtotalAdult = selectedTourCost + perPersonTransferCost + hotelCost + addonCostPerAdult;
-            let markupAmountAdult = (manualMarkupAdult !== null) ? manualMarkupAdult : subtotalAdult * markupPercent;
+            let markupAmountAdult = getMarkup('adult', subtotalAdult);
             const totalThbAdult = subtotalAdult + markupAmountAdult;
-            const adultMarkupDisplay = (manualMarkupAdult !== null) ? `+ ${formatCurrency(markupAmountAdult, 'THB')} (Manual)` : `+ ${formatCurrency(markupAmountAdult, 'THB')} (${markupPercentValue}%)`;
-
-            // CHILD W/ EXTRA BED
             const subtotalChildExtraBed = selectedTourCost + hotelCost;
-            let markupAmountChildExtraBed = (manualMarkupChildExtraBed !== null) ? manualMarkupChildExtraBed : subtotalChildExtraBed * markupPercent;
+            let markupAmountChildExtraBed = getMarkup('child_extra', subtotalChildExtraBed);
             const totalThbChildExtraBed = subtotalChildExtraBed + markupAmountChildExtraBed;
-            const childExtraBedMarkupDisplay = (manualMarkupChildExtraBed !== null) ? `+ ${formatCurrency(markupAmountChildExtraBed, 'THB')} (Manual)` : `+ ${formatCurrency(markupAmountChildExtraBed, 'THB')} (${markupPercentValue}%)`;
-
-            // CHILD SHARING
             const subtotalChildSharing = selectedTourCost + totalMealCost;
-            let markupAmountChildSharing = (manualMarkupChildSharing !== null) ? manualMarkupChildSharing : subtotalChildSharing * markupPercent;
+            let markupAmountChildSharing = getMarkup('child_sharing', subtotalChildSharing);
             const totalThbChildSharing = subtotalChildSharing + markupAmountChildSharing;
-            const childSharingMarkupDisplay = (manualMarkupChildSharing !== null) ? `+ ${formatCurrency(markupAmountChildSharing, 'THB')} (Manual)` : `+ ${formatCurrency(markupAmountChildSharing, 'THB')} (${markupPercentValue}%)`;
-
-            // Render to DOM
-            document.getElementById(`adult_markup_${suffix}`).innerHTML = adultMarkupDisplay;
             document.getElementById(`adult_thb_${suffix}`).innerText = formatCurrency(totalThbAdult, 'THB');
             let usdAdult = totalThbAdult / usdDivisor;
             if (document.getElementById(`adult_usd_${suffix}`)) document.getElementById(`adult_usd_${suffix}`).innerText = formatCurrency(usdAdult, 'USD');
             let lkrAdult = totalThbAdult * lkrRate;
             document.getElementById(`adult_lkr_${suffix}`).innerText = formatCurrency(lkrAdult, 'LKR');
             let finalLkrAdult = Math.ceil(lkrAdult / 100) * 100 + 1000;
-            finalLkrAdult = finalLkrAdult + adjustAdult;
             if (document.getElementById(`adult_final_lkr_${suffix}`)) document.getElementById(`adult_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrAdult, 'LKR');
-
-            document.getElementById(`child_extra_markup_${suffix}`).innerHTML = childExtraBedMarkupDisplay;
             document.getElementById(`child_extra_thb_${suffix}`).innerText = formatCurrency(totalThbChildExtraBed, 'THB');
             let usdChildExtra = totalThbChildExtraBed / usdDivisor;
             if (document.getElementById(`child_extra_usd_${suffix}`)) document.getElementById(`child_extra_usd_${suffix}`).innerText = formatCurrency(usdChildExtra, 'USD');
             let lkrChildExtra = totalThbChildExtraBed * lkrRate;
             document.getElementById(`child_extra_lkr_${suffix}`).innerText = formatCurrency(lkrChildExtra, 'LKR');
             let finalLkrChildExtra = Math.ceil(lkrChildExtra / 100) * 100 + 1000;
-            finalLkrChildExtra = finalLkrChildExtra + adjustChildExtra;
             if (document.getElementById(`child_final_lkr_${suffix}`)) document.getElementById(`child_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrChildExtra, 'LKR');
-
-            document.getElementById(`child_sharing_markup_${suffix}`).innerHTML = childSharingMarkupDisplay;
             document.getElementById(`child_sharing_thb_${suffix}`).innerText = formatCurrency(totalThbChildSharing, 'THB');
             let usdChildSharing = totalThbChildSharing / usdDivisor;
             if (document.getElementById(`child_sharing_usd_${suffix}`)) document.getElementById(`child_sharing_usd_${suffix}`).innerText = formatCurrency(usdChildSharing, 'USD');
             let lkrChildSharing = totalThbChildSharing * lkrRate;
             document.getElementById(`child_sharing_lkr_${suffix}`).innerText = formatCurrency(lkrChildSharing, 'LKR');
             let finalLkrChildSharing = Math.ceil(lkrChildSharing / 100) * 100 + 1000;
-            finalLkrChildSharing = finalLkrChildSharing + adjustChildSharing;
             if (document.getElementById(`child_sharing_final_lkr_${suffix}`)) document.getElementById(`child_sharing_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrChildSharing, 'LKR');
         };
 
@@ -1723,6 +1877,34 @@
         await loadMasterDatabase();
         renderAll();
     };
+
+    function onMarkupChange(type, category, suffix) {
+        let pctInput = document.getElementById(`markup_pct_${category}_${suffix}`);
+        let thbInput = document.getElementById(`markup_thb_${category}_${suffix}`);
+        let subtotal = parseFloat(thbInput.dataset.subtotal) || 0;
+        
+        pctInput.dataset.manual = 'true';
+        thbInput.dataset.manual = 'true';
+        
+        if (type === 'thb') {
+            let thbVal = parseFloat(thbInput.value) || 0;
+            let pctVal = subtotal > 0 ? (thbVal / subtotal) * 100 : 0;
+            pctInput.value = pctVal.toFixed(2);
+        } else {
+            let pctVal = parseFloat(pctInput.value) || 0;
+            let thbVal = subtotal * (pctVal / 100);
+            thbInput.value = thbVal.toFixed(2);
+        }
+        calculate();
+    }
+
+    function resetMarkup(category, suffix) {
+        let pctInput = document.getElementById(`markup_pct_${category}_${suffix}`);
+        let thbInput = document.getElementById(`markup_thb_${category}_${suffix}`);
+        pctInput.dataset.manual = 'false';
+        thbInput.dataset.manual = 'false';
+        calculate();
+    }
 </script>
 
 </body>

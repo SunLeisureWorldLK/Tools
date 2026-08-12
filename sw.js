@@ -1,12 +1,12 @@
-const CACHE_NAME = 'sl-tools-v1';
+const CACHE_NAME = 'sl-tools-v2';
 
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/tour_costing.html',
-  '/Domarco_Itinerary.html',
-  '/Evago_Smart_Itinerary.html',
-  '/Image/LOGO.png'
+  '.',
+  './index.html',
+  './tour_costing.html',
+  './Domarco_Itinerary.html',
+  './Evago_Smart_Itinerary.html',
+  './Image/LOGO.png'
 ];
 
 // Install event: cache basic assets

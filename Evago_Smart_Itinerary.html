@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EVAGO Travels - Smart Itinerary</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 10mm;
+            background-color: #f8f9fa;
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            background: #f8f9fa;
+        }
+        
+        /* Edit mode styles */
+        [contenteditable="true"] {
+            outline: none;
+            transition: all 0.2s;
+            border-bottom: 1px dashed transparent;
+        }
+        [contenteditable="true"]:hover {
+            background-color: rgba(247, 127, 0, 0.1);
+            border-bottom: 1px dashed #F77F00;
+            border-radius: 2px;
+        }
+        
+        .upload-btn {
+            display: block;
+            margin-top: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #555;
+            background: #eee;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .control-panel {
+            background: #111;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-family: sans-serif;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel button, .control-panel .file-label {
+            background: #F77F00;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .control-panel button:hover, .control-panel .file-label:hover {
+            background: #e07300;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; }
+            .container { box-shadow: none !important; padding: 0 !important; }
+            [contenteditable="true"]:hover { background-color: transparent; border-bottom: none; }
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* Header Modern */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #0A2342;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .logo { max-height: 90px; object-fit: contain; }
+        .header-text { text-align: right; }
+        .main-title { font-size: 24pt; color: #F77F00; font-weight: 700; margin: 0; line-height: 1.1; letter-spacing: -0.5px; }
+        .sub-title { font-size: 12pt; color: #0A2342; margin: 5px 0 0 0; font-weight: 600; }
+        .ref-badge { background: #0A2342; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 9pt; display: inline-block; margin-top: 8px; }
+        .contact-badge { background: #e63946; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 9pt; display: inline-block; margin-top: 8px; font-weight: bold; margin-left: 5px;}
+
+        /* Timeline / Cards */
+        .day-card {
+            display: flex;
+            background: #ffffff;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+            border: 1px solid #eee;
+            border-left: 6px solid #F77F00;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        
+        .day-content {
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .day-title {
+            color: #0A2342;
+            font-size: 14pt;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .meal-badge {
+            font-size: 9pt;
+            background: #f0f4f8;
+            color: #0A2342;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .day-desc {
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #444;
+            margin: 0;
+        }
+
+        /* Image Styling */
+        .day-img-wrapper {
+            width: 240px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fafafa;
+            border-left: 1px dashed #ddd;
+        }
+        .day-img {
+            width: 210px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 30px 10px 30px 10px;
+            box-shadow: 4px 4px 10px rgba(10, 35, 66, 0.15);
+        }
+
+        /* Tables */
+        .section-title {
+            color: #0A2342;
+            font-size: 16pt;
+            border-bottom: 2px solid #F77F00;
+            display: inline-block;
+            margin: 15px 0 10px 0;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .box { background: #fff; border-radius: 12px; padding: 15px; border: 1px solid #ddd; }
+        .box-title { font-weight: 700; font-size: 12pt; margin-bottom: 10px; text-align: center; color: #fff; padding: 6px; border-radius: 6px; }
+        .bg-inc { background: #0A2342; }
+        .bg-exc { background: #e63946; }
+        .box ul { padding-left: 20px; margin: 0; font-size: 9.5pt; line-height: 1.5; }
+        .box li { margin-bottom: 6px; }
+
+        .hotel-table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: avoid; }
+        .hotel-table th { background: #f0f4f8; color: #0A2342; padding: 10px; text-align: left; font-size: 10pt; border: 1px solid #cdd6e0; }
+        .hotel-table td { padding: 10px; font-size: 10pt; border: 1px solid #cdd6e0; }
+        
+        /* Price Tag */
+        .price-banner {
+            background: linear-gradient(135deg, #0A2342 0%, #164072 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(10,35,66,0.2);
+            page-break-inside: avoid;
+        }
+        .price-banner h2 { margin: 0; font-size: 24pt; color: #F77F00; }
+        .price-banner p { margin: 5px 0 0 0; font-size: 11pt; opacity: 0.9; }
+        .price-banner .extra { display: inline-block; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.3); font-size: 10pt; }
+
+    </style>
+</head>
+<body>
+    
+    <div class="no-print control-panel">
+        <div style="margin-bottom: 10px; font-size: 18px;">🛠️ <b>SMART EDIT MODE</b></div>
+        <p style="font-size: 12px; color: #ccc; margin-top:0;">Edit the text and upload images below. You can save your edits to a file and load them later!</p>
+        
+        <button onclick="exportJSON()">💾 Save Edits (Download JSON)</button>
+        
+        <label class="file-label">
+            📂 Load Edits (Upload JSON)
+            <input type="file" accept=".json" onchange="importJSON(event)" style="display: none;">
+        </label>
+        
+        <button onclick="window.print()" style="background: #2a9d8f;">🖨️ Save as PDF</button>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <img id="logo-img" class="save-img" src="https://via.placeholder.com/250x100?text=EVAGO+TRAVELS" alt="EVAGO Logo" class="logo" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'logo-img')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('logo-img')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Logo Size: <input type="range" id="logo-size-slider" min="30" max="300" value="90" oninput="changeLogoSize(this.value)" style="vertical-align: middle;">
+                </div>
+            </div>
+            <div class="header-text">
+                <h1 id="txt-title" class="main-title" contenteditable="true">THE ULTIMATE THAI ESCAPE</h1>
+                <p id="txt-subtitle" class="sub-title" contenteditable="true">01 Night Pattaya &bull; 03 Nights Bangkok | 15 Pax</p>
+                <div>
+                    <div id="txt-ref" class="ref-badge" contenteditable="true">Sep 2026 | Ref: INQ-82316</div>
+                    <div id="txt-contact" class="contact-badge" contenteditable="true">📞 +94 77 123 4567</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 1 -->
+        <div class="day-card">
+            <div class="day-content">
+                <h3 class="day-title">
+                    <span id="txt-d1-title" contenteditable="true">Day 01: Welcome to Thailand & Coral Island</span>
+                    <span id="txt-d1-meal" class="meal-badge" contenteditable="true">Meals: (--/L/--)</span>
+                </h3>
+                <p id="txt-d1-desc" class="day-desc" contenteditable="true">
+                    Kickstart your journey with a private arrival transfer from Bangkok Airport to the vibrant city of Pattaya. Dive straight into a tropical adventure with an exhilarating <strong>Coral Island Tour</strong>, complete with a delicious lunch (Join Transfer). By 14:00, check into your 3-star accommodation (Baron Beach Resort, Golden Beach Hotel, or similar) and relax for the evening. Overnight at the hotel.
+                </p>
+            </div>
+            <div class="day-img-wrapper">
+                <img id="img-d1" class="save-img day-img" src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=400&q=80" alt="Pattaya" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'img-d1')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('img-d1')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Zoom: <input type="range" min="100" max="250" value="100" oninput="document.getElementById('img-d1').style.transform = `scale(${this.value/100})`" style="vertical-align: middle; width:100px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 2 -->
+        <div class="day-card">
+            <div class="day-content">
+                <h3 class="day-title">
+                    <span id="txt-d2-title" contenteditable="true">Day 02: Spiritual Vibes & Journey to Bangkok</span>
+                    <span id="txt-d2-meal" class="meal-badge" contenteditable="true">Meals: (B/--/--)</span>
+                </h3>
+                <p id="txt-d2-desc" class="day-desc" contenteditable="true">
+                    Enjoy a hearty breakfast before checking out. Seek blessings at the majestic <strong>Pattaya Big Buddha Temple</strong>, soaking in the serene atmosphere. Afterward, enjoy a comfortable private transfer to the bustling metropolis of Bangkok. By 14:00, check into your premium 3-star hotel (Picnic Hotel, Hotel De Bangkok, Tango Vibrant, or similar) for a peaceful overnight stay.
+                </p>
+            </div>
+            <div class="day-img-wrapper">
+                <img id="img-d2" class="save-img day-img" src="https://images.unsplash.com/photo-1582468546235-9bf31e5bc4cb?auto=format&fit=crop&w=400&q=80" alt="Big Buddha" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'img-d2')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('img-d2')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Zoom: <input type="range" min="100" max="250" value="100" oninput="document.getElementById('img-d2').style.transform = `scale(${this.value/100})`" style="vertical-align: middle; width:100px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 3 -->
+        <div class="day-card">
+            <div class="day-content">
+                <h3 class="day-title">
+                    <span id="txt-d3-title" contenteditable="true">Day 03: Leisure & Enchanting River Cruise</span>
+                    <span id="txt-d3-meal" class="meal-badge" contenteditable="true">Meals: (B/--/D)</span>
+                </h3>
+                <p id="txt-d3-desc" class="day-desc" contenteditable="true">
+                    Start your day with breakfast and enjoy a free day to explore Bangkok's famous shopping havens and vibrant streets at your own pace. As the sun sets, embark on a magical <strong>Chao Phraya Cruise Dinner</strong> (Join Transfer). Indulge in a lavish buffet while gliding past Bangkok's illuminated landmarks. Overnight at the hotel.
+                </p>
+            </div>
+            <div class="day-img-wrapper">
+                <img id="img-d3" class="save-img day-img" src="https://images.unsplash.com/photo-1590496159679-b1317bb81602?auto=format&fit=crop&w=400&q=80" alt="Cruise" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'img-d3')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('img-d3')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Zoom: <input type="range" min="100" max="250" value="100" oninput="document.getElementById('img-d3').style.transform = `scale(${this.value/100})`" style="vertical-align: middle; width:100px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 4 -->
+        <div class="day-card">
+            <div class="day-content">
+                <h3 class="day-title">
+                    <span id="txt-d4-title" contenteditable="true">Day 04: Thrills at Siam Amazing Park</span>
+                    <span id="txt-d4-meal" class="meal-badge" contenteditable="true">Meals: (B/L/--)</span>
+                </h3>
+                <p id="txt-d4-desc" class="day-desc" contenteditable="true">
+                    Fuel up with breakfast before heading to the ultimate playground—<strong>Siam Amazing Park</strong>! Enjoy a fun-filled day of thrilling rides and exciting water park splashes. A fantastic lunch is included to keep your energy high throughout the adventure. Return to your hotel for your final night in Bangkok.
+                </p>
+            </div>
+            <div class="day-img-wrapper">
+                <img id="img-d4" class="save-img day-img" src="https://images.unsplash.com/photo-1505881402582-c5bc11054f91?auto=format&fit=crop&w=400&q=80" alt="Amusement Park" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'img-d4')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('img-d4')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Zoom: <input type="range" min="100" max="250" value="100" oninput="document.getElementById('img-d4').style.transform = `scale(${this.value/100})`" style="vertical-align: middle; width:100px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 5 -->
+        <div class="day-card">
+            <div class="day-content">
+                <h3 class="day-title">
+                    <span id="txt-d5-title" contenteditable="true">Day 05: Farewell Thailand</span>
+                    <span id="txt-d5-meal" class="meal-badge" contenteditable="true">Meals: (B/--/--)</span>
+                </h3>
+                <p id="txt-d5-desc" class="day-desc" contenteditable="true">
+                    Savor your final breakfast in Bangkok. Spend your morning at leisure before a 12:00 PM checkout. A private transfer will whisk you away from your Bangkok hotel directly to Bangkok Airport for your safe journey home, carrying unforgettable memories. <strong>Tour Ends!</strong>
+                </p>
+            </div>
+            <div class="day-img-wrapper">
+                <img id="img-d5" class="save-img day-img" src="https://images.unsplash.com/photo-1555026978-656debe3cc18?auto=format&fit=crop&w=400&q=80" alt="Airport" />
+                <input type="file" class="no-print upload-btn" accept="image/*" onchange="loadImage(event, 'img-d5')" style="display:inline-block; width:180px;">
+                <button class="no-print upload-btn" onclick="loadImageUrl('img-d5')" style="display:inline-block; padding:3px 10px;">URL</button>
+                <div class="no-print" style="margin-top: 5px; font-size: 11px; color: #555;">
+                    Zoom: <input type="range" min="100" max="250" value="100" oninput="document.getElementById('img-d5').style.transform = `scale(${this.value/100})`" style="vertical-align: middle; width:100px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid-2">
+            <div class="box">
+                <div id="txt-inc-title" class="box-title bg-inc" contenteditable="true">✔️ INCLUSIONS</div>
+                <ul id="txt-inc-list" contenteditable="true">
+                    <li>1N Pattaya 3N Bangkok 4*/3* Hotel Accommodation with Breakfast</li>
+                    <li>Private Transfer from Airport - Hotel - Airport</li>
+                    <li>Tour by air-conditioned vehicles</li>
+                    <li>All admission fees & Transfers as mentioned</li>
+                    <li>Coral Island tour with Lunch (Join Transfer)</li>
+                    <li>Pattaya Big Buddha Temple</li>
+                    <li>Chao Phraya Cruise Dinner (Join Transfer)</li>
+                    <li>Siam Amazing Park with Lunch</li>
+                    <li>Meals (04 Breakfast / 02 Lunch / 01 Dinner)</li>
+                </ul>
+            </div>
+            <div class="box">
+                <div id="txt-exc-title" class="box-title bg-exc" contenteditable="true">❌ EXCLUSIONS</div>
+                <ul id="txt-exc-list" contenteditable="true">
+                    <li>Air fare</li>
+                    <li>Everything which is not mentioned in the program</li>
+                    <li>Thailand Visa</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Hotels -->
+        <h2 id="txt-hotel-main" class="section-title" contenteditable="true">Accommodation Details</h2>
+        <table class="hotel-table">
+            <tr>
+                <th id="txt-hhead-1" style="width: 20%;" contenteditable="true">Location</th>
+                <th id="txt-hhead-2" contenteditable="true">3* Hotel Options</th>
+            </tr>
+            <tr>
+                <td id="txt-hloc-1" contenteditable="true"><strong>Pattaya</strong></td>
+                <td id="txt-hopt-1" contenteditable="true">Baron Beach Resort Pattaya 3*, Golden Beach Hotel 3* or Similar 3*</td>
+            </tr>
+            <tr>
+                <td id="txt-hloc-2" contenteditable="true"><strong>Bangkok</strong></td>
+                <td id="txt-hopt-2" contenteditable="true">Picnic Hotel 3*, Hotel De Bangkok 3*, Tango Vibrant Hotel Bangkok or Similar 3*</td>
+            </tr>
+        </table>
+
+        <!-- Pricing Banner -->
+        <div class="price-banner">
+            <h2 id="txt-price-1" contenteditable="true">LKR 255,000 <span style="font-size: 14pt; color: #fff; font-weight: normal;">Per Person</span></h2>
+            <p id="txt-price-2" contenteditable="true">(Minimum 15 Pax)</p>
+            <div id="txt-price-3" class="extra" contenteditable="true">
+                Additional Meal: LKR 13,500 Per Person
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Change logo size
+        function changeLogoSize(size) {
+            document.getElementById('logo-img').style.maxHeight = size + 'px';
+        }
+
+        // Load image from PC
+        function loadImage(event, imgId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadImageUrl(imgId) {
+            const url = window.prompt("Enter the Image URL:");
+            if (url && url.trim() !== '') {
+                document.getElementById(imgId).src = url;
+            }
+        }
+
+        // Export data as JSON
+        function exportJSON() {
+            let data = { texts: {}, images: {}, settings: {} };
+            
+            // Collect logo size
+            let logoSlider = document.getElementById('logo-size-slider');
+            if (logoSlider) {
+                data.settings.logoSize = logoSlider.value;
+            }
+            
+            // Collect all editable texts
+            document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+                if(el.id) {
+                    data.texts[el.id] = el.innerHTML;
+                }
+            });
+            
+            // Collect all uploaded images
+            document.querySelectorAll('img.save-img').forEach(img => {
+                if(img.id) {
+                    data.images[img.id] = img.src;
+                }
+            });
+
+            // Create JSON and trigger download using Blob (handles large embedded images safely)
+            let jsonString = JSON.stringify(data);
+            let blob = new Blob([jsonString], { type: "application/json" });
+            let url = URL.createObjectURL(blob);
+            
+            let downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", "Evago_Itinerary_Data.json");
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        // Import data from JSON
+        function importJSON(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let content = e.target.result;
+                    let data = JSON.parse(content);
+                    
+                    // Update texts
+                    if(data.texts) {
+                        for (let id in data.texts) {
+                            let el = document.getElementById(id);
+                            if(el) el.innerHTML = data.texts[id];
+                        }
+                    }
+                    
+                    // Update images
+                    if(data.images) {
+                        for (let id in data.images) {
+                            let img = document.getElementById(id);
+                            if(img) img.src = data.images[id];
+                        }
+                    }
+                    
+                    // Update settings
+                    if(data.settings && data.settings.logoSize) {
+                        changeLogoSize(data.settings.logoSize);
+                        let logoSlider = document.getElementById('logo-size-slider');
+                        if (logoSlider) {
+                            logoSlider.value = data.settings.logoSize;
+                        }
+                    }
+
+                    alert("Data loaded successfully! 🎉");
+                } catch (error) {
+                    alert("Error reading JSON file. Make sure it's the correct file.");
+                }
+                
+                // Clear input so same file can be uploaded again if needed
+                event.target.value = "";
+            }
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>

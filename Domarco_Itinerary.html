@@ -590,7 +590,10 @@
                             <li>Overnight at Hotel.</li>
                         </ul>
                     </div>
-                    <button class="add-day-img-btn no-print" onclick="addDayImage(this)" contenteditable="false"><i class="fas fa-image"></i> Add Image for this Day</button>
+                    <div class="day-img-controls no-print" contenteditable="false" style="display: flex; gap: 5px;">
+                        <button class="add-day-img-btn" onclick="addDayImage(this.parentElement)"><i class="fas fa-image"></i> Add Image</button>
+                        <button class="add-day-img-btn" onclick="addDayImageURL(this.parentElement)"><i class="fas fa-link"></i> URL</button>
+                    </div>
                 </div>
             </div>
 
@@ -611,7 +614,10 @@
                             <li>Overnight at Hotel.</li>
                         </ul>
                     </div>
-                    <button class="add-day-img-btn no-print" onclick="addDayImage(this)" contenteditable="false"><i class="fas fa-image"></i> Add Image for this Day</button>
+                    <div class="day-img-controls no-print" contenteditable="false" style="display: flex; gap: 5px;">
+                        <button class="add-day-img-btn" onclick="addDayImage(this.parentElement)"><i class="fas fa-image"></i> Add Image</button>
+                        <button class="add-day-img-btn" onclick="addDayImageURL(this.parentElement)"><i class="fas fa-link"></i> URL</button>
+                    </div>
                 </div>
             </div>
 
@@ -629,7 +635,10 @@
                             <li>Overnight at Hotel.</li>
                         </ul>
                     </div>
-                    <button class="add-day-img-btn no-print" onclick="addDayImage(this)" contenteditable="false"><i class="fas fa-image"></i> Add Image for this Day</button>
+                    <div class="day-img-controls no-print" contenteditable="false" style="display: flex; gap: 5px;">
+                        <button class="add-day-img-btn" onclick="addDayImage(this.parentElement)"><i class="fas fa-image"></i> Add Image</button>
+                        <button class="add-day-img-btn" onclick="addDayImageURL(this.parentElement)"><i class="fas fa-link"></i> URL</button>
+                    </div>
                 </div>
             </div>
 
@@ -648,7 +657,10 @@
                             <li>Overnight at Hotel.</li>
                         </ul>
                     </div>
-                    <button class="add-day-img-btn no-print" onclick="addDayImage(this)" contenteditable="false"><i class="fas fa-image"></i> Add Image for this Day</button>
+                    <div class="day-img-controls no-print" contenteditable="false" style="display: flex; gap: 5px;">
+                        <button class="add-day-img-btn" onclick="addDayImage(this.parentElement)"><i class="fas fa-image"></i> Add Image</button>
+                        <button class="add-day-img-btn" onclick="addDayImageURL(this.parentElement)"><i class="fas fa-link"></i> URL</button>
+                    </div>
                 </div>
             </div>
 
@@ -667,7 +679,10 @@
                             <li><strong>Tour End!</strong></li>
                         </ul>
                     </div>
-                    <button class="add-day-img-btn no-print" onclick="addDayImage(this)" contenteditable="false"><i class="fas fa-image"></i> Add Image for this Day</button>
+                    <div class="day-img-controls no-print" contenteditable="false" style="display: flex; gap: 5px;">
+                        <button class="add-day-img-btn" onclick="addDayImage(this.parentElement)"><i class="fas fa-image"></i> Add Image</button>
+                        <button class="add-day-img-btn" onclick="addDayImageURL(this.parentElement)"><i class="fas fa-link"></i> URL</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -851,18 +866,30 @@
         }
 
         // Add Image for a specific Day
-        function addDayImage(btn) {
+        function addDayImage(container) {
             triggerImageUpload(function(url) {
                 const img = document.createElement('img');
                 img.src = url;
                 img.className = 'day-img'; // applies the fixed 100% width and 240px height format
                 
-                // Insert the image just before the button
-                btn.parentElement.insertBefore(img, btn);
+                // Insert the image just before the container
+                container.parentElement.insertBefore(img, container);
                 
                 // Automatically select the newly inserted image
                 selectImage(img);
             });
+        }
+
+        function addDayImageURL(container) {
+            const url = window.prompt("Enter the Image URL:");
+            if (url && url.trim() !== '') {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'day-img'; 
+                
+                container.parentElement.insertBefore(img, container);
+                selectImage(img);
+            }
         }
 
         // Insert new image at cursor position (General Toolbar)

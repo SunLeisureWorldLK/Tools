@@ -38,10 +38,12 @@
   --gradient-gold: linear-gradient(135deg, #ffde00, #ffb800);
   --gradient-blue: linear-gradient(135deg, #74d852, #54b732);
   --gradient-teal: linear-gradient(135deg, #279e36, #1e7829);
+  --gradient-purple: linear-gradient(135deg, #a855f7, #7e22ce);
   --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.08);
   --shadow-card: 0 8px 32px rgba(30, 120, 41, 0.08);
   --shadow-glow-gold: 0 0 60px rgba(255, 184, 0, 0.2);
   --shadow-glow-blue: 0 0 60px rgba(84, 183, 50, 0.2);
+  --shadow-glow-purple: 0 0 60px rgba(168, 85, 247, 0.2);
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -845,6 +847,9 @@ body {
 .tool-card.card-teal::before { background: var(--gradient-teal); }
 .tool-card.card-teal:hover { box-shadow: var(--shadow-card), var(--shadow-glow-blue); }
 
+.tool-card.card-purple::before { background: var(--gradient-purple); }
+.tool-card.card-purple:hover { box-shadow: var(--shadow-card), var(--shadow-glow-purple); }
+
 .tool-icon {
   width: 64px;
   height: 64px;
@@ -875,6 +880,12 @@ body {
   border: 1px solid rgba(20, 184, 166, 0.15);
 }
 
+.card-purple .tool-icon {
+  background: var(--accent-purple-dim);
+  color: var(--accent-purple);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
 .tool-card:hover .tool-icon {
   transform: scale(1.08);
 }
@@ -890,6 +901,7 @@ body {
 .card-gold:hover h3 { color: var(--accent-gold); }
 .card-blue:hover h3 { color: var(--accent-blue); }
 .card-teal:hover h3 { color: var(--accent-teal); }
+.card-purple:hover h3 { color: var(--accent-purple); }
 
 .tool-card p {
   font-size: 14px;
@@ -932,6 +944,12 @@ body {
   border: 1px solid rgba(20, 184, 166, 0.1);
 }
 
+.card-purple .feature-tag {
+  background: var(--accent-purple-dim);
+  color: var(--accent-purple);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
 .tool-action {
   display: flex;
   align-items: center;
@@ -944,6 +962,7 @@ body {
 .card-gold .tool-action { color: var(--accent-gold); }
 .card-blue .tool-action { color: var(--accent-blue); }
 .card-teal .tool-action { color: var(--accent-teal); }
+.card-purple .tool-action { color: var(--accent-purple); }
 
 .tool-action i {
   transition: transform 0.3s ease;
@@ -1408,6 +1427,23 @@ body {
           <span>Open Calculator <i class="fas fa-arrow-right"></i></span>
         </div>
       </div>
+
+      <!-- Tool 6: Master Database Manager -->
+      <a class="tool-card card-purple" href="data_manager.html" target="_blank" id="tool-database" onclick="window.slwLogActivity('Opened Master Database Manager')">
+        <div class="tool-icon">
+          <i class="fas fa-database"></i>
+        </div>
+        <h3>Master Database Manager</h3>
+        <p>Manage the central inventory of Hotels, Tours, and Transfers. Push updates across all tools effortlessly.</p>
+        <div class="tool-features">
+          <span class="feature-tag">Database</span>
+          <span class="feature-tag">Inventory</span>
+          <span class="feature-tag">Auto-Sync</span>
+        </div>
+        <div class="tool-action">
+          Open Database <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
 
     </div>
   </section>

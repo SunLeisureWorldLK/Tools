@@ -1,0 +1,10 @@
+{
+  "appId": "com.sunleisure.tools",
+  "appName": "Sun Leisure Tools",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://prabdsanju.github.io/Tools/",
+    "cleartext": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Sun Leisure Tools",
+  "short_name": "SL Tools",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1d4ed8",
+  "description": "Sun Leisure World Travel Agent Portal",
+  "icons": [
+    {
+      "src": "Image/LOGO.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Image/LOGO.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

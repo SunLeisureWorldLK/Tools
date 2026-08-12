@@ -30,6 +30,12 @@
             max-width: 500px;
         }
     </style>
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="Image/LOGO.png">
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-12">
 
@@ -1479,7 +1485,13 @@
                     .image-gallery img { max-width: 150px; max-height: 150px; border-radius: 5px; border: 1px solid #ddd; }
                     @media print { .toolbar-container, .remove-day-btn, .add-activity-btn, .remove-item-btn, .add-image-btn { display: none; } }
                 </style>
-            </head>
+                <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="Image/LOGO.png">
+</head>
             <body>
                 <div class="toolbar-container">
                     <div class="controls">
@@ -1700,7 +1712,21 @@
                         loadMasterDatabase();
                     });
                 <\/script>
-            </body>
+            <!-- Register Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    });
+  }
+</script>
+</body>
             </html>
         `;
 
@@ -1907,5 +1933,19 @@
     }
 </script>
 
+<!-- Register Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+    });
+  }
+</script>
 </body>
 </html>

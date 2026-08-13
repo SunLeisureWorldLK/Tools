@@ -720,8 +720,10 @@ Be encouraging, fast, helpful, and charming!
             let guideCostPerPax = currentQuote.includeGuide ? (1500 / currentQuote.pax) : 0;
 
             let subtotalTHB = hotelCostPerPax + transferCostPerPax + toursCostPerPax + guideCostPerPax;
-            let finalTHB = subtotalTHB * (1 + (currentQuote.markup / 100));
-            let finalLKR = Math.round(finalTHB * currentQuote.lkrRate);
+            let finalTHB = subtotalTHB * 1.25; // 25% Markup matching Excel sheet formula (=Net * 125 / 100)
+            let rawLKR = finalTHB * currentQuote.lkrRate; // 10.8 THB to LKR
+            let roundedLKR = Math.ceil(rawLKR / 100) * 100; // Excel =ROUNDUP(val, -2)
+            let finalLKR = roundedLKR + 1000; // +1000 LKR Agent Quote Buffer matching Excel sheet Row 44/48
             let finalUSD = Math.round(finalTHB / currentQuote.usdRate);
 
             // Update DOM

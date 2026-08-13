@@ -305,6 +305,9 @@
             pax: 2,
             nights: 4,
             star: 3,
+            transferType: 'join', // 'join' by default, 'private' if requested
+            tourType: 'join',     // 'join' by default, 'private' if requested
+            includeGuide: false,
             hotels: [],
             transfers: [],
             tours: [],
@@ -464,9 +467,13 @@ Our Live Master Database Inventory:
 
 PRICING & TRANSFER RULES:
 - Currency Rate: 1 THB = 10.8 LKR.
-- Airport Transfers (Pick-up & Drop-off):
-  * If PAX > 2 (3 or more adults): Airport Pick-up = 1,200 THB per way, Airport Drop-off = 1,200 THB per way (Total 2,400 THB per vehicle).
-  * If PAX <= 2 (1 or 2 adults): Airport Pick-up = 1,000 THB per way, Airport Drop-off = 1,000 THB per way (Total 2,000 THB per vehicle).
+- Transfer Basis:
+  * Default: JOIN TRANSFER basis (budget friendly). Arrival & Departure Join Transfers = ~600 THB per way per person.
+  * If requested PRIVATE: 
+    - PAX > 2 (3 or more adults): Private Van Pick-up = 1,200 THB per way, Drop-off = 1,200 THB per way.
+    - PAX <= 2 (1 or 2 adults): Private Sedan Pick-up = 1,000 THB per way, Drop-off = 1,000 THB per way.
+- Customization:
+  * You can customize ANY itinerary request (change hotels, add/remove cities, add tours like Safari World, Dinner Cruise, Floating Market, etc.).
 
 CONVERSATIONAL RULES & TONE:
 1. Speak in a super friendly, welcoming mix of Sinhala and English (Singlish / polite English). Use emojis (🌴, ✈️, 🏨, 🚘, ✨) naturally.
@@ -544,12 +551,16 @@ Be encouraging, fast, helpful, and charming!
         }
 
         function generateContextualButtons() {
-            // Check currentQuote to see what information might be useful next
-            let btns = '';
-            btns += `<div class="pt-3 border-t border-gray-100 flex flex-wrap gap-2 text-xs">`;
+            let btns = `<div class="pt-3 border-t border-gray-100 flex flex-wrap gap-2 text-xs">`;
             
+            if (currentQuote.transferType === 'join') {
+                btns += `<button onclick="sendQuickMessage('Make transfers Private')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 transition font-medium">🚘 Switch to Private Transfers</button>`;
+            } else {
+                btns += `<button onclick="sendQuickMessage('Make transfers Join basis')" class="bg-emerald-50 hover:bg-emerald-100 text-sun-green px-2.5 py-1 rounded-lg border border-emerald-200 transition font-medium">🚌 Switch to Join Transfers</button>`;
+            }
+
             if (currentQuote.destination === 'Bangkok & Pattaya') {
-                btns += `<button onclick="sendQuickMessage('Change to Bangkok Only')" class="bg-emerald-50 hover:bg-emerald-100 text-sun-green px-2.5 py-1 rounded-lg border border-emerald-200 transition font-medium">🏙️ Bangkok Only</button>`;
+                btns += `<button onclick="sendQuickMessage('Change to Bangkok Only')" class="bg-blue-50 hover:bg-blue-100 text-sun-blue px-2.5 py-1 rounded-lg border border-blue-200 transition font-medium">🏙️ Bangkok Only</button>`;
             } else {
                 btns += `<button onclick="sendQuickMessage('Change to Bangkok and Pattaya')" class="bg-blue-50 hover:bg-blue-100 text-sun-blue px-2.5 py-1 rounded-lg border border-blue-200 transition font-medium">🏙️ Bangkok & Pattaya</button>`;
             }
@@ -579,7 +590,6 @@ Be encouraging, fast, helpful, and charming!
             } else {
                 const dayMatch = lower.match(/(\d+)\s*(d|day|days)\b/);
                 if (dayMatch) {
-                    // e.g., 4 Days usually means 3 Nights
                     currentQuote.nights = Math.max(1, parseInt(dayMatch[1]) - 1);
                 }
             }
@@ -596,6 +606,18 @@ Be encouraging, fast, helpful, and charming!
                 currentQuote.destination = 'Bangkok Only';
             } else if (lower.includes('phuket')) {
                 currentQuote.destination = 'Phuket';
+            }
+
+            // Transfer Basis (Join vs Private)
+            if (lower.includes('private transfer') || lower.includes('private car') || lower.includes('private van') || lower.includes('pvt')) {
+                currentQuote.transferType = 'private';
+            } else if (lower.includes('join transfer') || lower.includes('join basis') || lower.includes('shared transfer')) {
+                currentQuote.transferType = 'join';
+            }
+
+            // Guide
+            if (lower.includes('guide') || lower.includes('tour guide')) {
+                currentQuote.includeGuide = true;
             }
 
             recalculateQuote();
@@ -621,11 +643,12 @@ Be encouraging, fast, helpful, and charming!
                     <div class="flex justify-between font-semibold"><span>👥 Travelers:</span> <span class="text-gray-800">${currentQuote.pax} Adults</span></div>
                     <div class="flex justify-between font-semibold"><span>🌙 Duration:</span> <span class="text-gray-800">${currentQuote.nights} Nights / ${currentQuote.nights + 1} Days</span></div>
                     <div class="flex justify-between font-semibold"><span>🏨 Hotel Tier:</span> <span class="text-gray-800">${currentQuote.star}-Star (${hotelName})</span></div>
+                    <div class="flex justify-between font-semibold"><span>🚘 Transfer Basis:</span> <span class="text-indigo-700 capitalize">${currentQuote.transferType} Transfer Basis</span></div>
                 </div>
                 <p class="text-xs text-gray-700"><strong>🗓️ Suggested Itinerary Plan:</strong></p>
                 <ul class="list-disc pl-4 text-xs space-y-1 text-gray-600">
-                    <li><strong>Day 01:</strong> Arrival at Bangkok Airport, Private Transfer to Hotel & Leisure.</li>
-                    <li><strong>Day 02:</strong> Bangkok City & Temple Tour (Marble Temple & Golden Buddha).</li>
+                    <li><strong>Day 01:</strong> Arrival at Airport, ${currentQuote.transferType === 'private' ? 'Private' : 'Join'} Transfer to Hotel & Leisure.</li>
+                    <li><strong>Day 02:</strong> City & Temple Tour (Marble Temple & Golden Buddha).</li>
                     <li><strong>Day 03:</strong> Chao Phraya River Dinner Cruise Experience.</li>
                     ${currentQuote.nights >= 4 ? `<li><strong>Day 04:</strong> Safari World & Marine Park Full Day Tour with Lunch.</li>` : ''}
                     <li><strong>Day ${currentQuote.nights + 1}:</strong> Breakfast at Hotel, Free Shopping & Transfer to Airport for Departure.</li>
@@ -657,18 +680,31 @@ Be encouraging, fast, helpful, and charming!
             let hotelCostPerPax = (hotelPricePerNight * currentQuote.nights) / 2;
 
             // Transfers (Arrival Pick-up & Departure Drop-off)
-            let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;
-            let transferTotal = 0;
-            if (currentQuote.destination.includes('Pattaya')) {
-                // Airport -> Pattaya, Pattaya -> BKK, BKK -> Airport
-                let pattayaWay = currentQuote.pax > 2 ? 2200 : 1900;
-                let interWay = currentQuote.pax > 2 ? 2000 : 1700;
-                transferTotal = pattayaWay + interWay + perWayRate; 
+            let transferCostPerPax = 0;
+            let transferTitle = 'Airport Transfers';
+
+            if (currentQuote.transferType === 'join') {
+                // Join Transfers (Budget Basis: 600 THB per way per pax)
+                if (currentQuote.destination.includes('Pattaya')) {
+                    transferCostPerPax = 600 + 500 + 600;
+                } else {
+                    transferCostPerPax = 600 + 600;
+                }
+                transferTitle = `Join Basis Transfers (${currentQuote.pax} Pax)`;
             } else {
-                // Airport Pick-up + Drop-off (v.v.)
-                transferTotal = perWayRate * 2; 
+                // Private Transfers
+                let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;
+                let transferTotal = 0;
+                if (currentQuote.destination.includes('Pattaya')) {
+                    let pattayaWay = currentQuote.pax > 2 ? 2200 : 1900;
+                    let interWay = currentQuote.pax > 2 ? 2000 : 1700;
+                    transferTotal = pattayaWay + interWay + perWayRate; 
+                } else {
+                    transferTotal = perWayRate * 2; 
+                }
+                transferCostPerPax = transferTotal / currentQuote.pax;
+                transferTitle = `Private Transfers (Split / ${currentQuote.pax} Pax)`;
             }
-            let transferCostPerPax = transferTotal / currentQuote.pax;
 
             // Sample Tours
             let toursCostPerPax = 0;
@@ -680,7 +716,10 @@ Be encouraging, fast, helpful, and charming!
                 toursCostPerPax = 1150 + 1450; // Cruise + Safari World
             }
 
-            let subtotalTHB = hotelCostPerPax + transferCostPerPax + toursCostPerPax;
+            // Optional Guide
+            let guideCostPerPax = currentQuote.includeGuide ? (1500 / currentQuote.pax) : 0;
+
+            let subtotalTHB = hotelCostPerPax + transferCostPerPax + toursCostPerPax + guideCostPerPax;
             let finalTHB = subtotalTHB * (1 + (currentQuote.markup / 100));
             let finalLKR = Math.round(finalTHB * currentQuote.lkrRate);
             let finalUSD = Math.round(finalTHB / currentQuote.usdRate);
@@ -705,12 +744,24 @@ Be encouraging, fast, helpful, and charming!
                 </div>
                 <div class="p-2.5 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
                     <div>
-                        <strong class="text-sun-blue block">Private Transfers (Split / ${currentQuote.pax} Pax)</strong>
-                        <span class="text-gray-500">Airport & Hotel Transfers</span>
+                        <strong class="text-sun-blue block">${transferTitle}</strong>
+                        <span class="text-gray-500">${currentQuote.transferType === 'private' ? 'Private Vehicle' : 'Shared Join Bus'}</span>
                     </div>
                     <span class="font-bold text-gray-700">${Math.round(transferCostPerPax)} THB</span>
                 </div>
             `;
+
+            if (currentQuote.includeGuide) {
+                listHtml += `
+                    <div class="p-2.5 bg-purple-50 rounded-lg border border-purple-200 flex justify-between items-center">
+                        <div>
+                            <strong class="text-purple-800 block">English Speaking Tour Guide</strong>
+                            <span class="text-gray-500">1,500 THB Total (Split / Pax)</span>
+                        </div>
+                        <span class="font-bold text-gray-700">${Math.round(guideCostPerPax)} THB</span>
+                    </div>
+                `;
+            }
 
             sampleTours.forEach(t => {
                 listHtml += `

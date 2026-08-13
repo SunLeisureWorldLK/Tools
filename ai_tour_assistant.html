@@ -437,6 +437,47 @@
             scrollChatToBottom();
         }
 
+        async function appendBotMessageTyping(rawText, interactiveButtons = "") {
+            const container = document.getElementById('chatMessages');
+            const msgId = 'bot-msg-' + Date.now();
+            const msgHtml = `
+                <div class="flex items-start gap-3 max-w-3xl">
+                    <div class="w-9 h-9 rounded-full bg-sun-green text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm">
+                        <i class="fas fa-robot text-xs"></i>
+                    </div>
+                    <div class="chat-bubble-bot p-5 text-gray-800 text-sm leading-relaxed space-y-3 w-full overflow-hidden">
+                        <div id="${msgId}"></div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', msgHtml);
+            scrollChatToBottom();
+
+            const textContainer = document.getElementById(msgId);
+            let currentText = '';
+            
+            // Fast typewriter effect (3 chars per frame)
+            return new Promise(resolve => {
+                let index = 0;
+                const speed = 3;
+                
+                function typeFrame() {
+                    if (index < rawText.length) {
+                        currentText += rawText.substring(index, index + speed);
+                        textContainer.innerHTML = formatMarkdownText(currentText) + '<span class="inline-block w-1.5 h-3.5 bg-sun-green animate-pulse ml-1 align-middle rounded-sm"></span>';
+                        scrollChatToBottom();
+                        index += speed;
+                        requestAnimationFrame(typeFrame);
+                    } else {
+                        textContainer.innerHTML = formatMarkdownText(rawText) + interactiveButtons;
+                        scrollChatToBottom();
+                        resolve();
+                    }
+                }
+                requestAnimationFrame(typeFrame);
+            });
+        }
+
         function scrollChatToBottom() {
             const container = document.getElementById('chatMessages');
             container.scrollTop = container.scrollHeight;
@@ -579,7 +620,7 @@ Be the best travel consultant in Sri Lanka! 🌟
                 
                 // Add interactive action buttons based on context
                 let interactiveButtons = generateContextualButtons();
-                appendBotMessage(formatMarkdownText(botReply) + interactiveButtons);
+                await appendBotMessageTyping(botReply, interactiveButtons);
             } else {
                 appendBotMessage(`
                     <div class="bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-lg text-xs space-y-2">
@@ -701,7 +742,7 @@ Be the best travel consultant in Sri Lanka! 🌟
                 <p class="text-xs font-semibold text-sun-green pt-1">👉 දකුණු පසින් Live Price Calculation (LKR / THB) සහ Full Breakdown එක බලන්න!</p>
             `;
 
-            appendBotMessage(replyHtml);
+            await appendBotMessageTyping(replyHtml, generateContextualButtons());
         }
 
         function formatMarkdownText(text) {

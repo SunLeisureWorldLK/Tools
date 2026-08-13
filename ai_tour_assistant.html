@@ -309,7 +309,7 @@
             transfers: [],
             tours: [],
             markup: 25,
-            lkrRate: 10.0,
+            lkrRate: 10.8,
             usdRate: 31.0
         };
 
@@ -461,6 +461,12 @@ Our Live Master Database Inventory:
 - Hotels: ${JSON.stringify(masterDb.hotels.map(h=>({name:h.name, star:h.star, price:h.price, loc:h.location})))}
 - Tours: ${JSON.stringify(masterDb.tours.map(t=>({name:t.name, join:t.joinPrice, ticket:t.ticketOnlyPrice, car:t.privateCarPrice, van:t.privateVanPrice, loc:t.location})))}
 - Transfers: ${JSON.stringify(masterDb.transfers.map(tr=>({name:tr.name, car:tr.carPrice, van:tr.vanPrice, loc:tr.location})))}
+
+PRICING & TRANSFER RULES:
+- Currency Rate: 1 THB = 10.8 LKR.
+- Airport Transfers (Pick-up & Drop-off):
+  * If PAX > 2 (3 or more adults): Airport Pick-up = 1,200 THB per way, Airport Drop-off = 1,200 THB per way (Total 2,400 THB per vehicle).
+  * If PAX <= 2 (1 or 2 adults): Airport Pick-up = 1,000 THB per way, Airport Drop-off = 1,000 THB per way (Total 2,000 THB per vehicle).
 
 CONVERSATIONAL RULES & TONE:
 1. Speak in a super friendly, welcoming mix of Sinhala and English (Singlish / polite English). Use emojis (🌴, ✈️, 🏨, 🚘, ✨) naturally.
@@ -650,12 +656,17 @@ Be encouraging, fast, helpful, and charming!
             // Hotel cost per person twin sharing = (Rate * Nights) / 2
             let hotelCostPerPax = (hotelPricePerNight * currentQuote.nights) / 2;
 
-            // Transfers (Arrival, Departure, Intercity)
+            // Transfers (Arrival Pick-up & Departure Drop-off)
+            let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;
             let transferTotal = 0;
             if (currentQuote.destination.includes('Pattaya')) {
-                transferTotal = 1900 + 1700 + 1200; // Airport to Pattaya + Pattaya to BKK + BKK to Airport
+                // Airport -> Pattaya, Pattaya -> BKK, BKK -> Airport
+                let pattayaWay = currentQuote.pax > 2 ? 2200 : 1900;
+                let interWay = currentQuote.pax > 2 ? 2000 : 1700;
+                transferTotal = pattayaWay + interWay + perWayRate; 
             } else {
-                transferTotal = 1000 + 1000; // Airport to BKK v.v.
+                // Airport Pick-up + Drop-off (v.v.)
+                transferTotal = perWayRate * 2; 
             }
             let transferCostPerPax = transferTotal / currentQuote.pax;
 

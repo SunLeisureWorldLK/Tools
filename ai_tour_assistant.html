@@ -467,13 +467,13 @@ Our Live Master Database Inventory:
 
 PRICING & TRANSFER RULES:
 - Currency Rate: 1 THB = 10.8 LKR.
-- Transfer Basis:
-  * Default: JOIN TRANSFER basis (budget friendly). Arrival & Departure Join Transfers = ~600 THB per way per person.
-  * If requested PRIVATE: 
-    - PAX > 2 (3 or more adults): Private Van Pick-up = 1,200 THB per way, Drop-off = 1,200 THB per way.
-    - PAX <= 2 (1 or 2 adults): Private Sedan Pick-up = 1,000 THB per way, Drop-off = 1,000 THB per way.
-- Customization:
-  * You can customize ANY itinerary request (change hotels, add/remove cities, add tours like Safari World, Dinner Cruise, Floating Market, etc.).
+- Airport Transfers (Pick-up & Drop-off): ALWAYS PRIVATE VEHICLES!
+  * 1-2 Pax (Couples / Singles): Private Sedan Car = 1,000 THB per way (Pick-up = 1,000 THB, Drop-off = 1,000 THB).
+  * 3+ Pax (Families / Groups): Private Van = 1,200 THB per way (Pick-up = 1,200 THB, Drop-off = 1,200 THB).
+  * If Pattaya included: 1-2 Pax Car (1,900 + 1,700 + 1,000 THB) | 3+ Pax Van (2,200 + 2,000 + 1,200 THB).
+- Sightseeing Tours:
+  * Default: JOIN TOUR basis (shared join bus/coach, join prices from master_db).
+  * Option: Can switch to PRIVATE TOUR basis (Private Car / Van for sightseeing tours if requested).
 
 CONVERSATIONAL RULES & TONE:
 1. Speak in a super friendly, welcoming mix of Sinhala and English (Singlish / polite English). Use emojis (🌴, ✈️, 🏨, 🚘, ✨) naturally.
@@ -553,10 +553,10 @@ Be encouraging, fast, helpful, and charming!
         function generateContextualButtons() {
             let btns = `<div class="pt-3 border-t border-gray-100 flex flex-wrap gap-2 text-xs">`;
             
-            if (currentQuote.transferType === 'join') {
-                btns += `<button onclick="sendQuickMessage('Make transfers Private')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 transition font-medium">🚘 Switch to Private Transfers</button>`;
+            if (currentQuote.tourType === 'join') {
+                btns += `<button onclick="sendQuickMessage('Make tours Private')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 transition font-medium">🚘 Switch to Private Tours</button>`;
             } else {
-                btns += `<button onclick="sendQuickMessage('Make transfers Join basis')" class="bg-emerald-50 hover:bg-emerald-100 text-sun-green px-2.5 py-1 rounded-lg border border-emerald-200 transition font-medium">🚌 Switch to Join Transfers</button>`;
+                btns += `<button onclick="sendQuickMessage('Make tours Join basis')" class="bg-emerald-50 hover:bg-emerald-100 text-sun-green px-2.5 py-1 rounded-lg border border-emerald-200 transition font-medium">🚌 Switch to Join Tours</button>`;
             }
 
             if (currentQuote.destination === 'Bangkok & Pattaya') {
@@ -608,11 +608,11 @@ Be encouraging, fast, helpful, and charming!
                 currentQuote.destination = 'Phuket';
             }
 
-            // Transfer Basis (Join vs Private)
-            if (lower.includes('private transfer') || lower.includes('private car') || lower.includes('private van') || lower.includes('pvt')) {
-                currentQuote.transferType = 'private';
-            } else if (lower.includes('join transfer') || lower.includes('join basis') || lower.includes('shared transfer')) {
-                currentQuote.transferType = 'join';
+            // Tour Basis (Join vs Private Tours)
+            if (lower.includes('private tour') || lower.includes('private sightseeing') || lower.includes('pvt tour')) {
+                currentQuote.tourType = 'private';
+            } else if (lower.includes('join tour') || lower.includes('join basis') || lower.includes('shared tour')) {
+                currentQuote.tourType = 'join';
             }
 
             // Guide
@@ -643,15 +643,16 @@ Be encouraging, fast, helpful, and charming!
                     <div class="flex justify-between font-semibold"><span>👥 Travelers:</span> <span class="text-gray-800">${currentQuote.pax} Adults</span></div>
                     <div class="flex justify-between font-semibold"><span>🌙 Duration:</span> <span class="text-gray-800">${currentQuote.nights} Nights / ${currentQuote.nights + 1} Days</span></div>
                     <div class="flex justify-between font-semibold"><span>🏨 Hotel Tier:</span> <span class="text-gray-800">${currentQuote.star}-Star (${hotelName})</span></div>
-                    <div class="flex justify-between font-semibold"><span>🚘 Transfer Basis:</span> <span class="text-indigo-700 capitalize">${currentQuote.transferType} Transfer Basis</span></div>
+                    <div class="flex justify-between font-semibold"><span>🚘 Airport Transfer:</span> <span class="text-indigo-700 font-bold">Private Basis (${currentQuote.pax > 2 ? 'Van 1,200 THB/way' : 'Car 1,000 THB/way'})</span></div>
+                    <div class="flex justify-between font-semibold"><span>🎟️ Tour Basis:</span> <span class="text-amber-700 capitalize">${currentQuote.tourType} Sightseeing</span></div>
                 </div>
                 <p class="text-xs text-gray-700"><strong>🗓️ Suggested Itinerary Plan:</strong></p>
                 <ul class="list-disc pl-4 text-xs space-y-1 text-gray-600">
-                    <li><strong>Day 01:</strong> Arrival at Airport, ${currentQuote.transferType === 'private' ? 'Private' : 'Join'} Transfer to Hotel & Leisure.</li>
+                    <li><strong>Day 01:</strong> Arrival at Airport, Private Transfer to Hotel & Leisure.</li>
                     <li><strong>Day 02:</strong> City & Temple Tour (Marble Temple & Golden Buddha).</li>
-                    <li><strong>Day 03:</strong> Chao Phraya River Dinner Cruise Experience.</li>
+                    <li><strong>Day 03:</strong> Chao Phraya River Dinner Cruise Experience (${currentQuote.tourType === 'private' ? 'Private' : 'Join'} basis).</li>
                     ${currentQuote.nights >= 4 ? `<li><strong>Day 04:</strong> Safari World & Marine Park Full Day Tour with Lunch.</li>` : ''}
-                    <li><strong>Day ${currentQuote.nights + 1}:</strong> Breakfast at Hotel, Free Shopping & Transfer to Airport for Departure.</li>
+                    <li><strong>Day ${currentQuote.nights + 1}:</strong> Breakfast at Hotel, Free Shopping & Private Transfer to Airport for Departure.</li>
                 </ul>
                 <p class="text-xs font-semibold text-sun-green pt-1">👉 දකුණු පසින් Live Price Calculation (LKR / THB) සහ Full Breakdown එක බලන්න!</p>
             `;
@@ -679,41 +680,40 @@ Be encouraging, fast, helpful, and charming!
             // Hotel cost per person twin sharing = (Rate * Nights) / 2
             let hotelCostPerPax = (hotelPricePerNight * currentQuote.nights) / 2;
 
-            // Transfers (Arrival Pick-up & Departure Drop-off)
-            let transferCostPerPax = 0;
-            let transferTitle = 'Airport Transfers';
+            // Airport Transfers: ALWAYS PRIVATE (1,000 THB Car for <=2 pax | 1,200 THB Van for >2 pax per way)
+            let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;
+            let transferTotal = 0;
+            let transferVehicleType = currentQuote.pax > 2 ? 'Private Van' : 'Private Car';
 
-            if (currentQuote.transferType === 'join') {
-                // Join Transfers (Budget Basis: 600 THB per way per pax)
-                if (currentQuote.destination.includes('Pattaya')) {
-                    transferCostPerPax = 600 + 500 + 600;
-                } else {
-                    transferCostPerPax = 600 + 600;
-                }
-                transferTitle = `Join Basis Transfers (${currentQuote.pax} Pax)`;
+            if (currentQuote.destination.includes('Pattaya')) {
+                let pattayaWay = currentQuote.pax > 2 ? 2200 : 1900;
+                let interWay = currentQuote.pax > 2 ? 2000 : 1700;
+                transferTotal = pattayaWay + interWay + perWayRate; 
             } else {
-                // Private Transfers
-                let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;
-                let transferTotal = 0;
-                if (currentQuote.destination.includes('Pattaya')) {
-                    let pattayaWay = currentQuote.pax > 2 ? 2200 : 1900;
-                    let interWay = currentQuote.pax > 2 ? 2000 : 1700;
-                    transferTotal = pattayaWay + interWay + perWayRate; 
-                } else {
-                    transferTotal = perWayRate * 2; 
-                }
-                transferCostPerPax = transferTotal / currentQuote.pax;
-                transferTitle = `Private Transfers (Split / ${currentQuote.pax} Pax)`;
+                transferTotal = perWayRate * 2; // Pick-up + Drop-off
             }
+            let transferCostPerPax = transferTotal / currentQuote.pax;
+            let transferTitle = `Private Transfers (${transferVehicleType} - Split / ${currentQuote.pax} Pax)`;
 
-            // Sample Tours
+            // Sightseeing Tours (Default Join, optional Private)
             let toursCostPerPax = 0;
             let sampleTours = [];
             if (masterDb.tours && masterDb.tours.length > 0) {
                 sampleTours = masterDb.tours.slice(0, 2);
-                toursCostPerPax = sampleTours.reduce((sum, t) => sum + (t.joinPrice || t.ticketOnlyPrice || 800), 0);
+                
+                toursCostPerPax = sampleTours.reduce((sum, t) => {
+                    let cost = 0;
+                    if (currentQuote.tourType === 'private') {
+                        let privTotal = currentQuote.pax > 2 ? (t.privateVanPrice || 2500) : (t.privateCarPrice || 1800);
+                        let ticket = t.ticketOnlyPrice || 400;
+                        cost = (privTotal / currentQuote.pax) + ticket;
+                    } else {
+                        cost = t.joinPrice || t.ticketOnlyPrice || 1000;
+                    }
+                    return sum + cost;
+                }, 0);
             } else {
-                toursCostPerPax = 1150 + 1450; // Cruise + Safari World
+                toursCostPerPax = 1150 + 1450; // Cruise + Safari World Join
             }
 
             // Optional Guide
@@ -745,7 +745,7 @@ Be encouraging, fast, helpful, and charming!
                 <div class="p-2.5 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
                     <div>
                         <strong class="text-sun-blue block">${transferTitle}</strong>
-                        <span class="text-gray-500">${currentQuote.transferType === 'private' ? 'Private Vehicle' : 'Shared Join Bus'}</span>
+                        <span class="text-gray-500">Pick-up & Drop-off (${transferVehicleType})</span>
                     </div>
                     <span class="font-bold text-gray-700">${Math.round(transferCostPerPax)} THB</span>
                 </div>
@@ -764,13 +764,17 @@ Be encouraging, fast, helpful, and charming!
             }
 
             sampleTours.forEach(t => {
+                let tourCost = currentQuote.tourType === 'private' ? 
+                    Math.round(((currentQuote.pax > 2 ? (t.privateVanPrice || 2500) : (t.privateCarPrice || 1800)) / currentQuote.pax) + (t.ticketOnlyPrice || 400)) :
+                    (t.joinPrice || t.ticketOnlyPrice || 1000);
+
                 listHtml += `
                     <div class="p-2.5 bg-amber-50 rounded-lg border border-amber-200 flex justify-between items-center">
                         <div>
-                            <strong class="text-amber-800 block">${t.name}</strong>
+                            <strong class="text-amber-800 block">${t.name} (${currentQuote.tourType === 'private' ? 'Private' : 'Join'})</strong>
                             <span class="text-gray-500">${t.location || 'Bangkok'}</span>
                         </div>
-                        <span class="font-bold text-gray-700">${t.joinPrice || t.ticketOnlyPrice || 1000} THB</span>
+                        <span class="font-bold text-gray-700">${tourCost} THB</span>
                     </div>
                 `;
             });

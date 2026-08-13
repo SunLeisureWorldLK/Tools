@@ -4,7 +4,7 @@
       "name": "Picnic Hotel 3*, Hotel De Bangkok 3*, Tango Vibrant Hotel 3*",
       "location": "Bangkok",
       "star": "3",
-      "price": 1400,
+      "price": 700,
       "mealPrice": 250,
       "id": "h_1786125846056"
     },
@@ -12,7 +12,7 @@
       "name": "Century Park Hotel 4*, De Prime Hotel 4*, Palace Hotel 4*",
       "location": "Bangkok",
       "star": "4",
-      "price": 2600,
+      "price": 1300,
       "mealPrice": 450,
       "id": "h_1786130471098"
     },
@@ -20,7 +20,7 @@
       "name": "Baron Beach Resort 3*, Golden Beach Hotel 3*",
       "location": "Pattaya",
       "star": "3",
-      "price": 1300,
+      "price": 650,
       "mealPrice": 350,
       "id": "h_1786130823962"
     },
@@ -28,7 +28,7 @@
       "name": "Sunbeam Hotel 4*, Grand Bella 4*",
       "location": "Pattaya",
       "star": "4",
-      "price": 2300,
+      "price": 1150,
       "mealPrice": 350,
       "id": "h_1786130852962"
     },
@@ -36,7 +36,7 @@
       "name": "AIM Hotel 3*, Patong Lodge Hotel 3*, Ibis Phuket Patong 3*",
       "location": "Phuket",
       "star": "3",
-      "price": 1600,
+      "price": 800,
       "mealPrice": 250,
       "id": "h_1786131704857"
     },
@@ -44,7 +44,7 @@
       "name": "Sleep With Me Hotel 4*, Andakira Hotel 4*, Citrus Patong 4*",
       "location": "Phuket",
       "star": "4",
-      "price": 2600,
+      "price": 1300,
       "mealPrice": 350,
       "id": "h_1786131731353"
     }

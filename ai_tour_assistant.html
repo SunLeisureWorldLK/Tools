@@ -779,53 +779,148 @@ Be the best travel consultant in Sri Lanka! 🌟
             document.getElementById('finalPriceLKR').innerText = `LKR ${finalLKR.toLocaleString()}`;
             document.getElementById('finalPriceUSD').innerText = `($${finalUSD} USD / ${Math.round(finalTHB)} THB)`;
 
-            // Render Services List
+            // Build full day-by-day itinerary for right panel
+            const hotelName = matchHotels[0]?.name?.split(',')[0]?.trim() || `${currentQuote.star}-Star Hotel`;
+            const vehicle = transferVehicleType;
+
+            // Filter tours relevant to destination
+            const destLower = currentQuote.destination.toLowerCase();
+            const relevantTours = masterDb.tours.filter(t => {
+                const loc = (t.location || '').toLowerCase();
+                if (destLower.includes('phuket')) return loc.includes('phuket') || loc.includes('krabi');
+                if (destLower.includes('pattaya')) return loc.includes('pattaya') || loc.includes('bangkok');
+                if (destLower.includes('chiang')) return loc.includes('chiang');
+                return loc.includes('bangkok') || loc === '';
+            }).filter(t => t.joinPrice > 0 || t.ticketOnlyPrice > 0);
+
+            // Pick best tours — 1 per activity day
+            const activityDays = Math.max(1, currentQuote.nights - 1);
+            const pickedTours = relevantTours.slice(0, activityDays);
+
+            // Calculate tour cost from picked tours
+            toursCostPerPax = pickedTours.reduce((sum, t) => {
+                if (currentQuote.tourType === 'private') {
+                    let privTotal = currentQuote.pax > 2 ? (t.privateVanPrice || 2500) : (t.privateCarPrice || 1800);
+                    return sum + (privTotal / currentQuote.pax) + (t.ticketOnlyPrice || 400);
+                }
+                return sum + (t.joinPrice || t.ticketOnlyPrice || 1000);
+            }, 0);
+
+            // Recalculate totals with corrected tour cost
+            subtotalTHB = hotelCostPerPax + transferCostPerPax + toursCostPerPax + guideCostPerPax;
+            finalTHB = subtotalTHB * 1.25;
+            rawLKR = finalTHB * currentQuote.lkrRate;
+            roundedLKR = Math.ceil(rawLKR / 100) * 100;
+            finalLKR = roundedLKR + 1000;
+            finalUSD = Math.round(finalTHB / currentQuote.usdRate);
+
+            // Update totals DOM again after correction
+            document.getElementById('costTours').innerText = `${Math.round(toursCostPerPax)} THB`;
+            document.getElementById('costSubtotal').innerText = `${Math.round(subtotalTHB)} THB`;
+            document.getElementById('finalPriceLKR').innerText = `LKR ${finalLKR.toLocaleString()}`;
+            document.getElementById('finalPriceUSD').innerText = `($${finalUSD} USD / ${Math.round(finalTHB)} THB)`;
+
+            // ─── ITINERARY HEADER ───────────────────────────────────────────
             let listHtml = `
-                <div class="p-2.5 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center">
-                    <div>
-                        <strong class="text-sun-green block">${currentQuote.star}-Star Hotel (${currentQuote.nights} Nights)</strong>
-                        <span class="text-gray-500">${matchHotels[0]?.name || 'Picnic Hotel / Similar'}</span>
+                <div class="mb-3">
+                    <div class="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-2 rounded-lg text-center font-bold text-sm shadow">
+                        📋 ${currentQuote.nights}N ${currentQuote.nights + 1}D ${currentQuote.destination} Tour — ${currentQuote.pax} Pax
                     </div>
-                    <span class="font-bold text-gray-700">${Math.round(hotelCostPerPax)} THB</span>
-                </div>
-                <div class="p-2.5 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
-                    <div>
-                        <strong class="text-sun-blue block">${transferTitle}</strong>
-                        <span class="text-gray-500">Pick-up & Drop-off (${transferVehicleType})</span>
-                    </div>
-                    <span class="font-bold text-gray-700">${Math.round(transferCostPerPax)} THB</span>
-                </div>
-            `;
+                </div>`;
 
-            if (currentQuote.includeGuide) {
+            // ─── DAY 1: ARRIVAL ────────────────────────────────────────────
+            listHtml += `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-2.5 mb-2">
+                    <div class="flex items-center gap-1.5 font-bold text-blue-800 text-xs mb-1.5">
+                        <span class="bg-blue-600 text-white rounded px-1.5 py-0.5">Day 01</span>
+                        <span>Arrival Day</span>
+                        <span class="ml-auto text-gray-400 font-normal">(--/--/--)</span>
+                    </div>
+                    <div class="text-xs text-gray-700 space-y-1">
+                        <div class="flex items-start gap-1.5">🚗 <span>Arrival at Airport → Private Transfer to Hotel<br><span class="text-gray-400">${vehicle} Basis</span></span></div>
+                        <div class="flex items-start gap-1.5">🏨 <span>02:00 PM Check-in at <strong>${hotelName} ${currentQuote.star}★</strong></span></div>
+                        <div class="flex items-start gap-1.5">🌙 <span>Overnight at Hotel</span></div>
+                    </div>
+                </div>`;
+
+            // ─── ACTIVITY DAYS ─────────────────────────────────────────────
+            const mealMap = { 0: '(--/--/--)', 1: '(B/L/--)', 2: '(B/L/--)', 3: '(B/--/--)' };
+            pickedTours.forEach((t, i) => {
+                const dayNum = String(i + 2).padStart(2, '0');
+                const tourBasis = currentQuote.tourType === 'private' ? 'Private' : 'Join';
+                const tourCost = currentQuote.tourType === 'private'
+                    ? Math.round(((currentQuote.pax > 2 ? (t.privateVanPrice || 2500) : (t.privateCarPrice || 1800)) / currentQuote.pax) + (t.ticketOnlyPrice || 400))
+                    : (t.joinPrice || t.ticketOnlyPrice || 1000);
+                const meal = t.joinPrice > 0 ? '(B/L/--)' : '(B/--/--)';
                 listHtml += `
-                    <div class="p-2.5 bg-purple-50 rounded-lg border border-purple-200 flex justify-between items-center">
-                        <div>
-                            <strong class="text-purple-800 block">English Speaking Tour Guide</strong>
-                            <span class="text-gray-500">1,500 THB Total (Split / Pax)</span>
-                        </div>
-                        <span class="font-bold text-gray-700">${Math.round(guideCostPerPax)} THB</span>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-2">
+                    <div class="flex items-center gap-1.5 font-bold text-amber-800 text-xs mb-1.5">
+                        <span class="bg-amber-500 text-white rounded px-1.5 py-0.5">Day ${dayNum}</span>
+                        <span class="truncate">${t.name}</span>
+                        <span class="ml-auto text-gray-400 font-normal shrink-0">${meal}</span>
                     </div>
-                `;
-            }
-
-            sampleTours.forEach(t => {
-                let tourCost = currentQuote.tourType === 'private' ? 
-                    Math.round(((currentQuote.pax > 2 ? (t.privateVanPrice || 2500) : (t.privateCarPrice || 1800)) / currentQuote.pax) + (t.ticketOnlyPrice || 400)) :
-                    (t.joinPrice || t.ticketOnlyPrice || 1000);
-
-                listHtml += `
-                    <div class="p-2.5 bg-amber-50 rounded-lg border border-amber-200 flex justify-between items-center">
-                        <div>
-                            <strong class="text-amber-800 block">${t.name} (${currentQuote.tourType === 'private' ? 'Private' : 'Join'})</strong>
-                            <span class="text-gray-500">${t.location || 'Bangkok'}</span>
-                        </div>
-                        <span class="font-bold text-gray-700">${tourCost} THB</span>
+                    <div class="text-xs text-gray-700 space-y-1">
+                        <div class="flex items-start gap-1.5">🍳 <span>Breakfast at Hotel</span></div>
+                        <div class="flex items-start gap-1.5">🚌 <span><strong>${t.name}</strong><br><span class="text-gray-400">${tourBasis} Transfer Basis — <strong class="text-amber-700">${tourCost} THB/pax</strong></span></span></div>
+                        <div class="flex items-start gap-1.5">🌙 <span>Overnight at Hotel</span></div>
                     </div>
-                `;
+                </div>`;
             });
 
+            // ─── DEPARTURE DAY ─────────────────────────────────────────────
+            const lastDay = String(currentQuote.nights + 1).padStart(2, '0');
+            listHtml += `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-2.5 mb-2">
+                    <div class="flex items-center gap-1.5 font-bold text-red-700 text-xs mb-1.5">
+                        <span class="bg-red-500 text-white rounded px-1.5 py-0.5">Day ${lastDay}</span>
+                        <span>Departure Day</span>
+                        <span class="ml-auto text-gray-400 font-normal">(B/--/--)</span>
+                    </div>
+                    <div class="text-xs text-gray-700 space-y-1">
+                        <div class="flex items-start gap-1.5">🍳 <span>Breakfast at Hotel</span></div>
+                        <div class="flex items-start gap-1.5">🕛 <span>12:00 PM – Check-out from Hotel</span></div>
+                        <div class="flex items-start gap-1.5">🚗 <span>Private Transfer to Airport (${vehicle} Basis)</span></div>
+                        <div class="flex items-start gap-1.5">✈️ <span><strong>Tour End!</strong></span></div>
+                    </div>
+                </div>`;
+
+            // ─── HOTEL OPTIONS ─────────────────────────────────────────────
+            const h3 = masterDb.hotels.find(h => parseInt(h.star) === 3 && (h.location||'').toLowerCase().includes(destLower.split(' ')[0]));
+            const h4 = masterDb.hotels.find(h => parseInt(h.star) === 4 && (h.location||'').toLowerCase().includes(destLower.split(' ')[0]));
+            const h5 = masterDb.hotels.find(h => parseInt(h.star) === 5 && (h.location||'').toLowerCase().includes(destLower.split(' ')[0]));
+            listHtml += `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-2.5 mb-2">
+                    <div class="font-bold text-gray-700 text-xs mb-1.5">🏨 Hotel Options (Twin Sharing)</div>
+                    <div class="text-xs text-gray-600 space-y-0.5">
+                        ${h3 ? `<div>⭐⭐⭐ ${h3.name.split(',')[0].trim()}</div>` : ''}
+                        ${h4 ? `<div>⭐⭐⭐⭐ ${h4.name.split(',')[0].trim()}</div>` : ''}
+                        ${h5 ? `<div>⭐⭐⭐⭐⭐ ${h5.name.split(',')[0].trim()}</div>` : ''}
+                    </div>
+                </div>`;
+
+            // ─── INCLUDES / EXCLUDES ────────────────────────────────────────
+            listHtml += `
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-2">
+                        <div class="font-bold text-green-700 mb-1">✅ Includes</div>
+                        <ul class="text-gray-600 space-y-0.5 list-none">
+                            <li>• Private Airport Transfers</li>
+                            <li>• Hotel (${currentQuote.nights}N, Twin, B/F)</li>
+                            <li>• Sightseeing (${currentQuote.tourType === 'private' ? 'Private' : 'Join'} Basis)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-2">
+                        <div class="font-bold text-red-700 mb-1">⚠️ Excludes</div>
+                        <ul class="text-gray-600 space-y-0.5 list-none">
+                            <li>• International Flights</li>
+                            <li>• Personal Expenses</li>
+                            <li>• Tips & Gratuities</li>
+                        </ul>
+                    </div>
+                </div>`;
+
             document.getElementById('includedServicesList').innerHTML = listHtml;
+
         }
 
         function resetChat() {

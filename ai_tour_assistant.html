@@ -677,8 +677,8 @@ Be encouraging, fast, helpful, and charming!
             const matchHotels = masterDb.hotels.filter(h => parseInt(h.star) === currentQuote.star);
             let hotelPricePerNight = matchHotels.length > 0 ? matchHotels[0].price : 1400;
 
-            // Hotel cost per person twin sharing = Rate per pax per night * Nights
-            let hotelCostPerPax = hotelPricePerNight * currentQuote.nights;
+            // Hotel cost per person twin sharing = (Rate per room per night / 2) * Nights
+            let hotelCostPerPax = (hotelPricePerNight / 2) * currentQuote.nights;
 
             // Airport Transfers: ALWAYS PRIVATE (1,000 THB Car for <=2 pax | 1,200 THB Van for >2 pax per way)
             let perWayRate = currentQuote.pax > 2 ? 1200 : 1000;

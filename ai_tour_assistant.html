@@ -756,8 +756,10 @@ Be the best travel consultant in Sri Lanka! 🌟
         }
 
         function formatMarkdownText(text) {
+            // Replace literal '\n' string with actual newline if API returns it
+            text = text.replace(/\\n/g, '\n');
             if (typeof marked !== 'undefined') {
-                return marked.parse(text);
+                return marked.parse(text, { breaks: true });
             }
             return text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

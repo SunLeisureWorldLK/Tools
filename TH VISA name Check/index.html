@@ -525,56 +525,102 @@
         }
 
         /* PDF Preview Canvas Container */
+        .pdf-viewer-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #1e293b;
+        }
+
         .pdf-canvas-wrapper {
             flex: 1;
             overflow: auto;
-            background: #334155;
+            background: #1e293b;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 12px;
-            position: relative;
+            padding: 16px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .pdf-canvas-wrapper.dragging {
+            cursor: grabbing;
         }
 
         #pdf-render {
-            max-width: 100%;
-            height: auto;
+            max-width: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             border-radius: 4px;
             background: #ffffff;
+            transition: box-shadow 0.2s ease;
         }
 
+        /* Floating Zoom & Rotate Toolbar (Passport Scanner Design) */
         .canvas-toolbar {
             position: absolute;
-            bottom: 14px;
-            right: 14px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(4px);
-            padding: 4px 8px;
-            border-radius: 20px;
+            top: 10px;
+            right: 12px;
+            z-index: 25;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            padding: 4px 6px;
+            border-radius: 8px;
             display: flex;
-            gap: 6px;
+            gap: 4px;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .canvas-toolbar-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 2px;
         }
 
         .canvas-btn {
-            background: transparent;
-            color: white;
-            border: none;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            transition: all 0.15s ease;
         }
 
         .canvas-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: #2563eb;
+            border-color: #3b82f6;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .canvas-btn:active {
+            transform: translateY(0);
+            background: #1d4ed8;
+        }
+
+        .canvas-btn .material-icons {
+            font-size: 19px;
+            line-height: 1;
+        }
+
+        .canvas-zoom-badge {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0 6px;
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 42px;
+            text-align: center;
         }
 
         /* Loader */
@@ -682,19 +728,36 @@
                 </div>
             </div>
 
-            <!-- PDF Canvas Preview -->
-            <div class="pdf-canvas-wrapper" id="pdf-wrapper">
-                <div id="pdf-placeholder" style="color:#94a3b8; text-align:center; margin-top:40%; font-size:0.88rem;">
-                    <i class="fa-solid fa-file-pdf" style="font-size:2.5rem; color:#475569; margin-bottom:10px; display:block;"></i>
-                    Thai e-Visa PDF will be previewed here
-                </div>
-                <canvas id="pdf-render" style="display:none;"></canvas>
-
-                <!-- Floating Zoom Controls -->
+            <!-- PDF Viewer Container with Floating Toolbar -->
+            <div class="pdf-viewer-container">
+                <!-- Floating Zoom & Rotate Controls (Passport Scanner Style) -->
                 <div class="canvas-toolbar" id="canvas-toolbar" style="display:none;">
-                    <button class="canvas-btn" id="btn-zoom-out" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
-                    <button class="canvas-btn" id="btn-zoom-reset" title="Fit to Column"><i class="fa-solid fa-arrows-to-dot"></i></button>
-                    <button class="canvas-btn" id="btn-zoom-in" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                    <button class="canvas-btn" id="btn-rotate-left" title="Rotate Left (-90°)">
+                        <span class="material-icons">rotate_left</span>
+                    </button>
+                    <button class="canvas-btn" id="btn-rotate-right" title="Rotate Right (+90°)">
+                        <span class="material-icons">rotate_right</span>
+                    </button>
+                    <div class="canvas-toolbar-divider"></div>
+                    <button class="canvas-btn" id="btn-zoom-in" title="Zoom In (+)">
+                        <span class="material-icons">zoom_in</span>
+                    </button>
+                    <button class="canvas-btn" id="btn-zoom-out" title="Zoom Out (-)">
+                        <span class="material-icons">zoom_out</span>
+                    </button>
+                    <button class="canvas-btn" id="btn-zoom-reset" title="Fit to Column / Reset">
+                        <span class="material-icons">fit_screen</span>
+                    </button>
+                    <span id="canvas-zoom-badge" class="canvas-zoom-badge">100%</span>
+                </div>
+
+                <!-- Scrollable & Draggable PDF Canvas Container -->
+                <div class="pdf-canvas-wrapper" id="pdf-wrapper">
+                    <div id="pdf-placeholder" style="color:#94a3b8; text-align:center; margin-top:40%; font-size:0.88rem;">
+                        <i class="fa-solid fa-file-pdf" style="font-size:2.5rem; color:#475569; margin-bottom:10px; display:block;"></i>
+                        Thai e-Visa PDF will be previewed here
+                    </div>
+                    <canvas id="pdf-render" style="display:none;"></canvas>
                 </div>
             </div>
         </div>
@@ -734,6 +797,7 @@
         let activePreviewVisaId = null;
         let currentRenderTask = null;
         let currentPdfZoom = 1.0;
+        let currentPdfRotation = 0; // 0, 90, 180, 270
         let selectedPassengerIdx = 0;
         let loggedEventKeys = new Set(); // Prevent duplicate Firestore logging
 
@@ -815,21 +879,105 @@
             }
         });
 
-        // Zoom Controls
-        document.getElementById('btn-zoom-in').addEventListener('click', () => {
-            currentPdfZoom += 0.15;
+        // Zoom and Rotation Control Functions (Matching Passport Scanner)
+        function rotatePdf(degDelta) {
+            currentPdfRotation = (currentPdfRotation + degDelta + 360) % 360;
             renderActivePdf();
-        });
-        document.getElementById('btn-zoom-out').addEventListener('click', () => {
-            if (currentPdfZoom > 0.4) {
-                currentPdfZoom -= 0.15;
+        }
+
+        function zoomPdf(zoomDelta) {
+            const targetZoom = Math.round((currentPdfZoom + zoomDelta) * 100) / 100;
+            if (targetZoom >= 0.4 && targetZoom <= 4.0) {
+                currentPdfZoom = targetZoom;
                 renderActivePdf();
             }
-        });
-        document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+        }
+
+        function resetPdfView() {
             currentPdfZoom = 1.0;
+            currentPdfRotation = 0;
             renderActivePdf();
-        });
+            const wrapper = document.getElementById('pdf-wrapper');
+            if (wrapper) {
+                wrapper.scrollTop = 0;
+                wrapper.scrollLeft = 0;
+            }
+        }
+
+        document.getElementById('btn-rotate-left').addEventListener('click', () => rotatePdf(-90));
+        document.getElementById('btn-rotate-right').addEventListener('click', () => rotatePdf(90));
+        document.getElementById('btn-zoom-in').addEventListener('click', () => zoomPdf(0.2));
+        document.getElementById('btn-zoom-out').addEventListener('click', () => zoomPdf(-0.2));
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => resetPdfView());
+
+        // Mouse and Touch Drag-to-Pan on PDF Canvas
+        let isPdfDragging = false;
+        let pdfStartX = 0, pdfStartY = 0;
+        let pdfScrollLeft = 0, pdfScrollTop = 0;
+
+        const pdfWrapper = document.getElementById('pdf-wrapper');
+        if (pdfWrapper) {
+            pdfWrapper.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.canvas-toolbar') || e.target.closest('button')) return;
+                isPdfDragging = true;
+                pdfStartX = e.clientX;
+                pdfStartY = e.clientY;
+                pdfScrollLeft = pdfWrapper.scrollLeft;
+                pdfScrollTop = pdfWrapper.scrollTop;
+                pdfWrapper.classList.add('dragging');
+                e.preventDefault();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isPdfDragging) {
+                    isPdfDragging = false;
+                    if (pdfWrapper) pdfWrapper.classList.remove('dragging');
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isPdfDragging || !pdfWrapper) return;
+                const dx = e.clientX - pdfStartX;
+                const dy = e.clientY - pdfStartY;
+                pdfWrapper.scrollLeft = pdfScrollLeft - dx;
+                pdfWrapper.scrollTop = pdfScrollTop - dy;
+            });
+
+            // Touch drag support
+            pdfWrapper.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1 && !e.target.closest('.canvas-toolbar')) {
+                    isPdfDragging = true;
+                    pdfStartX = e.touches[0].clientX;
+                    pdfStartY = e.touches[0].clientY;
+                    pdfScrollLeft = pdfWrapper.scrollLeft;
+                    pdfScrollTop = pdfWrapper.scrollTop;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => {
+                isPdfDragging = false;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isPdfDragging || !pdfWrapper || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - pdfStartX;
+                const dy = e.touches[0].clientY - pdfStartY;
+                pdfWrapper.scrollLeft = pdfScrollLeft - dx;
+                pdfWrapper.scrollTop = pdfScrollTop - dy;
+            });
+
+            // Mouse wheel zoom when Ctrl is held
+            pdfWrapper.addEventListener('wheel', (e) => {
+                if (activePreviewVisaId && e.ctrlKey) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        zoomPdf(0.15);
+                    } else {
+                        zoomPdf(-0.15);
+                    }
+                }
+            }, { passive: false });
+        }
 
         // Batch PDF File Processor
         async function processVisaFiles(files) {
@@ -924,6 +1072,8 @@
                 try { currentRenderTask.cancel(); } catch(e) {}
                 currentRenderTask = null;
             }
+            currentPdfZoom = 1.0;
+            currentPdfRotation = 0;
             renderVisaBar();
             document.getElementById('pdf-placeholder').style.display = 'block';
             document.getElementById('pdf-render').style.display = 'none';
@@ -996,13 +1146,13 @@
             try {
                 const page1 = await visaItem.pdfDoc.getPage(1);
                 
-                // Calculate scale to fit wrapper width cleanly
-                const containerWidth = Math.max(280, wrapper.clientWidth - 28);
-                const unscaledViewport = page1.getViewport({ scale: 1.0 });
+                // Calculate scale to fit wrapper width cleanly with rotation support
+                const containerWidth = Math.max(280, wrapper.clientWidth - 32);
+                const unscaledViewport = page1.getViewport({ scale: 1.0, rotation: currentPdfRotation });
                 const baseScale = containerWidth / unscaledViewport.width;
                 const effectiveScale = baseScale * currentPdfZoom;
 
-                const viewport = page1.getViewport({ scale: effectiveScale });
+                const viewport = page1.getViewport({ scale: effectiveScale, rotation: currentPdfRotation });
                 const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
@@ -1017,7 +1167,14 @@
                 canvas.style.display = 'block';
                 placeholder.style.display = 'none';
                 toolbar.style.display = 'flex';
-                pageInfo.textContent = `${visaItem.numPages} Page(s) • ${Math.round(currentPdfZoom * 100)}%`;
+                
+                const rotText = currentPdfRotation !== 0 ? ` • ${currentPdfRotation}°` : '';
+                pageInfo.textContent = `${visaItem.numPages} Page(s) • ${Math.round(currentPdfZoom * 100)}%${rotText}`;
+                const zoomBadge = document.getElementById('canvas-zoom-badge');
+                if (zoomBadge) {
+                    zoomBadge.textContent = `${Math.round(currentPdfZoom * 100)}%`;
+                    zoomBadge.title = `Zoom: ${Math.round(currentPdfZoom * 100)}% | Rotation: ${currentPdfRotation}°`;
+                }
 
             } catch (err) {
                 if (err && err.name !== 'RenderingCancelledException') {

@@ -101,7 +101,7 @@
         .upload-section {
             border: 2px dashed #007bff;
             border-radius: 8px;
-            padding: 30px;
+            padding: 24px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -167,86 +167,183 @@
             padding: 20px;
             margin-bottom: 20px;
             display: none;
+            border: 1px solid #e2e8f0;
         }
 
         .results-section h2 {
             margin-top: 0;
-            color: #333;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            font-size: 1.25rem;
+            color: #1a2a3a;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 12px;
+            font-size: 1.3rem;
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Verification Outcome Banners */
+        .banner-match {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            padding: 14px 18px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .banner-mismatch {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            padding: 14px 18px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* Comparison Field Cards */
+        .comparison-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .comparison-card.is-match {
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+        }
+
+        .comparison-card.is-error {
+            background: #fef2f2;
+            border: 1.5px solid #fca5a5;
+        }
+
+        .field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+
+        .field-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #475569;
+        }
+
+        .field-badge {
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .field-badge.badge-match {
+            background: #22c55e;
+            color: #ffffff;
+        }
+
+        .field-badge.badge-err {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .val-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 8px 14px;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .val-label {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
+
+        /* Fully matched name highlight (Green) */
+        .name-highlight-green {
+            background: #dcfce7;
+            color: #15803d;
+            border: 2px solid #22c55e;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
         }
 
-        .match-card {
-            background: #f9f9f9;
+        /* Character-by-character diff container */
+        .char-diff-container {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            padding: 6px 10px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid #ddd;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.15rem;
         }
 
-        .match-card.success {
-            border-left-color: #28a745;
-            background: #f0fdf4;
+        /* Matched character */
+        .char-ok {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border-bottom: 3px solid #22c55e;
         }
 
-        .match-card.error {
-            border-left-color: #dc3545;
-            background: #fef2f2;
-        }
-        
-        .match-card.pending {
-            border-left-color: #ffc107;
-            background: #fffbeb;
-        }
-
-        .match-card h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.1rem;
-            color: #333;
+        /* Mismatched / Wrong character with top red indicator */
+        .char-err {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid #ef4444;
+            border-bottom: 3px solid #dc2626;
+            position: relative;
+            box-shadow: 0 0 6px rgba(220, 38, 38, 0.35);
         }
 
-        .detail-row {
-            display: flex;
-            margin-bottom: 5px;
-            font-size: 0.95rem;
+        .char-err::before {
+            content: '▼';
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            color: #dc2626;
+            line-height: 1;
         }
 
-        .detail-label {
-            font-weight: bold;
-            width: 140px;
-            color: #666;
-        }
-
-        .detail-value {
-            color: #222;
-        }
-        
-        .status-badge {
+        .char-space {
+            width: 8px;
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-bottom: 10px;
         }
 
-        .success .status-badge {
-            background: #28a745;
-            color: white;
-        }
-
-        .error .status-badge {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .pending .status-badge {
-            background: #ffc107;
-            color: #333;
+        .match-card.pending {
+            border-left: 5px solid #ffc107;
+            background: #fffbeb;
+            padding: 16px;
+            border-radius: 6px;
         }
         
         .pdf-canvas-container {
@@ -353,13 +450,18 @@
                 <p id="loader-text">Reading &amp; Analyzing Visa PDF...</p>
             </div>
 
+            <!-- Verification Results -->
             <div class="results-section" id="results-section">
-                <h2><i class="fa-solid fa-clipboard-check"></i> Verification Results</h2>
+                <h2>
+                    <span><i class="fa-solid fa-spell-check" style="color:#007bff; margin-right:8px;"></i> Name Verification Comparison</span>
+                    <span id="overall-status-badge" style="font-size:0.85rem;"></span>
+                </h2>
                 <div id="results-container">
-                    <!-- Results will be injected here -->
+                    <!-- Dynamic comparison cards inserted here -->
                 </div>
             </div>
             
+            <!-- PDF Canvas Preview -->
             <div class="pdf-canvas-container" id="pdf-container">
                 <div class="pdf-canvas-header">
                     <i class="fa-solid fa-eye"></i> Visa Document Preview
@@ -381,7 +483,6 @@
                 passportData = event.data.data || [];
                 console.log("Received Passport Data from Scanner:", passportData);
                 
-                // If PDF text is already extracted, run validation again
                 if (extractedPdfText) {
                     validateNames();
                 } else {
@@ -400,9 +501,7 @@
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loader-text');
 
-        // Click zone to open file dialog
         uploadZone.addEventListener('click', (e) => {
-            // Don't trigger if clicked change button directly
             if (e.target.closest('#btn-reupload')) return;
             fileInput.click();
         });
@@ -412,7 +511,6 @@
             fileInput.click();
         });
 
-        // Drag & Drop
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadZone.classList.add('dragover');
@@ -450,7 +548,6 @@
                 return;
             }
 
-            // Update Upload Zone UI immediately to show user something is happening
             currentLoadedFileName = file.name;
             uploadPrompt.style.display = 'none';
             uploadSuccessContent.style.display = 'flex';
@@ -465,27 +562,23 @@
             extractedPdfText = "";
 
             try {
-                // 1. Read binary data directly into ArrayBuffer (identical to passport-scanner)
                 const arrayBuffer = await file.arrayBuffer();
-                
                 loaderText.textContent = 'Extracting text & rendering preview...';
                 
-                // 2. Load PDF document
                 const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
                 console.log("PDF loaded successfully. Number of pages:", pdf.numPages);
 
-                // 3. Extract text sequentially from all pages
                 let fullText = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(" ");
-                    fullText += pageText + " ";
+                    fullText += pageText + " \n ";
                 }
                 extractedPdfText = fullText.toUpperCase();
-                console.log("Extracted PDF text characters:", extractedPdfText.length);
+                console.log("Extracted PDF text length:", extractedPdfText.length);
 
-                // 4. Render Page 1 Preview
+                // Render Preview Canvas
                 try {
                     const page1 = await pdf.getPage(1);
                     const viewport = page1.getViewport({ scale: 1.2 });
@@ -501,14 +594,13 @@
 
                     document.getElementById('pdf-container').style.display = 'block';
                 } catch (renderErr) {
-                    console.warn("Could not render page preview, but text was extracted:", renderErr);
+                    console.warn("Preview render warning:", renderErr);
                 }
 
-                // 5. Update Status
                 uploadedMeta.textContent = '✓ ' + (file.size / 1024).toFixed(1) + ' KB • ' + pdf.numPages + ' Page(s) • Ready';
                 loader.style.display = 'none';
 
-                // 6. Run comparison / validation
+                // Run verification
                 validateNames();
 
             } catch (err) {
@@ -518,7 +610,6 @@
                 uploadSuccessContent.style.display = 'none';
                 uploadZone.classList.remove('loaded');
             } finally {
-                // Reset input value so re-selecting same file works
                 fileInput.value = '';
             }
         }
@@ -528,10 +619,9 @@
             document.getElementById('results-section').style.display = 'block';
             const container = document.getElementById('results-container');
             container.innerHTML = `
-                <div class="match-card error">
-                    <span class="status-badge">Error</span>
-                    <h3>Processing Failed</h3>
-                    <p style="margin:0; color:#c53030;">${message}</p>
+                <div style="background:#fef2f2; border:1.5px solid #dc3545; border-radius:8px; padding:16px; color:#991b1b;">
+                    <h3 style="margin:0 0 6px 0;"><i class="fa-solid fa-circle-exclamation"></i> Processing Failed</h3>
+                    <p style="margin:0;">${message}</p>
                 </div>
             `;
         }
@@ -541,93 +631,323 @@
             const container = document.getElementById('results-container');
             container.innerHTML = `
                 <div class="match-card pending">
-                    <span class="status-badge">Awaiting PDF</span>
-                    <h3>Passport Data Received</h3>
-                    <p>Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the Thai VISA PDF on the right to compare.</p>
+                    <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-clock"></i> Passport Data Received</h3>
+                    <p style="margin:0; color:#713f12;">Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the Thai VISA PDF on the right to compare.</p>
                 </div>
             `;
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        // Parse structured Thai e-Visa data fields
+        function parseThaiVisaDetails(rawText) {
+            const text = (rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            const getField = (patterns) => {
+                for (const p of patterns) {
+                    const m = text.match(p);
+                    if (m && m[1] && m[1].trim()) {
+                        return m[1].trim().toUpperCase();
+                    }
+                }
+                return '';
+            };
+
+            const firstName = getField([
+                /First\s*name\s*:\s*([^\n\r]+?)(?=\s*(?:Middle\s*name|Family\s*name|Sex|Date|$))/i,
+                /First\s*name\s*:\s*([A-Z\s]+)/i
+            ]);
+
+            const middleName = getField([
+                /Middle\s*name\s*:\s*([^\n\r]+?)(?=\s*(?:Family\s*name|First\s*name|Sex|Date|$))/i,
+                /Middle\s*name\s*:\s*([A-Z\s]+)/i
+            ]);
+
+            const familyName = getField([
+                /Family\s*name\s*:\s*([^\n\r]+?)(?=\s*(?:Sex|Date\s*of\s*birth|Nationality|$))/i,
+                /Family\s*name\s*:\s*([A-Z\s]+)/i
+            ]);
+
+            const passportNo = getField([
+                /Passport\s*\/\s*TD\s*number\s*:\s*([A-Z0-9]+)/i,
+                /Passport\s*number\s*:\s*([A-Z0-9]+)/i
+            ]);
+
+            const givenNames = [firstName, middleName].filter(Boolean).join(' ').trim();
+            const fullName = [firstName, middleName, familyName].filter(Boolean).join(' ').trim();
+
+            return {
+                firstName,
+                middleName,
+                familyName,
+                passportNo,
+                givenNames,
+                fullName,
+                hasStructuredData: !!(firstName || familyName)
+            };
+        }
+
+        // Compare two names character by character and return visual diff HTML
+        function compareAndRenderName(expectedStr, actualStr) {
+            const exp = (expectedStr || '').toUpperCase().trim();
+            const act = (actualStr || '').toUpperCase().trim();
+
+            if (!exp && !act) {
+                return { isMatch: true, html: `<span style="color:#64748b;">Not Specified</span>`, notes: '' };
+            }
+
+            const expNoSpace = exp.replace(/\s+/g, '');
+            const actNoSpace = act.replace(/\s+/g, '');
+
+            // 1. Full 100% Match (including normalizing any PDF font kerning spaces)
+            if (expNoSpace === actNoSpace) {
+                return {
+                    isMatch: true,
+                    html: `
+                        <div class="name-highlight-green">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>${escapeHtml(act || exp)}</span>
+                        </div>
+                    `,
+                    notes: exp === act ? 'Exact 100% Match' : 'Match (Spacing normalized)'
+                };
+            }
+
+            // 2. Character-level diff using LCS alignment
+            const m = exp.length;
+            const n = act.length;
+            const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (exp[i - 1] === act[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+
+            let i = m, j = n;
+            const diffChars = [];
+
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && exp[i - 1] === act[j - 1]) {
+                    diffChars.unshift({ char: act[j - 1], type: 'ok' });
+                    i--;
+                    j--;
+                } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+                    // Extra/wrong letter in Visa
+                    diffChars.unshift({ char: act[j - 1], type: 'err', expected: i > 0 ? exp[i - 1] : '' });
+                    j--;
+                } else if (i > 0) {
+                    // Missing letter in Visa that was in Passport
+                    diffChars.unshift({ char: exp[i - 1], type: 'missing' });
+                    i--;
+                }
+            }
+
+            const diffHtml = diffChars.map(item => {
+                if (item.char === ' ') {
+                    return `<span class="char-space"></span>`;
+                }
+                if (item.type === 'ok') {
+                    return `<span class="char-ok">${escapeHtml(item.char)}</span>`;
+                }
+                if (item.type === 'err') {
+                    return `<span class="char-err" title="Mismatched letter in Visa">${escapeHtml(item.char)}</span>`;
+                }
+                if (item.type === 'missing') {
+                    return `<span class="char-err" style="background:#fee2e2; border-style:dashed;" title="Missing letter from passport">${escapeHtml(item.char)}</span>`;
+                }
+                return escapeHtml(item.char);
+            }).join('');
+
+            return {
+                isMatch: false,
+                html: `
+                    <div>
+                        <div class="char-diff-container">${diffHtml}</div>
+                        <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Letters marked with red do not match Passport
+                        </div>
+                    </div>
+                `,
+                notes: 'Letter spelling mismatch detected'
+            };
         }
 
         function validateNames() {
             document.getElementById('results-section').style.display = 'block';
             const container = document.getElementById('results-container');
+            const overallBadge = document.getElementById('overall-status-badge');
             container.innerHTML = '';
             
             if (passportData.length === 0) {
+                overallBadge.innerHTML = `<span class="field-badge badge-match" style="background:#f59e0b;">Awaiting Passport</span>`;
                 container.innerHTML = `
                     <div class="match-card pending">
-                        <span class="status-badge">Awaiting Passport</span>
-                        <h3>✓ Visa PDF Loaded: ${currentLoadedFileName}</h3>
-                        <p>Visa text extracted successfully. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
+                        <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-check"></i> Visa PDF Loaded: ${escapeHtml(currentLoadedFileName)}</h3>
+                        <p style="margin:0; color:#713f12;">Thai Visa text extracted successfully. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
                     </div>
                 `;
                 return;
             }
 
-            let allMatched = true;
+            // Extract structured Thai Visa fields
+            const visa = parseThaiVisaDetails(extractedPdfText);
+            console.log("Parsed Visa details:", visa);
+
+            let allCardsMatched = true;
 
             passportData.forEach((pp, index) => {
-                const firstName = (pp.names || pp.firstName || '').toUpperCase().trim();
-                const lastName = (pp.surname || pp.lastName || '').toUpperCase().trim();
-                
-                let isMatch = false;
-                let reason = "";
+                const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
+                const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
+                const ppPassNo = (pp.passportNumber || '').toUpperCase().trim();
 
-                if (!firstName && !lastName) {
-                    isMatch = false;
-                    reason = "No name found in passport scan.";
-                    allMatched = false;
-                } else {
-                    // Split names into individual words
-                    const nameParts = [...firstName.split(/\s+/), ...lastName.split(/\s+/)].filter(p => p.length > 0);
-                    
-                    // Check if EVERY word in passport name exists in the extracted PDF text
-                    const missingParts = nameParts.filter(part => !extractedPdfText.includes(part));
-                    
-                    if (missingParts.length === 0) {
-                        isMatch = true;
-                    } else {
-                        isMatch = false;
-                        reason = `Missing in VISA document: ${missingParts.join(", ")}`;
-                        allMatched = false;
-                    }
+                // 1. Determine Visa Given Names (First + Middle)
+                let vGiven = visa.givenNames;
+                if (!vGiven && visa.hasStructuredData) {
+                    vGiven = [visa.firstName, visa.middleName].filter(Boolean).join(' ').trim();
+                }
+                // Fallback: If no structured fields found, check if passport given names exist in text
+                if (!vGiven) {
+                    vGiven = ppGiven.split(/\s+/).every(part => extractedPdfText.includes(part)) ? ppGiven : '';
                 }
 
-                // Create Result Card
-                const card = document.createElement('div');
-                card.className = `match-card ${isMatch ? 'success' : 'error'}`;
+                // 2. Determine Visa Surname
+                let vSurname = visa.familyName;
+                if (!vSurname && visa.hasStructuredData) {
+                    vSurname = visa.familyName;
+                }
+                if (!vSurname) {
+                    vSurname = ppSurname.split(/\s+/).every(part => extractedPdfText.includes(part)) ? ppSurname : '';
+                }
+
+                // 3. Determine Visa Passport Number
+                let vPassNo = visa.passportNo;
+                if (!vPassNo && ppPassNo && extractedPdfText.includes(ppPassNo)) {
+                    vPassNo = ppPassNo;
+                }
+
+                // Compare each field character by character
+                const givenComp = compareAndRenderName(ppGiven, vGiven);
+                const surnameComp = compareAndRenderName(ppSurname, vSurname);
                 
-                card.innerHTML = `
-                    <span class="status-badge">${isMatch ? '✓ Full Match' : '⚠ Mismatch'}</span>
-                    <h3>Passport #${index + 1} (${pp.passportNumber || 'No Passport No'})</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">First / Given Names:</div>
-                        <div class="detail-value" style="font-weight:600;">${firstName || '—'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Surname / Last Name:</div>
-                        <div class="detail-value" style="font-weight:600;">${lastName || '—'}</div>
-                    </div>
-                    ${!isMatch ? `
-                        <div class="detail-row" style="color:#dc3545; margin-top:8px; font-weight:600;">
-                            <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> ${reason}
+                // Compare Passport Number
+                let passNoMatch = false;
+                let passNoHtml = '';
+                if (ppPassNo && vPassNo) {
+                    if (ppPassNo.replace(/\s+/g, '') === vPassNo.replace(/\s+/g, '')) {
+                        passNoMatch = true;
+                        passNoHtml = `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(vPassNo)}</div>`;
+                    } else {
+                        passNoMatch = false;
+                        passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo)}</span></div>`;
+                    }
+                } else if (!ppPassNo && !vPassNo) {
+                    passNoMatch = true;
+                    passNoHtml = `<span style="color:#64748b;">Not Specified</span>`;
+                } else {
+                    passNoMatch = false;
+                    passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo || 'Missing in Visa')}</span></div>`;
+                }
+
+                const cardMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch;
+                if (!cardMatched) {
+                    allCardsMatched = false;
+                }
+
+                // Build Comparison HTML
+                const cardDiv = document.createElement('div');
+                cardDiv.style.marginBottom = '20px';
+
+                cardDiv.innerHTML = `
+                    <!-- Top Status Banner for this Passport -->
+                    ${cardMatched ? `
+                        <div class="banner-match">
+                            <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#22c55e;"></i>
+                            <div>
+                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names in Visa are 100% Correct</h3>
+                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">First name, Middle name, Surname and Passport number match without any letter error.</p>
+                            </div>
                         </div>
                     ` : `
-                        <div class="detail-row" style="color:#28a745; margin-top:8px; font-weight:600;">
-                            <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> All names verified in Thai Visa document.
+                        <div class="banner-mismatch">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#ef4444;"></i>
+                            <div>
+                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH: Letter or Spelling Error Detected!</h3>
+                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the red highlighted letters below. The visa document differs from the passport.</p>
+                            </div>
                         </div>
                     `}
+
+                    <!-- Given Names (First Name + Middle Name) Row -->
+                    <div class="comparison-card ${givenComp.isMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-user"></i> Given Names (First Name + Middle Name)</span>
+                            <span class="field-badge ${givenComp.isMatch ? 'badge-match' : 'badge-err'}">${givenComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppGiven) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${givenComp.html}</div>
+                        </div>
+                    </div>
+
+                    <!-- Surname / Family Name Row -->
+                    <div class="comparison-card ${surnameComp.isMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-signature"></i> Family Name / Surname</span>
+                            <span class="field-badge ${surnameComp.isMatch ? 'badge-match' : 'badge-err'}">${surnameComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppSurname) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${surnameComp.html}</div>
+                        </div>
+                    </div>
+
+                    <!-- Passport Number Row -->
+                    <div class="comparison-card ${passNoMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-id-card"></i> Passport Number</span>
+                            <span class="field-badge ${passNoMatch ? 'badge-match' : 'badge-err'}">${passNoMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppPassNo) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${passNoHtml}</div>
+                        </div>
+                    </div>
                 `;
-                
-                container.appendChild(card);
+
+                container.appendChild(cardDiv);
             });
 
-            // Send message back to embedded iframe to highlight passport card border green/red
+            // Update top overall status badge
+            if (allCardsMatched) {
+                overallBadge.innerHTML = `<span class="field-badge badge-match" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> ALL MATCHED (GREEN)</span>`;
+            } else {
+                overallBadge.innerHTML = `<span class="field-badge badge-err" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> MISMATCH FOUND (RED)</span>`;
+            }
+
+            // Send verification result back to iframe to highlight passport card green/red
             const iframe = document.getElementById('scanner-iframe');
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({
                     type: 'VERIFICATION_RESULT',
-                    allMatched: allMatched
+                    allMatched: allCardsMatched
                 }, '*');
             }
         }

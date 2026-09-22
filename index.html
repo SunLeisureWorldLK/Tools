@@ -1484,6 +1484,17 @@ body {
           Open Scanner <i class="fas fa-arrow-right"></i>
         </div>
       </a>
+      
+      <!-- NEW: TH VISA Name Check -->
+      <a class="tool-card card-red" href="TH VISA name Check/index.html" target="_blank" id="tool-visa-check" onclick="window.slwLogActivity('Opened TH VISA Name Check')">
+        <div class="card-icon"><i class="fa-solid fa-file-signature"></i></div>
+        <div class="card-title">TH VISA Name Check</div>
+        <div class="card-desc">Scan passports and automatically verify names against TH VISA PDFs.</div>
+        <div class="card-badges">
+          <span class="badge badge-update">New</span>
+          <span class="badge badge-featured">Verification</span>
+        </div>
+      </a>
 
     </div>
   </section>
@@ -1584,7 +1595,8 @@ let latestVisibilityData = {};
 function applyToolVisibility() {
   const toolIds = [
     'tool-airasia', 'tool-quotation', 'tool-itinerary', 'tool-group-tour',
-    'tool-costing', 'tool-database', 'tool-ai-assistant', 'tool-passport-scanner'
+    'tool-costing', 'tool-database', 'tool-ai-assistant', 'tool-passport-scanner',
+    'tool-domarco', 'tool-evago', 'tool-visa-check'
   ];
   toolIds.forEach(id => {
     const el = document.getElementById(id);

@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ---- Check Mode ----
+    const urlParams = new URLSearchParams(window.location.search);
+    const isVisaCheckMode = urlParams.get('mode') === 'visa-check';
+
     // ---- Global Auth & State ----
     const currentUserStr = sessionStorage.getItem('slw_user_v3') || localStorage.getItem('slw_user_v3');
     
@@ -40,8 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const btnAdminPanel = document.getElementById('btn-admin-panel');
-    if (currentUserStr === 'admin' || currentUserStr === 'BPsanju') {
+    if (!isVisaCheckMode && (currentUserStr === 'admin' || currentUserStr === 'BPsanju')) {
         if(btnAdminPanel) btnAdminPanel.classList.remove('hidden');
+    }
+
+    if (isVisaCheckMode) {
+        document.getElementById('btn-copy-all-global').classList.add('hidden');
+        document.getElementById('btn-visa-done').classList.remove('hidden');
+        
+        // Hide sidebar and header elements if we want a cleaner iframe UI
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.style.display = 'none';
+        
+        document.querySelector('.main-content').style.marginLeft = '0';
+        document.querySelector('.top-header').style.display = 'none';
+        document.querySelector('.upload-section').style.marginTop = '20px';
     }
 
     // ---- Admin Dashboard Logic ----

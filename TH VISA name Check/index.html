@@ -334,6 +334,7 @@
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFileSelection(e.target.files[0]);
+                e.target.value = ''; // Reset input so same file can be selected again
             }
         });
 
@@ -352,20 +353,27 @@
                 const fileUrl = URL.createObjectURL(file);
                 
                 try {
-                    const pdf = await pdfjsLib.getDocument(fileUrl).promise;
-                    
-                    // Render PDF Preview
-                    await renderPdfPreview(pdf);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("PDF processing timed out. Please try a different PDF.")), 15000)
+                    );
 
-                    let fullText = "";
-                    
-                    // Extract text from all pages
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map(item => item.str).join(" ");
-                        fullText += pageText + " ";
-                    }
+                    const pdfPromise = (async () => {
+                        const pdf = await pdfjsLib.getDocument(fileUrl).promise;
+                        
+                        // Render PDF Preview WITHOUT awaiting so it doesn't block text extraction
+                        renderPdfPreview(pdf);
+
+                        let fullText = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(" ");
+                            fullText += pageText + " ";
+                        }
+                        return fullText;
+                    })();
+
+                    const fullText = await Promise.race([pdfPromise, timeoutPromise]);
                     
                     extractedPdfText = fullText.toUpperCase();
                     console.log("Extracted PDF Text length:", extractedPdfText.length);
@@ -375,7 +383,7 @@
                     
                 } catch (err) {
                     console.error("PDF Extraction Error:", err);
-                    alert("Error reading PDF text: " + err.message);
+                    alert("Error reading PDF: " + err.message);
                     document.getElementById('loader').style.display = 'none';
                 } finally {
                     URL.revokeObjectURL(fileUrl);

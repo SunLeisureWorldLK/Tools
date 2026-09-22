@@ -701,6 +701,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Real-time validity listener on Expiry input
+        if (card.ui.inputs.expiry) {
+            card.ui.inputs.expiry.addEventListener('input', () => updatePassportValidityBadge(card));
+            card.ui.inputs.expiry.addEventListener('change', () => updatePassportValidityBadge(card));
+        }
+
         // Copy all details
         cardElement.querySelector('.btn-copy-card').addEventListener('click', (e) => {
             const text = getCardDataText(card);
@@ -930,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.ui.inputs.dob.value = formatDob(dobRaw) || "";
             card.ui.inputs.passportNo.value = passportNo || "";
             card.ui.inputs.expiry.value = formatExpiry(expiryRaw) || "";
+            updatePassportValidityBadge(card);
 
             card.ui.resultsSection.classList.remove('hidden');
             card.status = 'success';
@@ -944,6 +951,58 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error("Parsing error:", err);
             showError(card, "Failed to parse passport details. The image might be blurry.");
+        }
+    }
+
+    function updatePassportValidityBadge(card) {
+        const expiryInput = card.ui.inputs.expiry;
+        const badgeEl = card.ui.cardElement.querySelector('.res-validity-badge');
+        if (!badgeEl || !expiryInput) return;
+
+        const expiryVal = expiryInput.value.trim();
+        if (!expiryVal) {
+            badgeEl.className = 'passport-validity-badge unknown';
+            badgeEl.innerHTML = `<span class="material-icons" style="font-size:16px;">help_outline</span> <span>No Expiry Date</span>`;
+            return;
+        }
+
+        let day, month, year;
+        const match = expiryVal.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+        if (match) {
+            day = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            year = parseInt(match[3], 10);
+        } else {
+            const isoMatch = expiryVal.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+            if (isoMatch) {
+                day = parseInt(isoMatch[3], 10);
+                month = parseInt(isoMatch[2], 10);
+                year = parseInt(isoMatch[1], 10);
+            }
+        }
+
+        if (!day || !month || !year) {
+            badgeEl.className = 'passport-validity-badge unknown';
+            badgeEl.innerHTML = `<span class="material-icons" style="font-size:16px;">help_outline</span> <span>Unrecognized Date</span>`;
+            return;
+        }
+
+        const expDate = new Date(year, month - 1, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.round((expDate - today) / (1000 * 60 * 60 * 24));
+        const months = (diffDays / 30.4375).toFixed(1);
+
+        if (diffDays <= 0) {
+            badgeEl.className = 'passport-validity-badge expired';
+            badgeEl.innerHTML = `<span class="material-icons" style="font-size:16px;">cancel</span> <span>✕ EXPIRED (${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year})</span>`;
+        } else if (diffDays < 180) {
+            badgeEl.className = 'passport-validity-badge warning';
+            badgeEl.innerHTML = `<span class="material-icons" style="font-size:16px;">warning</span> <span>⚠ Less than 6 Months! (~${months} mo / ${diffDays} d left)</span>`;
+        } else {
+            badgeEl.className = 'passport-validity-badge valid';
+            badgeEl.innerHTML = `<span class="material-icons" style="font-size:16px;">check_circle</span> <span>✓ 6+ Months Valid (~${months} mo / ${diffDays} d left)</span>`;
         }
     }
 

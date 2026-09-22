@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
     <div class="app-container" id="main-app">
@@ -118,6 +118,7 @@
                             <div class="row"><div class="label">Type</div><div class="value-container"><input type="text" class="value-input res-type" value="PASSPORT" data-field="Type"><span class="material-icons copy-btn" title="Copy">content_copy</span></div></div>
                             <div class="row"><div class="label">Passport No</div><div class="value-container"><input type="text" class="value-input res-passport-no" data-field="Passport No"><span class="material-icons copy-btn" title="Copy">content_copy</span></div></div>
                             <div class="row"><div class="label">Date of Expiry</div><div class="value-container"><input type="text" class="value-input res-expiry" data-field="Date of Expiry"><span class="material-icons copy-btn" title="Copy">content_copy</span></div></div>
+                            <div class="row row-validity"><div class="label">6-Mo Validity</div><div class="value-container"><div class="passport-validity-badge res-validity-badge unknown"><span class="material-icons" style="font-size:16px;">help_outline</span> <span>Awaiting Expiry</span></div></div></div>
                         </div>
                         <div class="action-buttons">
                             <button class="btn btn-primary btn-copy-card"><span class="material-icons" style="font-size: 18px; vertical-align: text-bottom;">content_copy</span> Copy All Details</button>
@@ -249,6 +250,6 @@
     <script src="tesseract-custom.js?v=2"></script>
     
     <!-- Main Script -->
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
 </body>
 </html>

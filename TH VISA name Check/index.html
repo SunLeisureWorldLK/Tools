@@ -270,7 +270,8 @@
             <div class="upload-section" id="upload-zone" onclick="document.getElementById('file-input').click()">
                 <i class="fa-solid fa-file-pdf"></i>
                 <p>Click or drag to upload TH VISA PDF</p>
-                <input type="file" id="file-input" accept="application/pdf">
+                <p id="upload-status" style="font-size:0.8rem;color:#888;margin-top:5px;"></p>
+                <input type="file" id="file-input" accept="application/pdf,.pdf">
             </div>
             
             <div class="loader" id="loader">
@@ -314,6 +315,16 @@
         // Handle File Upload
         const fileInput = document.getElementById('file-input');
         const uploadZone = document.getElementById('upload-zone');
+        const uploadStatus = document.getElementById('upload-status');
+
+        // Check if pdfjsLib loaded
+        if (typeof pdfjsLib === 'undefined') {
+            uploadStatus.style.color = '#dc3545';
+            uploadStatus.textContent = '⚠ PDF library not loaded! Try refreshing.';
+        } else {
+            uploadStatus.style.color = '#28a745';
+            uploadStatus.textContent = '✓ PDF library ready (v' + (pdfjsLib.version || '?') + ')';
+        }
 
         // Drag and drop support
         uploadZone.addEventListener('dragover', (e) => {

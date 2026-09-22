@@ -977,4 +977,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }).catch(err => console.error("Failed to copy:", err));
     }
+
+    // ==== Listen for Visa Check Verification Results ====
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'VERIFICATION_RESULT') {
+            const allMatched = event.data.allMatched;
+            const cards = document.querySelectorAll('.passport-card');
+            cards.forEach(card => {
+                if (allMatched) {
+                    card.style.border = '3px solid #28a745';
+                    card.style.boxShadow = '0 0 15px rgba(40, 167, 69, 0.5)';
+                } else {
+                    card.style.border = '3px solid #dc3545';
+                    card.style.boxShadow = '0 0 15px rgba(220, 53, 69, 0.5)';
+                }
+            });
+        }
+    });
+
+    // Handle Visa Check Done Button
+    const btnVisaDone = document.getElementById('btn-visa-done');
+    if (btnVisaDone) {
+        btnVisaDone.addEventListener('click', () => {
+            const passportsData = [];
+            const cards = document.querySelectorAll('.passport-card');
+            
+            cards.forEach(card => {
+                const getVal = (id) => card.querySelector(`input[id^="${id}"]`)?.value || '';
+                passportsData.push({
+                    passportNumber: getVal('passport-number'),
+                    names: getVal('names'),
+                    surname: getVal('surname'),
+                    nationality: getVal('nationality'),
+                    dateOfBirth: getVal('dob'),
+                    sex: getVal('sex'),
+                    dateOfExpiry: getVal('expiry'),
+                    personalNumber: getVal('personal-number')
+                });
+            });
+
+            // Send to parent window
+            window.parent.postMessage({
+                type: 'PASSPORT_SCANNED',
+                data: passportsData
+            }, '*');
+        });
+    }
+
 });

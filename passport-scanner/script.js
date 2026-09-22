@@ -1003,18 +1003,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const cards = document.querySelectorAll('.passport-card');
             
             cards.forEach(card => {
-                const getVal = (id) => card.querySelector(`input[id^="${id}"]`)?.value || '';
+                const getVal = (cls, id) => {
+                    const el = card.querySelector(cls) || (id ? card.querySelector(`input[id^="${id}"]`) : null);
+                    return el ? el.value.trim() : '';
+                };
                 passportsData.push({
-                    passportNumber: getVal('passport-number'),
-                    names: getVal('names'),
-                    surname: getVal('surname'),
-                    nationality: getVal('nationality'),
-                    dateOfBirth: getVal('dob'),
-                    sex: getVal('sex'),
-                    dateOfExpiry: getVal('expiry'),
-                    personalNumber: getVal('personal-number')
+                    passportNumber: getVal('.res-passport-no', 'passport-number'),
+                    names: getVal('.res-first-name', 'names'),
+                    surname: getVal('.res-last-name', 'surname'),
+                    nationality: getVal('.res-nationality', 'nationality'),
+                    dateOfBirth: getVal('.res-dob', 'dob'),
+                    sex: getVal('.res-sex', 'sex'),
+                    dateOfExpiry: getVal('.res-expiry', 'expiry'),
+                    personalNumber: getVal('.res-personal-number', 'personal-number')
                 });
             });
+
+            console.log("Sending passport data to TH VISA checker:", passportsData);
 
             // Send to parent window
             window.parent.postMessage({

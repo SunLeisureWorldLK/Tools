@@ -903,6 +903,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let firstName = (nameParts[1] || '').replace(/</g, ' ').trim();
 
             let passportNo = mrzLine2.substring(0, 9).replace(/</g, '');
+            if (passportNo.length > 1) {
+                // Sri Lankan & ICAO standard passport numbers: letter + 7 numeric digits. Fix OCR 'O' -> '0'
+                passportNo = passportNo.charAt(0) + passportNo.slice(1).replace(/O/g, '0');
+            }
             let nationality = mrzLine2.substring(10, 13).replace(/</g, '');
             
             let dobRaw = mrzLine2.substring(13, 19);

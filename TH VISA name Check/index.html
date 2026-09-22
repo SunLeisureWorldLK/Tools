@@ -700,7 +700,7 @@
                 <span id="passport-count-pill" class="col-badge">0 Scanned</span>
             </div>
             <div class="cockpit-col-content">
-                <iframe src="../passport-scanner/index.html?mode=visa-check&v=14" class="iframe-container" id="scanner-iframe"></iframe>
+                <iframe src="../passport-scanner/index.html?mode=visa-check&v=15" class="iframe-container" id="scanner-iframe"></iframe>
             </div>
         </div>
 
@@ -1508,6 +1508,17 @@
             };
         }
 
+        // Normalize passport number to handle OCR confusion between digit '0' and letter 'O'
+        function normalizePassNo(str) {
+            if (!str) return '';
+            const clean = str.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            // Sri Lankan & international passports: 1st char is letter, subsequent chars are numeric digits.
+            if (clean.length > 1) {
+                return clean.charAt(0) + clean.slice(1).replace(/O/g, '0');
+            }
+            return clean;
+        }
+
         // Compare two names character by character and return visual diff HTML
         function compareAndRenderName(expectedStr, actualStr) {
             const exp = (expectedStr || '').toUpperCase().trim();
@@ -1599,9 +1610,13 @@
             const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
 
             if (ppPassNo) {
-                let m = loadedVisas.find(v => v.visa.passportNo && v.visa.passportNo === ppPassNo);
+                const normPp = normalizePassNo(ppPassNo);
+                let m = loadedVisas.find(v => v.visa.passportNo && normalizePassNo(v.visa.passportNo) === normPp);
                 if (m) return m;
-                m = loadedVisas.find(v => v.extractedPdfText.includes(ppPassNo));
+                m = loadedVisas.find(v => {
+                    const normText = normalizePassNo(v.extractedPdfText);
+                    return normText.includes(normPp);
+                });
                 if (m) return m;
             }
 
@@ -1797,15 +1812,19 @@
 
                 let passNoMatch = false;
                 let passNoHtml = '';
-                if (ppPassNo && vPassNo) {
-                    if (ppPassNo.replace(/\s+/g, '') === vPassNo.replace(/\s+/g, '')) {
+                const normPpPass = normalizePassNo(ppPassNo);
+                const normVPass = normalizePassNo(vPassNo);
+
+                if (normPpPass && normVPass) {
+                    if (normPpPass === normVPass) {
                         passNoMatch = true;
                         passNoHtml = `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(vPassNo)}</div>`;
                     } else {
                         passNoMatch = false;
-                        passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo)}</span></div>`;
+                        const comp = compareAndRenderName(normPpPass, normVPass);
+                        passNoHtml = comp.html;
                     }
-                } else if (!ppPassNo && !vPassNo) {
+                } else if (!normPpPass && !normVPass) {
                     passNoMatch = true;
                     passNoHtml = `<span style="color:#64748b;">Not Specified</span>`;
                 } else {

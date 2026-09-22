@@ -6,12 +6,20 @@
     <title>TH VISA Name Check</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="./pdf.min.js"></script>
+    
+    <!-- PDF.js CDN (matches passport-scanner) with local fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js';
+        if (!window.pdfjsLib) {
+            document.write('<script src="./pdf.min.js"><\/script>');
         }
     </script>
+    <script>
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
     <style>
         body {
             margin: 0;
@@ -93,32 +101,63 @@
         .upload-section {
             border: 2px dashed #007bff;
             border-radius: 8px;
-            padding: 40px;
+            padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             background: #f8faff;
             margin-bottom: 20px;
+            position: relative;
         }
 
         .upload-section:hover {
             background: #eef4ff;
+            border-color: #0056b3;
         }
 
-        .upload-section i {
-            font-size: 3rem;
+        .upload-section.dragover {
+            background: #e1edff;
+            border-color: #0056b3;
+            transform: scale(1.01);
+        }
+
+        .upload-section.loaded {
+            border: 2px solid #28a745;
+            background: #f0fdf4;
+            padding: 16px 20px;
+            cursor: default;
+        }
+
+        .upload-section i.upload-icon {
+            font-size: 2.8rem;
             color: #007bff;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            display: block;
         }
 
         .upload-section p {
             margin: 0;
-            color: #555;
-            font-size: 1.1rem;
+            color: #444;
+            font-size: 1.05rem;
+            font-weight: 500;
         }
 
-        input[type="file"] {
-            display: none;
+        .btn-change-file {
+            background: #1a2a3a;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-change-file:hover {
+            background: #2c4257;
         }
 
         .results-section {
@@ -126,7 +165,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             padding: 20px;
-            margin-top: 20px;
+            margin-bottom: 20px;
             display: none;
         }
 
@@ -135,6 +174,10 @@
             color: #333;
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .match-card {
@@ -163,7 +206,7 @@
         .match-card h3 {
             margin: 0 0 10px 0;
             font-size: 1.1rem;
-            color: #444;
+            color: #333;
         }
 
         .detail-row {
@@ -206,49 +249,62 @@
             color: #333;
         }
         
-        .pdf-preview {
-            width: 100%;
-            height: 400px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-top: 20px;
-            display: none;
-        }
-        
         .pdf-canvas-container {
             width: 100%;
-            overflow: auto;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 8px;
             display: none;
-            background: #eee;
+            background: #525659;
             text-align: center;
-            padding: 10px;
+            padding: 15px;
             box-sizing: border-box;
         }
+
+        .pdf-canvas-header {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         
-        canvas {
+        #pdf-render {
             max-width: 100%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-radius: 4px;
+            background: #fff;
         }
         
         .loader {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 25px;
+            background: #f8faff;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #d0e2ff;
         }
         
         .loader i {
-            font-size: 2rem;
+            font-size: 2.2rem;
             color: #007bff;
             animation: spin 1s linear infinite;
+        }
+
+        .loader p {
+            margin: 10px 0 0 0;
+            color: #333;
+            font-weight: 500;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
     </style>
 </head>
 <body>
@@ -261,32 +317,53 @@
     <div class="split-container">
         <!-- Left Side: Passport Scanner (Embedded via iframe) -->
         <div class="left-panel">
-            <iframe src="../passport-scanner/index.html?mode=visa-check&v=2" class="iframe-container" id="scanner-iframe"></iframe>
+            <iframe src="../passport-scanner/index.html?mode=visa-check&v=3" class="iframe-container" id="scanner-iframe"></iframe>
         </div>
 
         <!-- Right Side: PDF Upload & Validation -->
         <div class="right-panel">
             
-            <div class="upload-section" id="upload-zone" onclick="document.getElementById('file-input').click()">
-                <i class="fa-solid fa-file-pdf"></i>
-                <p>Click or drag to upload TH VISA PDF</p>
-                <p id="upload-status" style="font-size:0.8rem;color:#888;margin-top:5px;"></p>
-                <input type="file" id="file-input" accept="application/pdf,.pdf">
+            <!-- Upload Box -->
+            <div class="upload-section" id="upload-zone">
+                <div id="upload-prompt">
+                    <i class="fa-solid fa-file-pdf upload-icon"></i>
+                    <p>Click or drag &amp; drop TH VISA PDF</p>
+                    <span style="font-size:0.85rem; color:#6c757d; margin-top:5px; display:block;">Supports Thai e-Visa PDF documents</span>
+                </div>
+
+                <div id="upload-success-content" style="display:none; align-items:center; justify-content:space-between; width:100%;">
+                    <div style="display:flex; align-items:center; gap:12px; text-align:left;">
+                        <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#28a745;"></i>
+                        <div>
+                            <div id="uploaded-filename" style="font-weight:700; font-size:1rem; color:#1a2a3a;"></div>
+                            <div id="uploaded-meta" style="font-size:0.85rem; color:#28a745; font-weight:500;"></div>
+                        </div>
+                    </div>
+                    <button class="btn-change-file" id="btn-reupload" type="button">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Change PDF
+                    </button>
+                </div>
             </div>
+
+            <!-- Hidden file input placed outside the clickable zone -->
+            <input type="file" id="file-input" accept="application/pdf,.pdf" style="display:none;">
             
             <div class="loader" id="loader">
                 <i class="fa-solid fa-circle-notch"></i>
-                <p>Analyzing Visa Document...</p>
+                <p id="loader-text">Reading &amp; Analyzing Visa PDF...</p>
             </div>
 
             <div class="results-section" id="results-section">
-                <h2>Verification Results</h2>
+                <h2><i class="fa-solid fa-clipboard-check"></i> Verification Results</h2>
                 <div id="results-container">
                     <!-- Results will be injected here -->
                 </div>
             </div>
             
             <div class="pdf-canvas-container" id="pdf-container">
+                <div class="pdf-canvas-header">
+                    <i class="fa-solid fa-eye"></i> Visa Document Preview
+                </div>
                 <canvas id="pdf-render"></canvas>
             </div>
 
@@ -296,12 +373,13 @@
     <script>
         let passportData = [];
         let extractedPdfText = "";
+        let currentLoadedFileName = "";
 
-        // Listen for messages from the embedded Passport Scanner iframe
+        // Listen for messages from embedded Passport Scanner iframe
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'PASSPORT_SCANNED') {
-                passportData = event.data.data;
-                console.log("Received Passport Data:", passportData);
+                passportData = event.data.data || [];
+                console.log("Received Passport Data from Scanner:", passportData);
                 
                 // If PDF text is already extracted, run validation again
                 if (extractedPdfText) {
@@ -312,140 +390,150 @@
             }
         });
 
-        // Handle File Upload
         const fileInput = document.getElementById('file-input');
         const uploadZone = document.getElementById('upload-zone');
-        const uploadStatus = document.getElementById('upload-status');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const uploadSuccessContent = document.getElementById('upload-success-content');
+        const uploadedFilename = document.getElementById('uploaded-filename');
+        const uploadedMeta = document.getElementById('uploaded-meta');
+        const btnReupload = document.getElementById('btn-reupload');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
 
-        // Check if pdfjsLib loaded
-        if (typeof pdfjsLib === 'undefined') {
-            uploadStatus.style.color = '#dc3545';
-            uploadStatus.textContent = '⚠ PDF library not loaded! Try refreshing.';
-        } else {
-            uploadStatus.style.color = '#28a745';
-            uploadStatus.textContent = '✓ PDF library ready (v' + (pdfjsLib.version || '?') + ')';
-        }
+        // Click zone to open file dialog
+        uploadZone.addEventListener('click', (e) => {
+            // Don't trigger if clicked change button directly
+            if (e.target.closest('#btn-reupload')) return;
+            fileInput.click();
+        });
 
-        // Drag and drop support
+        btnReupload.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        // Drag & Drop
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadZone.style.background = '#eef4ff';
+            uploadZone.classList.add('dragover');
         });
+
         uploadZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            uploadZone.style.background = '#f8faff';
+            uploadZone.classList.remove('dragover');
         });
+
         uploadZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadZone.style.background = '#f8faff';
-            if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                handleFileSelection(fileInput.files[0]);
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                processVisaFile(e.dataTransfer.files[0]);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileSelection(e.target.files[0]);
-                e.target.value = ''; // Reset input so same file can be selected again
+            if (e.target.files && e.target.files.length > 0) {
+                processVisaFile(e.target.files[0]);
             }
         });
 
-        async function handleFileSelection(file) {
-            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-                showError("Please upload a valid PDF file. The selected file does not appear to be a PDF.");
+        async function processVisaFile(file) {
+            console.log("Selected file:", file.name, file.size, file.type);
+
+            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                showError("The selected file is not a PDF. Please select a valid .pdf Thai Visa document.");
                 return;
             }
 
             if (typeof pdfjsLib === 'undefined') {
-                showError("PDF library failed to load. Please check your internet connection and refresh the page.");
+                showError("PDF library failed to load. Please check your network connection and reload the page.");
                 return;
             }
 
-            document.getElementById('loader').style.display = 'block';
+            // Update Upload Zone UI immediately to show user something is happening
+            currentLoadedFileName = file.name;
+            uploadPrompt.style.display = 'none';
+            uploadSuccessContent.style.display = 'flex';
+            uploadedFilename.textContent = file.name;
+            uploadedMeta.textContent = (file.size / 1024).toFixed(1) + ' KB • Reading file...';
+            uploadZone.classList.add('loaded');
+
+            loader.style.display = 'block';
+            loaderText.textContent = 'Reading & Parsing ' + file.name + '...';
             document.getElementById('results-section').style.display = 'none';
             document.getElementById('pdf-container').style.display = 'none';
             extractedPdfText = "";
 
             try {
-                const fileUrl = URL.createObjectURL(file);
+                // 1. Read binary data directly into ArrayBuffer (identical to passport-scanner)
+                const arrayBuffer = await file.arrayBuffer();
                 
-                try {
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error("PDF processing timed out. Please try a different PDF.")), 15000)
-                    );
+                loaderText.textContent = 'Extracting text & rendering preview...';
+                
+                // 2. Load PDF document
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+                console.log("PDF loaded successfully. Number of pages:", pdf.numPages);
 
-                    const pdfPromise = (async () => {
-                        const pdf = await pdfjsLib.getDocument(fileUrl).promise;
-                        
-                        // Render PDF Preview WITHOUT awaiting so it doesn't block text extraction
-                        renderPdfPreview(pdf);
-
-                        let fullText = "";
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const textContent = await page.getTextContent();
-                            const pageText = textContent.items.map(item => item.str).join(" ");
-                            fullText += pageText + " ";
-                        }
-                        return fullText;
-                    })();
-
-                    const fullText = await Promise.race([pdfPromise, timeoutPromise]);
-                    
-                    extractedPdfText = fullText.toUpperCase();
-                    console.log("Extracted PDF Text length:", extractedPdfText.length);
-                    
-                    document.getElementById('loader').style.display = 'none';
-                    validateNames();
-                    
-                } catch (err) {
-                    console.error("PDF Extraction Error:", err);
-                    showError("Error reading PDF: " + err.message);
-                } finally {
-                    URL.revokeObjectURL(fileUrl);
+                // 3. Extract text sequentially from all pages
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + " ";
                 }
-            } catch (e) {
-                console.error("File loading error:", e);
-                showError("File loading error: " + e.message);
+                extractedPdfText = fullText.toUpperCase();
+                console.log("Extracted PDF text characters:", extractedPdfText.length);
+
+                // 4. Render Page 1 Preview
+                try {
+                    const page1 = await pdf.getPage(1);
+                    const viewport = page1.getViewport({ scale: 1.2 });
+                    const canvas = document.getElementById('pdf-render');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page1.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    document.getElementById('pdf-container').style.display = 'block';
+                } catch (renderErr) {
+                    console.warn("Could not render page preview, but text was extracted:", renderErr);
+                }
+
+                // 5. Update Status
+                uploadedMeta.textContent = '✓ ' + (file.size / 1024).toFixed(1) + ' KB • ' + pdf.numPages + ' Page(s) • Ready';
+                loader.style.display = 'none';
+
+                // 6. Run comparison / validation
+                validateNames();
+
+            } catch (err) {
+                console.error("PDF Processing Error:", err);
+                showError("Failed to read PDF: " + (err.message || err));
+                uploadPrompt.style.display = 'block';
+                uploadSuccessContent.style.display = 'none';
+                uploadZone.classList.remove('loaded');
+            } finally {
+                // Reset input value so re-selecting same file works
+                fileInput.value = '';
             }
         }
 
         function showError(message) {
-            document.getElementById('loader').style.display = 'none';
+            loader.style.display = 'none';
             document.getElementById('results-section').style.display = 'block';
             const container = document.getElementById('results-container');
             container.innerHTML = `
                 <div class="match-card error">
-                    <span class="status-badge" style="background:#dc3545;color:white;">Error</span>
-                    <h3>Failed to Process Document</h3>
-                    <p>${message}</p>
+                    <span class="status-badge">Error</span>
+                    <h3>Processing Failed</h3>
+                    <p style="margin:0; color:#c53030;">${message}</p>
                 </div>
             `;
-        }
-        
-        async function renderPdfPreview(pdf) {
-            try {
-                const page = await pdf.getPage(1);
-                
-                const scale = 1.2;
-                const viewport = page.getViewport({scale: scale});
-                
-                const canvas = document.getElementById('pdf-render');
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
-                await page.render(renderContext).promise;
-                document.getElementById('pdf-container').style.display = 'block';
-            } catch (err) {
-                console.error("Error rendering PDF preview:", err);
-            }
         }
 
         function renderPendingState() {
@@ -455,7 +543,7 @@
                 <div class="match-card pending">
                     <span class="status-badge">Awaiting PDF</span>
                     <h3>Passport Data Received</h3>
-                    <p>Please upload the TH VISA PDF to verify ${passportData.length} passport(s).</p>
+                    <p>Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the Thai VISA PDF on the right to compare.</p>
                 </div>
             `;
         }
@@ -469,8 +557,8 @@
                 container.innerHTML = `
                     <div class="match-card pending">
                         <span class="status-badge">Awaiting Passport</span>
-                        <h3>Visa Loaded</h3>
-                        <p>Please scan passports on the left and click "Done" to verify.</p>
+                        <h3>✓ Visa PDF Loaded: ${currentLoadedFileName}</h3>
+                        <p>Visa text extracted successfully. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
                     </div>
                 `;
                 return;
@@ -482,55 +570,59 @@
                 const firstName = (pp.names || pp.firstName || '').toUpperCase().trim();
                 const lastName = (pp.surname || pp.lastName || '').toUpperCase().trim();
                 
-                // Construct logic for checking name
-                // Visa usually contains names in order, potentially with middle names.
-                // E.g., "DOE JOHN MICHAEL" or "JOHN MICHAEL DOE"
-                // The safest check is: Does every part of the first name and last name exist in the PDF text?
-                
                 let isMatch = false;
                 let reason = "";
 
                 if (!firstName && !lastName) {
                     isMatch = false;
                     reason = "No name found in passport scan.";
+                    allMatched = false;
                 } else {
                     // Split names into individual words
                     const nameParts = [...firstName.split(/\s+/), ...lastName.split(/\s+/)].filter(p => p.length > 0);
                     
-                    // Check if EVERY word exists in the extracted PDF text
+                    // Check if EVERY word in passport name exists in the extracted PDF text
                     const missingParts = nameParts.filter(part => !extractedPdfText.includes(part));
                     
                     if (missingParts.length === 0) {
                         isMatch = true;
                     } else {
                         isMatch = false;
-                        reason = `Missing in VISA: ${missingParts.join(", ")}`;
+                        reason = `Missing in VISA document: ${missingParts.join(", ")}`;
                         allMatched = false;
                     }
                 }
 
-                // Create Card
+                // Create Result Card
                 const card = document.createElement('div');
-                card.className = \`match-card \${isMatch ? 'success' : 'error'}\`;
+                card.className = `match-card ${isMatch ? 'success' : 'error'}`;
                 
-                card.innerHTML = \`
-                    <span class="status-badge">\${isMatch ? 'Match' : 'Mismatch'}</span>
-                    <h3>Passport #\${index + 1}</h3>
+                card.innerHTML = `
+                    <span class="status-badge">${isMatch ? '✓ Full Match' : '⚠ Mismatch'}</span>
+                    <h3>Passport #${index + 1} (${pp.passportNumber || 'No Passport No'})</h3>
                     <div class="detail-row">
-                        <div class="detail-label">First Name:</div>
-                        <div class="detail-value">\${firstName}</div>
+                        <div class="detail-label">First / Given Names:</div>
+                        <div class="detail-value" style="font-weight:600;">${firstName || '—'}</div>
                     </div>
                     <div class="detail-row">
-                        <div class="detail-label">Last Name:</div>
-                        <div class="detail-value">\${lastName}</div>
+                        <div class="detail-label">Surname / Last Name:</div>
+                        <div class="detail-value" style="font-weight:600;">${lastName || '—'}</div>
                     </div>
-                    \${!isMatch ? \`<div class="detail-row" style="color:#dc3545; margin-top:8px; font-size:0.85rem;"><i class="fa-solid fa-circle-exclamation"></i>&nbsp; \${reason}</div>\` : ''}
-                \`;
+                    ${!isMatch ? `
+                        <div class="detail-row" style="color:#dc3545; margin-top:8px; font-weight:600;">
+                            <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> ${reason}
+                        </div>
+                    ` : `
+                        <div class="detail-row" style="color:#28a745; margin-top:8px; font-weight:600;">
+                            <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> All names verified in Thai Visa document.
+                        </div>
+                    `}
+                `;
                 
                 container.appendChild(card);
             });
 
-            // Send message back to iframe to highlight their UI
+            // Send message back to embedded iframe to highlight passport card border green/red
             const iframe = document.getElementById('scanner-iframe');
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({

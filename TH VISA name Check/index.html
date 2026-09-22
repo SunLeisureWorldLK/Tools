@@ -675,6 +675,25 @@
                 /Family\s*name\s*:\s*([A-Z\s]+)/i
             ]);
 
+            const sex = getField([
+                /Sex\s*:\s*([^\n\r]+?)(?=\s*(?:Date\s*of\s*birth|Nationality|Passport|$))/i,
+                /Sex\s*:\s*([A-Z]+)/i
+            ]);
+
+            const dob = getField([
+                /Date\s*of\s*birth\s*:\s*([^\n\r]+?)(?=\s*(?:Nationality|Passport|$))/i,
+                /Date\s*of\s*birth\s*:\s*([0-9A-Z\s]+)/i
+            ]);
+
+            const nationality = getField([
+                /Nationality\s*:\s*([^\n\r]+?)(?=\s*(?:Passport|$))/i,
+                /Nationality\s*:\s*([A-Z]+)/i
+            ]);
+
+            const passportTdCountry = getField([
+                /Passport\s*\/\s*TD\s*:\s*([^\n\r]+?)(?=\s*(?:Passport\s*\/\s*TD\s*number|$))/i
+            ]);
+
             const passportNo = getField([
                 /Passport\s*\/\s*TD\s*number\s*:\s*([A-Z0-9]+)/i,
                 /Passport\s*number\s*:\s*([A-Z0-9]+)/i
@@ -687,10 +706,176 @@
                 firstName,
                 middleName,
                 familyName,
+                sex,
+                dob,
+                nationality: nationality || passportTdCountry,
                 passportNo,
                 givenNames,
                 fullName,
                 hasStructuredData: !!(firstName || familyName)
+            };
+        }
+
+        const MONTH_MAP = {
+            'jan': 1, 'january': 1,
+            'feb': 2, 'february': 2,
+            'mar': 3, 'march': 3,
+            'apr': 4, 'april': 4,
+            'may': 5,
+            'jun': 6, 'june': 6,
+            'jul': 7, 'july': 7,
+            'aug': 8, 'august': 8,
+            'sep': 9, 'september': 9, 'sept': 9,
+            'oct': 10, 'october': 10,
+            'nov': 11, 'november': 11,
+            'dec': 12, 'december': 12
+        };
+
+        function parseAnyDate(str) {
+            if (!str) return null;
+            str = str.trim().toLowerCase();
+
+            // Check DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+            const numMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+            if (numMatch) {
+                return {
+                    day: parseInt(numMatch[1], 10),
+                    month: parseInt(numMatch[2], 10),
+                    year: parseInt(numMatch[3], 10),
+                    display: `${String(numMatch[1]).padStart(2, '0')}/${String(numMatch[2]).padStart(2, '0')}/${numMatch[3]}`
+                };
+            }
+
+            // Check YYYY-MM-DD
+            const isoMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+            if (isoMatch) {
+                return {
+                    day: parseInt(isoMatch[3], 10),
+                    month: parseInt(isoMatch[2], 10),
+                    year: parseInt(isoMatch[1], 10),
+                    display: `${String(isoMatch[3]).padStart(2, '0')}/${String(isoMatch[2]).padStart(2, '0')}/${isoMatch[1]}`
+                };
+            }
+
+            // Check DD Month YYYY (e.g. 20 July 1968)
+            const textMatch1 = str.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/);
+            if (textMatch1 && MONTH_MAP[textMatch1[2]]) {
+                const m = MONTH_MAP[textMatch1[2]];
+                return {
+                    day: parseInt(textMatch1[1], 10),
+                    month: m,
+                    year: parseInt(textMatch1[3], 10),
+                    display: `${String(textMatch1[1]).padStart(2, '0')}/${String(m).padStart(2, '0')}/${textMatch1[3]}`
+                };
+            }
+
+            return null;
+        }
+
+        function compareDates(expDateStr, actDateStr) {
+            const exp = (expDateStr || '').trim();
+            const act = (actDateStr || '').trim();
+
+            if (!exp && !act) {
+                return { isMatch: true, html: `<span style="color:#64748b;">Not Specified</span>` };
+            }
+
+            const pExp = parseAnyDate(exp);
+            const pAct = parseAnyDate(act);
+
+            if (pExp && pAct) {
+                if (pExp.day === pAct.day && pExp.month === pAct.month && pExp.year === pAct.year) {
+                    return {
+                        isMatch: true,
+                        html: `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(act)} (${pExp.display})</div>`
+                    };
+                } else {
+                    return {
+                        isMatch: false,
+                        html: `<div>
+                            <div class="char-diff-container"><span class="char-err">${escapeHtml(act)}</span></div>
+                            <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Date does not match Passport (${escapeHtml(exp)})
+                            </div>
+                        </div>`
+                    };
+                }
+            }
+
+            if (exp.toUpperCase() === act.toUpperCase()) {
+                return {
+                    isMatch: true,
+                    html: `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(act)}</div>`
+                };
+            }
+
+            return {
+                isMatch: false,
+                html: `<div>
+                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
+                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Date does not match Passport (${escapeHtml(exp)})
+                    </div>
+                </div>`
+            };
+        }
+
+        function compareSex(expSex, actSex) {
+            const exp = (expSex || '').toUpperCase().trim();
+            const act = (actSex || '').toUpperCase().trim();
+
+            if (!exp && !act) {
+                return { isMatch: true, html: `<span style="color:#64748b;">Not Specified</span>` };
+            }
+
+            const normExp = exp.startsWith('F') ? 'F' : (exp.startsWith('M') ? 'M' : exp);
+            const normAct = act.startsWith('F') ? 'F' : (act.startsWith('M') ? 'M' : act);
+
+            if (normExp === normAct) {
+                const label = normAct === 'F' ? 'F (Female)' : (normAct === 'M' ? 'M (Male)' : act);
+                return {
+                    isMatch: true,
+                    html: `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(label)}</div>`
+                };
+            }
+
+            return {
+                isMatch: false,
+                html: `<div>
+                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
+                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Gender does not match Passport (${escapeHtml(exp)})
+                    </div>
+                </div>`
+            };
+        }
+
+        function compareNationality(expNat, actNat) {
+            const exp = (expNat || '').toUpperCase().trim();
+            const act = (actNat || '').toUpperCase().trim();
+
+            if (!exp && !act) {
+                return { isMatch: true, html: `<span style="color:#64748b;">Not Specified</span>` };
+            }
+
+            const isLka = (s) => s === 'LKA' || s === 'LK' || s.includes('SRI LANKA') || s.includes('SRILANKA');
+            const match = (isLka(exp) && isLka(act)) || (exp === act);
+
+            if (match) {
+                return {
+                    isMatch: true,
+                    html: `<div class="name-highlight-green"><i class="fa-solid fa-circle-check"></i> ${escapeHtml(act)}</div>`
+                };
+            }
+
+            return {
+                isMatch: false,
+                html: `<div>
+                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
+                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Nationality does not match Passport (${escapeHtml(exp)})
+                    </div>
+                </div>`
             };
         }
 
@@ -811,13 +996,15 @@
                 const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
                 const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
                 const ppPassNo = (pp.passportNumber || '').toUpperCase().trim();
+                const ppDob = (pp.dateOfBirth || pp.dob || '').trim();
+                const ppSex = (pp.sex || '').trim();
+                const ppNat = (pp.nationality || '').trim();
 
                 // 1. Determine Visa Given Names (First + Middle)
                 let vGiven = visa.givenNames;
                 if (!vGiven && visa.hasStructuredData) {
                     vGiven = [visa.firstName, visa.middleName].filter(Boolean).join(' ').trim();
                 }
-                // Fallback: If no structured fields found, check if passport given names exist in text
                 if (!vGiven) {
                     vGiven = ppGiven.split(/\s+/).every(part => extractedPdfText.includes(part)) ? ppGiven : '';
                 }
@@ -837,9 +1024,24 @@
                     vPassNo = ppPassNo;
                 }
 
-                // Compare each field character by character
+                // 4. Determine Visa Date of Birth
+                let vDob = visa.dob;
+                if (!vDob && ppDob && extractedPdfText.includes(ppDob)) {
+                    vDob = ppDob;
+                }
+
+                // 5. Determine Visa Sex
+                let vSex = visa.sex;
+
+                // 6. Determine Visa Nationality
+                let vNat = visa.nationality;
+
+                // Compare each field
                 const givenComp = compareAndRenderName(ppGiven, vGiven);
                 const surnameComp = compareAndRenderName(ppSurname, vSurname);
+                const dobComp = compareDates(ppDob, vDob);
+                const sexComp = compareSex(ppSex, vSex);
+                const natComp = compareNationality(ppNat, vNat);
                 
                 // Compare Passport Number
                 let passNoMatch = false;
@@ -860,7 +1062,7 @@
                     passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo || 'Missing in Visa')}</span></div>`;
                 }
 
-                const cardMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch;
+                const cardMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch && dobComp.isMatch && sexComp.isMatch && natComp.isMatch;
                 if (!cardMatched) {
                     allCardsMatched = false;
                 }
@@ -875,16 +1077,16 @@
                         <div class="banner-match">
                             <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#22c55e;"></i>
                             <div>
-                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names in Visa are 100% Correct</h3>
-                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">First name, Middle name, Surname and Passport number match without any letter error.</p>
+                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names & Details Match 100%</h3>
+                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">Given Names, Surname, Date of Birth, Sex, Nationality, and Passport Number all match perfectly.</p>
                             </div>
                         </div>
                     ` : `
                         <div class="banner-mismatch">
                             <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#ef4444;"></i>
                             <div>
-                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH: Letter or Spelling Error Detected!</h3>
-                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the red highlighted letters below. The visa document differs from the passport.</p>
+                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH: Difference Detected in Details!</h3>
+                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the fields below. Characters or values highlighted in red do not match.</p>
                             </div>
                         </div>
                     `}
@@ -916,6 +1118,51 @@
                             
                             <div class="val-label">Thai Visa:</div>
                             <div>${surnameComp.html}</div>
+                        </div>
+                    </div>
+
+                    <!-- Date of Birth Row -->
+                    <div class="comparison-card ${dobComp.isMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-cake-candles"></i> Date of Birth (DOB)</span>
+                            <span class="field-badge ${dobComp.isMatch ? 'badge-match' : 'badge-err'}">${dobComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppDob) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${dobComp.html}</div>
+                        </div>
+                    </div>
+
+                    <!-- Sex / Gender Row -->
+                    <div class="comparison-card ${sexComp.isMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-venus-mars"></i> Sex / Gender</span>
+                            <span class="field-badge ${sexComp.isMatch ? 'badge-match' : 'badge-err'}">${sexComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppSex) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${sexComp.html}</div>
+                        </div>
+                    </div>
+
+                    <!-- Nationality Row -->
+                    <div class="comparison-card ${natComp.isMatch ? 'is-match' : 'is-error'}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-flag"></i> Nationality</span>
+                            <span class="field-badge ${natComp.isMatch ? 'badge-match' : 'badge-err'}">${natComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport (Scanned):</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppNat) || '—'}</div>
+                            
+                            <div class="val-label">Thai Visa:</div>
+                            <div>${natComp.html}</div>
                         </div>
                     </div>
 

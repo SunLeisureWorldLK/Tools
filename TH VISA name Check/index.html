@@ -349,42 +349,40 @@
             extractedPdfText = "";
 
             try {
-                // Read file as ArrayBuffer
-                const fileReader = new FileReader();
-                fileReader.onload = async function() {
-                    const typedarray = new Uint8Array(this.result);
+                const fileUrl = URL.createObjectURL(file);
+                
+                try {
+                    const pdf = await pdfjsLib.getDocument(fileUrl).promise;
                     
-                    try {
-                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                        
-                        // Render PDF Preview
-                        await renderPdfPreview(pdf);
+                    // Render PDF Preview
+                    await renderPdfPreview(pdf);
 
-                        let fullText = "";
-                        
-                        // Extract text from all pages
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const textContent = await page.getTextContent();
-                            const pageText = textContent.items.map(item => item.str).join(" ");
-                            fullText += pageText + " ";
-                        }
-                        
-                        extractedPdfText = fullText.toUpperCase();
-                        console.log("Extracted PDF Text length:", extractedPdfText.length);
-                        
-                        document.getElementById('loader').style.display = 'none';
-                        validateNames();
-                        
-                    } catch (err) {
-                        console.error("PDF Extraction Error:", err);
-                        alert("Error reading PDF text.");
-                        document.getElementById('loader').style.display = 'none';
+                    let fullText = "";
+                    
+                    // Extract text from all pages
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(" ");
+                        fullText += pageText + " ";
                     }
-                };
-                fileReader.readAsArrayBuffer(file);
+                    
+                    extractedPdfText = fullText.toUpperCase();
+                    console.log("Extracted PDF Text length:", extractedPdfText.length);
+                    
+                    document.getElementById('loader').style.display = 'none';
+                    validateNames();
+                    
+                } catch (err) {
+                    console.error("PDF Extraction Error:", err);
+                    alert("Error reading PDF text: " + err.message);
+                    document.getElementById('loader').style.display = 'none';
+                } finally {
+                    URL.revokeObjectURL(fileUrl);
+                }
             } catch (e) {
-                console.error(e);
+                console.error("File loading error:", e);
+                alert("File loading error: " + e.message);
                 document.getElementById('loader').style.display = 'none';
             }
         }

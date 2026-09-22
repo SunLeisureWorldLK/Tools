@@ -52,3 +52,13 @@ window.slwSetUserOffline = function(user) {
     }, { merge: true }).catch(e => console.error("Firestore Status Error:", e));
   } catch(e) {}
 };
+
+// Automatic heartbeat to keep user online while any tool is open
+setInterval(() => {
+  try {
+    const user = sessionStorage.getItem('slw_user_v3') || localStorage.getItem('slw_user_v3');
+    if (user && window.slwSetUserOnline) {
+      window.slwSetUserOnline(user);
+    }
+  } catch(e) {}
+}, 60000); // Every 60 seconds

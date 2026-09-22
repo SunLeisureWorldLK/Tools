@@ -22,6 +22,10 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
     </script>
+    <!-- Firebase SDK (Firestore verification logging) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="../firebase_init.js?v=2.3"></script>
 
     <style>
         body {
@@ -348,6 +352,125 @@
             padding: 16px;
             border-radius: 6px;
         }
+
+        /* Passenger Multi-Check Card Block */
+        .passenger-block {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .passenger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .passenger-title {
+            font-size: 1.12rem;
+            font-weight: 700;
+            color: #1a2a3a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .matched-visa-pill {
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 6-Month Validity Card */
+        .validity-card {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .validity-card.is-valid {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .validity-card.is-warning {
+            background: #fffbeb;
+            border-color: #fde047;
+        }
+
+        .validity-card.is-expired {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+
+        .field-badge.badge-warning {
+            background: #f59e0b;
+            color: #ffffff;
+        }
+
+        /* Visa Badge Tags in Upload Section */
+        .visa-badge-item {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .visa-badge-item .remove-visa-btn {
+            color: #94a3b8;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 4px;
+            font-size: 1.1rem;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+
+        .visa-badge-item .remove-visa-btn:hover {
+            color: #dc2626;
+        }
+
+        /* Preview Switcher Tabs */
+        .preview-tab-btn {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preview-tab-btn:hover, .preview-tab-btn.active {
+            background: #fff;
+            color: #1a2a3a;
+            font-weight: 600;
+        }
         
         .pdf-canvas-container {
             width: 100%;
@@ -417,7 +540,7 @@
     <div class="split-container">
         <!-- Left Side: Passport Scanner (Embedded via iframe) -->
         <div class="left-panel">
-            <iframe src="../passport-scanner/index.html?mode=visa-check&v=12" class="iframe-container" id="scanner-iframe"></iframe>
+            <iframe src="../passport-scanner/index.html?mode=visa-check&v=13" class="iframe-container" id="scanner-iframe"></iframe>
         </div>
 
         <!-- Right Side: PDF Upload & Validation -->
@@ -427,36 +550,45 @@
             <div class="upload-section" id="upload-zone">
                 <div id="upload-prompt">
                     <i class="fa-solid fa-file-pdf upload-icon"></i>
-                    <p>Click or drag &amp; drop TH VISA PDF</p>
-                    <span style="font-size:0.85rem; color:#6c757d; margin-top:5px; display:block;">Supports Thai e-Visa PDF documents</span>
+                    <p id="upload-main-text">Click or drag &amp; drop TH VISA PDF(s)</p>
+                    <span style="font-size:0.85rem; color:#6c757d; margin-top:5px; display:block;">Supports single or batch upload of Thai e-Visa PDF files (select multiple for groups)</span>
                 </div>
 
-                <div id="upload-success-content" style="display:none; align-items:center; justify-content:space-between; width:100%;">
-                    <div style="display:flex; align-items:center; gap:12px; text-align:left;">
-                        <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#28a745;"></i>
-                        <div>
-                            <div id="uploaded-filename" style="font-weight:700; font-size:1rem; color:#1a2a3a;"></div>
-                            <div id="uploaded-meta" style="font-size:0.85rem; color:#28a745; font-weight:500;"></div>
+                <div id="upload-success-content" style="display:none; flex-direction:column; gap:12px; width:100%;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:12px; text-align:left;">
+                            <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#28a745;"></i>
+                            <div>
+                                <div id="uploaded-summary-title" style="font-weight:700; font-size:1rem; color:#1a2a3a;"></div>
+                                <div id="uploaded-meta" style="font-size:0.85rem; color:#28a745; font-weight:500;"></div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-change-file" id="btn-add-more" type="button" style="background:#007bff;">
+                                <i class="fa-solid fa-plus"></i> Add More PDFs
+                            </button>
+                            <button class="btn-change-file" id="btn-clear-all" type="button" style="background:#dc2626;">
+                                <i class="fa-solid fa-trash-can"></i> Clear All
+                            </button>
                         </div>
                     </div>
-                    <button class="btn-change-file" id="btn-reupload" type="button">
-                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Change PDF
-                    </button>
+                    <!-- Badges for each loaded visa -->
+                    <div id="visas-badge-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;"></div>
                 </div>
             </div>
 
-            <!-- Hidden file input placed outside the clickable zone -->
-            <input type="file" id="file-input" accept="application/pdf,.pdf" style="display:none;">
+            <!-- Hidden file input placed outside the clickable zone (multiple allowed) -->
+            <input type="file" id="file-input" accept="application/pdf,.pdf" multiple style="display:none;">
             
             <div class="loader" id="loader">
                 <i class="fa-solid fa-circle-notch"></i>
-                <p id="loader-text">Reading &amp; Analyzing Visa PDF...</p>
+                <p id="loader-text">Reading &amp; Analyzing Visa PDF(s)...</p>
             </div>
 
             <!-- Verification Results -->
             <div class="results-section" id="results-section">
                 <h2>
-                    <span><i class="fa-solid fa-spell-check" style="color:#007bff; margin-right:8px;"></i> Name Verification Comparison</span>
+                    <span><i class="fa-solid fa-spell-check" style="color:#007bff; margin-right:8px;"></i> Name &amp; Validity Verification</span>
                     <span id="overall-status-badge" style="font-size:0.85rem;"></span>
                 </h2>
                 <div id="results-container">
@@ -466,8 +598,12 @@
             
             <!-- PDF Canvas Preview -->
             <div class="pdf-canvas-container" id="pdf-container">
-                <div class="pdf-canvas-header">
-                    <i class="fa-solid fa-eye"></i> Visa Document Preview
+                <div class="pdf-canvas-header" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-eye"></i> Visa Document Preview: <span id="preview-active-title" style="color:#93c5fd; font-weight:normal;"></span>
+                    </div>
+                    <!-- Tab switcher if multiple visas are loaded -->
+                    <div id="preview-switcher-tabs" style="display:none; gap:6px; flex-wrap:wrap;"></div>
                 </div>
                 <canvas id="pdf-render"></canvas>
             </div>
@@ -477,8 +613,10 @@
 
     <script>
         let passportData = [];
-        let extractedPdfText = "";
-        let currentLoadedFileName = "";
+        let loadedVisas = []; // Array of { id, file, fileName, fileSize, numPages, extractedPdfText, visa, pdfDoc }
+        let activePreviewVisaId = null;
+        let currentRenderTask = null;
+        let loggedEventKeys = new Set(); // Prevent duplicate Firestore logging
 
         // Listen for messages from embedded Passport Scanner iframe
         window.addEventListener('message', (event) => {
@@ -486,7 +624,7 @@
                 passportData = event.data.data || [];
                 console.log("Received Passport Data from Scanner:", passportData);
                 
-                if (extractedPdfText) {
+                if (loadedVisas.length > 0) {
                     validateNames();
                 } else {
                     renderPendingState();
@@ -498,20 +636,26 @@
         const uploadZone = document.getElementById('upload-zone');
         const uploadPrompt = document.getElementById('upload-prompt');
         const uploadSuccessContent = document.getElementById('upload-success-content');
-        const uploadedFilename = document.getElementById('uploaded-filename');
-        const uploadedMeta = document.getElementById('uploaded-meta');
-        const btnReupload = document.getElementById('btn-reupload');
+        const btnAddMore = document.getElementById('btn-add-more');
+        const btnClearAll = document.getElementById('btn-clear-all');
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loader-text');
 
         uploadZone.addEventListener('click', (e) => {
-            if (e.target.closest('#btn-reupload')) return;
+            if (e.target.closest('#btn-add-more') || e.target.closest('#btn-clear-all') || e.target.closest('.remove-visa-btn')) return;
             fileInput.click();
         });
 
-        btnReupload.addEventListener('click', (e) => {
+        btnAddMore.addEventListener('click', (e) => {
             e.stopPropagation();
             fileInput.click();
+        });
+
+        btnClearAll.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm("Remove all loaded Thai Visa documents?")) {
+                clearAllVisas();
+            }
         });
 
         uploadZone.addEventListener('dragover', (e) => {
@@ -528,21 +672,23 @@
             e.preventDefault();
             uploadZone.classList.remove('dragover');
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                processVisaFile(e.dataTransfer.files[0]);
+                processVisaFiles(e.dataTransfer.files);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                processVisaFile(e.target.files[0]);
+                processVisaFiles(e.target.files);
             }
         });
 
-        async function processVisaFile(file) {
-            console.log("Selected file:", file.name, file.size, file.type);
+        // Batch PDF File Processor
+        async function processVisaFiles(files) {
+            if (!files || files.length === 0) return;
+            const fileArray = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf');
 
-            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-                showError("The selected file is not a PDF. Please select a valid .pdf Thai Visa document.");
+            if (fileArray.length === 0) {
+                showError("No valid PDF file selected. Please select Thai Visa .pdf document(s).");
                 return;
             }
 
@@ -551,70 +697,205 @@
                 return;
             }
 
-            currentLoadedFileName = file.name;
-            uploadPrompt.style.display = 'none';
-            uploadSuccessContent.style.display = 'flex';
-            uploadedFilename.textContent = file.name;
-            uploadedMeta.textContent = (file.size / 1024).toFixed(1) + ' KB • Reading file...';
-            uploadZone.classList.add('loaded');
-
             loader.style.display = 'block';
-            loaderText.textContent = 'Reading & Parsing ' + file.name + '...';
-            document.getElementById('results-section').style.display = 'none';
-            document.getElementById('pdf-container').style.display = 'none';
-            extractedPdfText = "";
+            let count = 0;
 
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                loaderText.textContent = 'Extracting text & rendering preview...';
-                
-                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-                console.log("PDF loaded successfully. Number of pages:", pdf.numPages);
+            for (const file of fileArray) {
+                count++;
+                loaderText.textContent = `Reading & Analyzing Visa PDF (${count}/${fileArray.length}): ${file.name}...`;
 
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(" ");
-                    fullText += pageText + " \n ";
+                // Skip if already loaded
+                if (loadedVisas.some(v => v.fileName === file.name && v.fileSize === file.size)) {
+                    continue;
                 }
-                extractedPdfText = fullText.toUpperCase();
-                console.log("Extracted PDF text length:", extractedPdfText.length);
 
-                // Render Preview Canvas
                 try {
-                    const page1 = await pdf.getPage(1);
-                    const viewport = page1.getViewport({ scale: 1.2 });
-                    const canvas = document.getElementById('pdf-render');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
 
-                    await page1.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    }).promise;
+                    let fullText = "";
+                    for (let p = 1; p <= pdfDoc.numPages; p++) {
+                        const page = await pdfDoc.getPage(p);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(" ");
+                        fullText += pageText + " \n ";
+                    }
+                    const extractedText = fullText.toUpperCase();
+                    const visaDetails = parseThaiVisaDetails(extractedText);
+                    visaDetails.fileName = file.name;
 
-                    document.getElementById('pdf-container').style.display = 'block';
-                } catch (renderErr) {
-                    console.warn("Preview render warning:", renderErr);
+                    const visaItem = {
+                        id: 'visa_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                        file: file,
+                        fileName: file.name,
+                        fileSize: file.size,
+                        numPages: pdfDoc.numPages,
+                        extractedPdfText: extractedText,
+                        visa: visaDetails,
+                        pdfDoc: pdfDoc
+                    };
+
+                    loadedVisas.push(visaItem);
+
+                } catch (err) {
+                    console.error("Error reading PDF:", file.name, err);
                 }
+            }
 
-                uploadedMeta.textContent = '✓ ' + (file.size / 1024).toFixed(1) + ' KB • ' + pdf.numPages + ' Page(s) • Ready';
-                loader.style.display = 'none';
+            loader.style.display = 'none';
+            fileInput.value = '';
 
-                // Run verification
-                validateNames();
+            if (loadedVisas.length === 0) {
+                showError("Failed to parse the uploaded PDF file(s). Please verify the documents.");
+                renderUploadState();
+                return;
+            }
 
-            } catch (err) {
-                console.error("PDF Processing Error:", err);
-                showError("Failed to read PDF: " + (err.message || err));
+            if (!activePreviewVisaId || !loadedVisas.some(v => v.id === activePreviewVisaId)) {
+                activePreviewVisaId = loadedVisas[0].id;
+            }
+
+            renderUploadState();
+            renderPreviewTabs();
+            renderPdfPreview(loadedVisas.find(v => v.id === activePreviewVisaId));
+
+            validateNames();
+        }
+
+        function removeVisa(visaId) {
+            loadedVisas = loadedVisas.filter(v => v.id !== visaId);
+            if (activePreviewVisaId === visaId) {
+                activePreviewVisaId = loadedVisas.length > 0 ? loadedVisas[0].id : null;
+            }
+            renderUploadState();
+            renderPreviewTabs();
+            if (activePreviewVisaId) {
+                renderPdfPreview(loadedVisas.find(v => v.id === activePreviewVisaId));
+            } else {
+                document.getElementById('pdf-container').style.display = 'none';
+            }
+            validateNames();
+        }
+
+        function clearAllVisas() {
+            loadedVisas = [];
+            activePreviewVisaId = null;
+            if (currentRenderTask) {
+                try { currentRenderTask.cancel(); } catch(e) {}
+                currentRenderTask = null;
+            }
+            renderUploadState();
+            document.getElementById('pdf-container').style.display = 'none';
+            document.getElementById('results-section').style.display = 'none';
+            if (passportData.length > 0) {
+                renderPendingState();
+            }
+        }
+
+        function renderUploadState() {
+            if (loadedVisas.length === 0) {
                 uploadPrompt.style.display = 'block';
                 uploadSuccessContent.style.display = 'none';
                 uploadZone.classList.remove('loaded');
-            } finally {
-                fileInput.value = '';
+            } else {
+                uploadPrompt.style.display = 'none';
+                uploadSuccessContent.style.display = 'flex';
+                uploadZone.classList.add('loaded');
+
+                const summaryTitle = document.getElementById('uploaded-summary-title');
+                const summaryMeta = document.getElementById('uploaded-meta');
+                const badgeList = document.getElementById('visas-badge-list');
+
+                if (loadedVisas.length === 1) {
+                    const v = loadedVisas[0];
+                    const pName = v.visa.fullName || v.fileName;
+                    summaryTitle.textContent = `${v.fileName}`;
+                    summaryMeta.textContent = `✓ ${(v.fileSize / 1024).toFixed(1)} KB • ${v.numPages} Page(s) • Passenger: ${pName}`;
+                } else {
+                    summaryTitle.textContent = `✓ ${loadedVisas.length} Thai Visa PDFs Loaded (Batch Mode)`;
+                    summaryMeta.textContent = `Auto-matching with scanned passports`;
+                }
+
+                badgeList.innerHTML = '';
+                loadedVisas.forEach(v => {
+                    const label = v.visa.fullName ? `${v.visa.fullName} (${v.visa.passportNo || v.visa.visaNumber || 'Visa'})` : v.fileName;
+                    const badge = document.createElement('div');
+                    badge.className = 'visa-badge-item';
+                    badge.innerHTML = `
+                        <i class="fa-solid fa-file-pdf" style="color:#dc2626;"></i>
+                        <span title="${escapeHtml(v.fileName)}" style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;">${escapeHtml(label)}</span>
+                        <span class="remove-visa-btn" title="Remove this Visa" onclick="event.stopPropagation(); removeVisa('${v.id}')">&times;</span>
+                    `;
+                    badgeList.appendChild(badge);
+                });
             }
+        }
+
+        // Render Canvas Preview
+        async function renderPdfPreview(visaItem) {
+            if (!visaItem || !visaItem.pdfDoc) return;
+            const pdfContainer = document.getElementById('pdf-container');
+            const previewTitle = document.getElementById('preview-active-title');
+            const canvas = document.getElementById('pdf-render');
+            if (!canvas) return;
+
+            if (currentRenderTask) {
+                try {
+                    currentRenderTask.cancel();
+                } catch(e) {}
+                currentRenderTask = null;
+            }
+
+            try {
+                const page1 = await visaItem.pdfDoc.getPage(1);
+                const viewport = page1.getViewport({ scale: 1.25 });
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                previewTitle.textContent = visaItem.visa.fullName ? `${visaItem.visa.fullName} (${visaItem.fileName})` : visaItem.fileName;
+
+                currentRenderTask = page1.render({
+                    canvasContext: context,
+                    viewport: viewport
+                });
+
+                await currentRenderTask.promise;
+                pdfContainer.style.display = 'block';
+            } catch (err) {
+                if (err && err.name !== 'RenderingCancelledException') {
+                    console.warn("Preview render error:", err);
+                }
+            }
+        }
+
+        function renderPreviewTabs() {
+            const tabsContainer = document.getElementById('preview-switcher-tabs');
+            if (!tabsContainer) return;
+
+            if (loadedVisas.length <= 1) {
+                tabsContainer.style.display = 'none';
+                tabsContainer.innerHTML = '';
+                return;
+            }
+
+            tabsContainer.style.display = 'flex';
+            tabsContainer.innerHTML = '';
+
+            loadedVisas.forEach((v, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'preview-tab-btn' + (v.id === activePreviewVisaId ? ' active' : '');
+                const shortName = v.visa.familyName || v.visa.firstName || `Visa #${idx + 1}`;
+                btn.textContent = `📄 ${shortName}`;
+                btn.title = v.fileName;
+                btn.onclick = () => {
+                    activePreviewVisaId = v.id;
+                    renderPreviewTabs();
+                    renderPdfPreview(v);
+                };
+                tabsContainer.appendChild(btn);
+            });
         }
 
         function showError(message) {
@@ -623,7 +904,7 @@
             const container = document.getElementById('results-container');
             container.innerHTML = `
                 <div style="background:#fef2f2; border:1.5px solid #dc3545; border-radius:8px; padding:16px; color:#991b1b;">
-                    <h3 style="margin:0 0 6px 0;"><i class="fa-solid fa-circle-exclamation"></i> Processing Failed</h3>
+                    <h3 style="margin:0 0 6px 0;"><i class="fa-solid fa-circle-exclamation"></i> Processing Error</h3>
                     <p style="margin:0;">${message}</p>
                 </div>
             `;
@@ -635,7 +916,7 @@
             container.innerHTML = `
                 <div class="match-card pending">
                     <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-clock"></i> Passport Data Received</h3>
-                    <p style="margin:0; color:#713f12;">Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the Thai VISA PDF on the right to compare.</p>
+                    <p style="margin:0; color:#713f12;">Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the corresponding Thai VISA PDF(s) on the right to compare.</p>
                 </div>
             `;
         }
@@ -699,6 +980,26 @@
                 /Passport\s*number\s*:\s*([A-Z0-9]+)/i
             ]);
 
+            const visaNumber = getField([
+                /Visa\s*number\s*:\s*([A-Z0-9]+)/i,
+                /Visa\s*No\.?\s*:\s*([A-Z0-9]+)/i,
+                /Reference\s*No\.?\s*:\s*([A-Z0-9]+)/i
+            ]);
+
+            const validFrom = getField([
+                /Valid\s*from\s*:\s*([0-9A-Z\s]+?)(?=\s*(?:Valid\s*until|Entries|No\.?\s*of|Visa|$))/i,
+                /Valid\s*from\s*:\s*([^\n\r]+)/i
+            ]);
+
+            const validUntil = getField([
+                /Valid\s*until\s*:\s*([0-9A-Z\s]+?)(?=\s*(?:A\.\s*APPLICANT|Entries|No\.?\s*of|Visa|$))/i,
+                /Valid\s*until\s*:\s*([^\n\r]+)/i
+            ]);
+
+            const visaType = getField([
+                /Visa\s*type\s*:\s*([^\n\r]+)/i
+            ]);
+
             const givenNames = [firstName, middleName].filter(Boolean).join(' ').trim();
             const fullName = [firstName, middleName, familyName].filter(Boolean).join(' ').trim();
 
@@ -710,9 +1011,13 @@
                 dob,
                 nationality: nationality || passportTdCountry,
                 passportNo,
+                visaNumber,
+                validFrom,
+                validUntil,
+                visaType,
                 givenNames,
                 fullName,
-                hasStructuredData: !!(firstName || familyName)
+                hasStructuredData: !!(firstName || familyName || passportNo)
             };
         }
 
@@ -757,7 +1062,7 @@
                 };
             }
 
-            // Check DD Month YYYY (e.g. 20 July 1968)
+            // Check DD Month YYYY (e.g. 20 July 1968 or 13 December 2026)
             const textMatch1 = str.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/);
             if (textMatch1 && MONTH_MAP[textMatch1[2]]) {
                 const m = MONTH_MAP[textMatch1[2]];
@@ -770,6 +1075,89 @@
             }
 
             return null;
+        }
+
+        // Passport 6-Month Validity Checker
+        function checkPassportValidity(passportExpiryStr, visaValidUntilStr) {
+            if (!passportExpiryStr) {
+                return {
+                    status: 'MISSING',
+                    badgeClass: 'badge-err',
+                    title: 'Expiry Date Missing in Passport',
+                    message: 'Passport Date of Expiry was not detected. Cannot verify 6-month validity rule.',
+                    isOk: false
+                };
+            }
+
+            const pExp = parseAnyDate(passportExpiryStr);
+            if (!pExp) {
+                return {
+                    status: 'UNKNOWN',
+                    badgeClass: 'badge-err',
+                    title: 'Unparseable Passport Expiry',
+                    message: `Could not parse passport expiry date: "${passportExpiryStr}"`,
+                    isOk: false
+                };
+            }
+
+            const expDate = new Date(pExp.year, pExp.month - 1, pExp.day);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let refDate = today;
+            let refLabel = 'Today';
+            let pUntil = null;
+
+            if (visaValidUntilStr) {
+                pUntil = parseAnyDate(visaValidUntilStr);
+                if (pUntil) {
+                    refDate = new Date(pUntil.year, pUntil.month - 1, pUntil.day);
+                    refLabel = `Visa 'Valid until' (${pUntil.display})`;
+                }
+            }
+
+            const diffDays = Math.round((expDate - refDate) / (1000 * 60 * 60 * 24));
+            const monthsRemaining = (diffDays / 30.4375).toFixed(1);
+
+            if (diffDays <= 0) {
+                return {
+                    status: 'EXPIRED',
+                    badgeClass: 'badge-err',
+                    title: 'CRITICAL: Passport Expired / Invalid for Travel',
+                    message: `Passport expires on ${pExp.display}, which is before or on ${refLabel}!`,
+                    isOk: false,
+                    diffDays,
+                    monthsRemaining,
+                    pExp,
+                    pUntil
+                };
+            }
+
+            if (diffDays < 180) { // Less than 6 months (180 days)
+                return {
+                    status: 'WARNING',
+                    badgeClass: 'badge-warning',
+                    title: 'ALERT: Less than 6 Months Validity Remaining',
+                    message: `Passport expires on ${pExp.display} (only ~${monthsRemaining} months / ${diffDays} days validity left after ${refLabel}). International airlines and Thai immigration strictly require at least 6 months validity.`,
+                    isOk: false,
+                    diffDays,
+                    monthsRemaining,
+                    pExp,
+                    pUntil
+                };
+            }
+
+            return {
+                status: 'VALID',
+                badgeClass: 'badge-match',
+                title: 'VALID: Passport Meets 6-Month Rule',
+                message: `Passport expires on ${pExp.display} (~${monthsRemaining} months / ${diffDays} days validity remaining after ${refLabel}). Sufficient validity for travel!`,
+                isOk: true,
+                diffDays,
+                monthsRemaining,
+                pExp,
+                pUntil
+            };
         }
 
         function compareDates(expDateStr, actDateStr) {
@@ -891,7 +1279,6 @@
             const expNoSpace = exp.replace(/\s+/g, '');
             const actNoSpace = act.replace(/\s+/g, '');
 
-            // 1. Full 100% Match (including normalizing any PDF font kerning spaces)
             if (expNoSpace === actNoSpace) {
                 return {
                     isMatch: true,
@@ -905,7 +1292,7 @@
                 };
             }
 
-            // 2. Character-level diff using LCS alignment
+            // Character-level diff using LCS alignment
             const m = exp.length;
             const n = act.length;
             const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
@@ -929,11 +1316,9 @@
                     i--;
                     j--;
                 } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-                    // Extra/wrong letter in Visa
                     diffChars.unshift({ char: act[j - 1], type: 'err', expected: i > 0 ? exp[i - 1] : '' });
                     j--;
                 } else if (i > 0) {
-                    // Missing letter in Visa that was in Passport
                     diffChars.unshift({ char: exp[i - 1], type: 'missing' });
                     i--;
                 }
@@ -969,6 +1354,76 @@
             };
         }
 
+        // Auto-match Passport with corresponding loaded Thai Visa
+        function findMatchingVisa(pp) {
+            if (loadedVisas.length === 0) return null;
+            const ppPassNo = (pp.passportNumber || '').toUpperCase().trim();
+            const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
+            const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
+
+            // 1. Try exact match on Passport Number
+            if (ppPassNo) {
+                let m = loadedVisas.find(v => v.visa.passportNo && v.visa.passportNo === ppPassNo);
+                if (m) return m;
+                m = loadedVisas.find(v => v.extractedPdfText.includes(ppPassNo));
+                if (m) return m;
+            }
+
+            // 2. Try match on Surname (Family name)
+            if (ppSurname) {
+                let m = loadedVisas.find(v => v.visa.familyName && v.visa.familyName === ppSurname);
+                if (m) return m;
+            }
+
+            // 3. Fallback: single passport & single visa
+            if (loadedVisas.length === 1 && passportData.length === 1) {
+                return loadedVisas[0];
+            }
+
+            return null;
+        }
+
+        // Log verification event to Firestore
+        function logVerificationEvent(pp, matchedVisa, cardMatched, validityComp, mismatchList) {
+            if (typeof db === 'undefined' || !db) return;
+
+            const ppPassNo = (pp.passportNumber || '').toUpperCase().trim();
+            const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
+            const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
+            const visaNo = matchedVisa.visa.visaNumber || 'N/A';
+
+            const logKey = `${ppPassNo}_${visaNo}_${cardMatched}_${validityComp.status}`;
+            if (loggedEventKeys.has(logKey)) {
+                return;
+            }
+            loggedEventKeys.add(logKey);
+
+            const currentUser = sessionStorage.getItem('slw_user_v3') || localStorage.getItem('slw_user_v3') || 'Agent';
+
+            const logEntry = {
+                officer: currentUser,
+                passengerName: `${ppGiven} ${ppSurname}`.trim() || 'Unknown',
+                passportNo: ppPassNo || 'Unknown',
+                visaNo: visaNo,
+                visaFileName: matchedVisa.fileName || '',
+                status: cardMatched ? 'MATCHED' : 'MISMATCH',
+                validityStatus: validityComp.status,
+                validityRemaining: validityComp.monthsRemaining ? `${validityComp.monthsRemaining} mo` : '',
+                validityDetails: validityComp.message || '',
+                mismatches: mismatchList || [],
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection('slw_visa_verification_logs').add(logEntry)
+              .then(() => console.log("Logged verification to Firestore:", logKey))
+              .catch(err => console.error("Firestore Visa Log Error:", err));
+
+            if (window.slwLogActivity) {
+                window.slwLogActivity(`Verified TH Visa: ${ppSurname || ppPassNo} (${cardMatched ? 'MATCHED' : 'MISMATCH'})`);
+            }
+        }
+
+        // Main Verification Runner
         function validateNames() {
             document.getElementById('results-section').style.display = 'block';
             const container = document.getElementById('results-container');
@@ -976,21 +1431,25 @@
             container.innerHTML = '';
             
             if (passportData.length === 0) {
-                overallBadge.innerHTML = `<span class="field-badge badge-match" style="background:#f59e0b;">Awaiting Passport</span>`;
+                overallBadge.innerHTML = `<span class="field-badge" style="background:#f59e0b; color:white;">Awaiting Passport</span>`;
                 container.innerHTML = `
                     <div class="match-card pending">
-                        <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-check"></i> Visa PDF Loaded: ${escapeHtml(currentLoadedFileName)}</h3>
-                        <p style="margin:0; color:#713f12;">Thai Visa text extracted successfully. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
+                        <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-check"></i> ${loadedVisas.length} Thai Visa Document(s) Loaded</h3>
+                        <p style="margin:0; color:#713f12;">Thai Visa data extracted. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
                     </div>
                 `;
                 return;
             }
 
-            // Extract structured Thai Visa fields
-            const visa = parseThaiVisaDetails(extractedPdfText);
-            console.log("Parsed Visa details:", visa);
+            if (loadedVisas.length === 0) {
+                renderPendingState();
+                return;
+            }
 
-            let allCardsMatched = true;
+            let allOverallMatched = true;
+            let hasAnyMismatch = false;
+            let hasAnyValidityWarning = false;
+            let awaitingVisaCount = 0;
 
             passportData.forEach((pp, index) => {
                 const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
@@ -999,51 +1458,85 @@
                 const ppDob = (pp.dateOfBirth || pp.dob || '').trim();
                 const ppSex = (pp.sex || '').trim();
                 const ppNat = (pp.nationality || '').trim();
+                const ppExpiry = (pp.dateOfExpiry || pp.expiry || '').trim();
 
-                // 1. Determine Visa Given Names (First + Middle)
+                const matchedVisa = findMatchingVisa(pp);
+
+                if (!matchedVisa) {
+                    awaitingVisaCount++;
+                    allOverallMatched = false;
+
+                    const pendingCard = document.createElement('div');
+                    pendingCard.className = 'passenger-block';
+                    pendingCard.style.border = '1.5px dashed #f59e0b';
+                    pendingCard.style.background = '#fffbeb';
+                    pendingCard.innerHTML = `
+                        <div class="passenger-header">
+                            <div class="passenger-title">
+                                <i class="fa-solid fa-user-clock" style="color:#f59e0b;"></i>
+                                Passenger #${index + 1}: ${escapeHtml(ppGiven)} ${escapeHtml(ppSurname)}
+                                <span style="font-family:monospace; font-size:0.9rem; background:#ffffff; padding:2px 8px; border-radius:4px; border:1px solid #fde047;">${escapeHtml(ppPassNo || 'No Passport No')}</span>
+                            </div>
+                            <span class="field-badge" style="background:#f59e0b; color:white;">Awaiting Matching Visa PDF</span>
+                        </div>
+                        <p style="margin:0; color:#854d0e; font-size:0.95rem;">
+                            No matching Thai Visa PDF detected for this passport. Please upload this passenger's Thai e-Visa PDF on the right to complete verification.
+                        </p>
+                    `;
+                    container.appendChild(pendingCard);
+                    return;
+                }
+
+                // Matched Visa Details
+                const visa = matchedVisa.visa;
+                const visaText = matchedVisa.extractedPdfText;
+
+                // 1. Given Names
                 let vGiven = visa.givenNames;
                 if (!vGiven && visa.hasStructuredData) {
                     vGiven = [visa.firstName, visa.middleName].filter(Boolean).join(' ').trim();
                 }
-                if (!vGiven) {
-                    vGiven = ppGiven.split(/\s+/).every(part => extractedPdfText.includes(part)) ? ppGiven : '';
+                if (!vGiven && ppGiven) {
+                    vGiven = ppGiven.split(/\s+/).every(part => visaText.includes(part)) ? ppGiven : '';
                 }
 
-                // 2. Determine Visa Surname
+                // 2. Surname
                 let vSurname = visa.familyName;
                 if (!vSurname && visa.hasStructuredData) {
                     vSurname = visa.familyName;
                 }
-                if (!vSurname) {
-                    vSurname = ppSurname.split(/\s+/).every(part => extractedPdfText.includes(part)) ? ppSurname : '';
+                if (!vSurname && ppSurname) {
+                    vSurname = ppSurname.split(/\s+/).every(part => visaText.includes(part)) ? ppSurname : '';
                 }
 
-                // 3. Determine Visa Passport Number
+                // 3. Passport Number
                 let vPassNo = visa.passportNo;
-                if (!vPassNo && ppPassNo && extractedPdfText.includes(ppPassNo)) {
+                if (!vPassNo && ppPassNo && visaText.includes(ppPassNo)) {
                     vPassNo = ppPassNo;
                 }
 
-                // 4. Determine Visa Date of Birth
+                // 4. Date of Birth
                 let vDob = visa.dob;
-                if (!vDob && ppDob && extractedPdfText.includes(ppDob)) {
+                if (!vDob && ppDob && visaText.includes(ppDob)) {
                     vDob = ppDob;
                 }
 
-                // 5. Determine Visa Sex
+                // 5. Sex
                 let vSex = visa.sex;
 
-                // 6. Determine Visa Nationality
+                // 6. Nationality
                 let vNat = visa.nationality;
 
-                // Compare each field
+                // 7. Visa Valid Until
+                let vValidUntil = visa.validUntil;
+
+                // Comparisons
                 const givenComp = compareAndRenderName(ppGiven, vGiven);
                 const surnameComp = compareAndRenderName(ppSurname, vSurname);
                 const dobComp = compareDates(ppDob, vDob);
                 const sexComp = compareSex(ppSex, vSex);
                 const natComp = compareNationality(ppNat, vNat);
-                
-                // Compare Passport Number
+
                 let passNoMatch = false;
                 let passNoHtml = '';
                 if (ppPassNo && vPassNo) {
@@ -1062,36 +1555,83 @@
                     passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo || 'Missing in Visa')}</span></div>`;
                 }
 
-                const cardMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch && dobComp.isMatch && sexComp.isMatch && natComp.isMatch;
-                if (!cardMatched) {
-                    allCardsMatched = false;
+                // 6-Month Validity Rule Evaluation
+                const validityComp = checkPassportValidity(ppExpiry, vValidUntil);
+
+                const detailsMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch && dobComp.isMatch && sexComp.isMatch && natComp.isMatch;
+                const passengerPassed = detailsMatched && validityComp.isOk;
+
+                if (!detailsMatched) {
+                    hasAnyMismatch = true;
+                    allOverallMatched = false;
+                }
+                if (!validityComp.isOk) {
+                    if (validityComp.status === 'WARNING') hasAnyValidityWarning = true;
+                    allOverallMatched = false;
                 }
 
-                // Build Comparison HTML
-                const cardDiv = document.createElement('div');
-                cardDiv.style.marginBottom = '20px';
+                // Gather list of mismatch fields
+                const mismatchList = [];
+                if (!givenComp.isMatch) mismatchList.push('Given Names');
+                if (!surnameComp.isMatch) mismatchList.push('Surname');
+                if (!dobComp.isMatch) mismatchList.push('DOB');
+                if (!sexComp.isMatch) mismatchList.push('Sex');
+                if (!natComp.isMatch) mismatchList.push('Nationality');
+                if (!passNoMatch) mismatchList.push('Passport No');
+                if (!validityComp.isOk) mismatchList.push(`6-Month Validity (${validityComp.status})`);
 
-                cardDiv.innerHTML = `
-                    <!-- Top Status Banner for this Passport -->
-                    ${cardMatched ? `
+                // Log to Firestore
+                logVerificationEvent(pp, matchedVisa, detailsMatched, validityComp, mismatchList);
+
+                // Build Passenger HTML Card
+                const blockDiv = document.createElement('div');
+                blockDiv.className = 'passenger-block';
+
+                blockDiv.innerHTML = `
+                    <!-- Header with Passenger & Matched Visa Info -->
+                    <div class="passenger-header">
+                        <div class="passenger-title">
+                            <i class="fa-solid fa-user-check" style="color:#007bff;"></i>
+                            Passenger #${index + 1}: ${escapeHtml(ppGiven)} ${escapeHtml(ppSurname)}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="matched-visa-pill" title="Matched Visa Document">
+                                <i class="fa-solid fa-file-pdf"></i> Visa: ${escapeHtml(visa.visaNumber || matchedVisa.fileName)}
+                            </span>
+                            <button type="button" class="preview-tab-btn" style="background:#1a2a3a; color:white;" onclick="activePreviewVisaId='${matchedVisa.id}'; renderPreviewTabs(); renderPdfPreview(loadedVisas.find(v=>v.id==='${matchedVisa.id}'));">
+                                <i class="fa-solid fa-eye"></i> View PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Outcome Banner for this Passenger -->
+                    ${detailsMatched && validityComp.isOk ? `
                         <div class="banner-match">
                             <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#22c55e;"></i>
                             <div>
-                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names & Details Match 100%</h3>
-                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">Given Names, Surname, Date of Birth, Sex, Nationality, and Passport Number all match perfectly.</p>
+                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names, Personal Details &amp; 6-Month Rule Passed!</h3>
+                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">Given Names, Surname, Date of Birth, Sex, Nationality, Passport Number, and 6-Month Validity verified 100%.</p>
+                            </div>
+                        </div>
+                    ` : (detailsMatched && validityComp.status === 'WARNING' ? `
+                        <div class="banner-mismatch" style="background:#fffbeb; border-color:#f59e0b;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#f59e0b;"></i>
+                            <div>
+                                <h3 style="margin:0; color:#b45309; font-size:1.1rem;">⚠ NAMES MATCHED, BUT PASSPORT HAS LESS THAN 6 MONTHS VALIDITY!</h3>
+                                <p style="margin:3px 0 0 0; color:#92400e; font-size:0.9rem;">All spelling &amp; personal data match, but passport expires soon. Airlines and Thai immigration strictly require at least 6 months validity.</p>
                             </div>
                         </div>
                     ` : `
                         <div class="banner-mismatch">
                             <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#ef4444;"></i>
                             <div>
-                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH: Difference Detected in Details!</h3>
-                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the fields below. Characters or values highlighted in red do not match.</p>
+                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH DETECTED: Differences Found in Details!</h3>
+                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the fields below. Characters or dates marked with red do not match the passport.</p>
                             </div>
                         </div>
-                    `}
+                    `)}
 
-                    <!-- Given Names (First Name + Middle Name) Row -->
+                    <!-- Given Names Row -->
                     <div class="comparison-card ${givenComp.isMatch ? 'is-match' : 'is-error'}">
                         <div class="field-header">
                             <span class="field-title"><i class="fa-solid fa-user"></i> Given Names (First Name + Middle Name)</span>
@@ -1180,16 +1720,53 @@
                             <div>${passNoHtml}</div>
                         </div>
                     </div>
+
+                    <!-- 6-Month Passport Validity Rule Row -->
+                    <div class="validity-card ${validityComp.status === 'VALID' ? 'is-valid' : (validityComp.status === 'WARNING' ? 'is-warning' : 'is-expired')}">
+                        <div class="field-header">
+                            <span class="field-title"><i class="fa-solid fa-calendar-check"></i> Passport 6-Month Validity Rule</span>
+                            <span class="field-badge ${validityComp.badgeClass}">
+                                ${validityComp.status === 'VALID' ? '✓ 6+ Months Valid' : (validityComp.status === 'WARNING' ? '⚠ Less than 6 Months' : '✕ Expired / Critical')}
+                            </span>
+                        </div>
+                        <div class="val-grid">
+                            <div class="val-label">Passport Expiry:</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">
+                                ${escapeHtml(ppExpiry || 'Not Detected')}
+                                ${validityComp.pExp ? `<span style="font-weight:normal; color:#64748b; font-size:0.85rem; margin-left:6px;">(${validityComp.pExp.display})</span>` : ''}
+                            </div>
+
+                            <div class="val-label">Visa Valid Until:</div>
+                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">
+                                ${escapeHtml(vValidUntil || 'Not Specified')}
+                                ${validityComp.pUntil ? `<span style="font-weight:normal; color:#64748b; font-size:0.85rem; margin-left:6px;">(${validityComp.pUntil.display})</span>` : ''}
+                            </div>
+
+                            <div class="val-label">Rule Evaluation:</div>
+                            <div>
+                                <div style="font-size:0.95rem; font-weight:700; color:${validityComp.status === 'VALID' ? '#15803d' : (validityComp.status === 'WARNING' ? '#b45309' : '#b91c1c')};">
+                                    ${validityComp.title}
+                                </div>
+                                <div style="font-size:0.85rem; color:#475569; margin-top:3px;">
+                                    ${validityComp.message}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
 
-                container.appendChild(cardDiv);
+                container.appendChild(blockDiv);
             });
 
             // Update top overall status badge
-            if (allCardsMatched) {
-                overallBadge.innerHTML = `<span class="field-badge badge-match" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> ALL MATCHED (GREEN)</span>`;
-            } else {
+            if (allOverallMatched) {
+                overallBadge.innerHTML = `<span class="field-badge badge-match" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> ALL MATCHED &amp; VALID (GREEN)</span>`;
+            } else if (hasAnyMismatch) {
                 overallBadge.innerHTML = `<span class="field-badge badge-err" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> MISMATCH FOUND (RED)</span>`;
+            } else if (hasAnyValidityWarning) {
+                overallBadge.innerHTML = `<span class="field-badge badge-warning" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> VALIDITY WARNING (&lt;6 MO)</span>`;
+            } else {
+                overallBadge.innerHTML = `<span class="field-badge" style="background:#f59e0b; color:white; padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-clock"></i> PENDING VISA DOCUMENTS</span>`;
             }
 
             // Send verification result back to iframe to highlight passport card green/red
@@ -1197,7 +1774,7 @@
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({
                     type: 'VERIFICATION_RESULT',
-                    allMatched: allCardsMatched
+                    allMatched: allOverallMatched
                 }, '*');
             }
         }

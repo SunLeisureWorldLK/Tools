@@ -175,6 +175,37 @@
         </tbody>
       </table>
     </div>
+
+    <!-- TH VISA Verification Logs Section -->
+    <div class="admin-card" style="margin-top: 30px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+        <h3 style="margin:0; border:none; padding:0; display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-passport" style="color:var(--primary);"></i> TH VISA Verification Logs
+          <span id="visa-log-count" style="font-size:0.8rem; background:var(--surface); border:1px solid var(--border); padding:2px 8px; border-radius:12px; color:var(--text2); font-weight:normal;">0 logs</span>
+        </h3>
+        <button onclick="clearVisaLogs()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:600;"><i class="fas fa-trash"></i> Clear Visa Logs</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border); color:var(--text2);">
+              <th style="padding:10px;">Time</th>
+              <th style="padding:10px;">Officer</th>
+              <th style="padding:10px;">Passenger Name</th>
+              <th style="padding:10px;">Passport No</th>
+              <th style="padding:10px;">Visa No</th>
+              <th style="padding:10px; text-align:center;">Name Match</th>
+              <th style="padding:10px; text-align:center;">6-Mo Validity</th>
+              <th style="padding:10px;">Discrepancies / Details</th>
+              <th style="padding:10px; text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-visa-logs-body">
+            <tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text2);">Loading visa verification logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div id="user-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
@@ -495,8 +526,98 @@
         renderLogs();
       });
 
+      // Listen for TH VISA Verification Logs
+      db.collection('slw_visa_verification_logs').orderBy('timestamp', 'desc').limit(100).onSnapshot(snapshot => {
+        const tbody = document.getElementById('admin-visa-logs-body');
+        const countSpan = document.getElementById('visa-log-count');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (countSpan) countSpan.textContent = `${snapshot.size} log(s)`;
+
+        if (snapshot.empty) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:25px; color:var(--text2);">No TH Visa verification records found.</td></tr>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const timeStr = data.timestamp && data.timestamp.toDate ? data.timestamp.toDate().toLocaleString() : 'Just now';
+          const isMatched = data.status === 'MATCHED';
+          const valStatus = data.validityStatus || 'UNKNOWN';
+
+          let valBadge = `<span style="background:#64748b; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">N/A</span>`;
+          if (valStatus === 'VALID') {
+            valBadge = `<span style="background:#10b981; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">✓ Pass (${data.validityRemaining || '6+ mo'})</span>`;
+          } else if (valStatus === 'WARNING') {
+            valBadge = `<span style="background:#f59e0b; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">⚠ &lt;6 mo (${data.validityRemaining || ''})</span>`;
+          } else if (valStatus === 'EXPIRED') {
+            valBadge = `<span style="background:#ef4444; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">✕ Expired</span>`;
+          }
+
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid var(--border)';
+          tr.innerHTML = `
+            <td style="padding:10px; white-space:nowrap; font-size:0.8rem; color:var(--text2);">${timeStr}</td>
+            <td style="padding:10px; font-weight:600; text-transform:capitalize;">${escapeHtml(data.officer || 'Agent')}</td>
+            <td style="padding:10px; font-weight:600; color:var(--text);">${escapeHtml(data.passengerName || '—')}</td>
+            <td style="padding:10px; font-family:monospace; font-weight:700;">${escapeHtml(data.passportNo || '—')}</td>
+            <td style="padding:10px; font-family:monospace;">${escapeHtml(data.visaNo || '—')}</td>
+            <td style="padding:10px; text-align:center;">
+              <span style="background:${isMatched ? '#10b981' : '#ef4444'}; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">
+                ${isMatched ? '✓ MATCHED' : '✕ MISMATCH'}
+              </span>
+            </td>
+            <td style="padding:10px; text-align:center;">${valBadge}</td>
+            <td style="padding:10px; font-size:0.82rem; color:${isMatched ? '#10b981' : '#dc2626'};">
+              ${data.mismatches && data.mismatches.length > 0 ? escapeHtml(data.mismatches.join(', ')) : (isMatched ? 'All details match 100%' : 'Mismatch detected')}
+            </td>
+            <td style="padding:10px; text-align:right;">
+              <button onclick="deleteSingleVisaLog('${doc.id}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.9rem;" title="Delete this log"><i class="fas fa-trash-can"></i></button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
       // Refresh timestamps every minute
       setInterval(renderStatuses, 60000);
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function clearVisaLogs() {
+      if (!confirm("Are you sure you want to clear all Thai Visa verification logs?")) return;
+      const btn = document.querySelector('button[onclick="clearVisaLogs()"]');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+
+      db.collection('slw_visa_verification_logs').get().then(snapshot => {
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        return batch.commit();
+      }).then(() => {
+        if (btn) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Cleared!';
+          btn.style.background = '#10b981';
+          setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.style.background = '#ef4444';
+          }, 2000);
+        }
+      }).catch(err => {
+        console.error("Error clearing visa logs", err);
+        if (btn) btn.innerHTML = originalHtml;
+      });
+    }
+
+    function deleteSingleVisaLog(id) {
+      if (!confirm("Delete this log record?")) return;
+      db.collection('slw_visa_verification_logs').doc(id).delete().catch(console.error);
     }
   </script>
 </body>

@@ -49,16 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isVisaCheckMode) {
-        document.getElementById('btn-copy-all-global').classList.add('hidden');
-        document.getElementById('btn-visa-done').classList.remove('hidden');
+        const btnCopyGlobal = document.getElementById('btn-copy-all-global');
+        if (btnCopyGlobal) btnCopyGlobal.classList.add('hidden');
         
-        // Hide sidebar and header elements if we want a cleaner iframe UI
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.style.display = 'none';
+        const btnVisaDone = document.getElementById('btn-visa-done');
+        if (btnVisaDone) btnVisaDone.classList.remove('hidden');
         
-        document.querySelector('.main-content').style.marginLeft = '0';
-        document.querySelector('.top-header').style.display = 'none';
-        document.querySelector('.upload-section').style.marginTop = '20px';
+        // Hide header elements if we want a cleaner iframe UI
+        const appHeader = document.querySelector('.app-header');
+        if (appHeader) appHeader.style.display = 'none';
+        
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) mainContent.style.marginLeft = '0';
+        
+        const uploadSec = document.querySelector('.upload-section');
+        if (uploadSec) uploadSec.style.marginTop = '20px';
     }
 
     // ---- Admin Dashboard Logic ----

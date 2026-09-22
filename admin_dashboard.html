@@ -230,19 +230,18 @@
       
       const now = new Date();
       Object.keys(USERS).forEach(u => {
-        const lastActive = latestStatuses[u];
+        const statusData = latestStatuses[u];
         let isOnline = false;
         let timeText = 'Never logged in';
         
-        if (lastActive) {
-          const diffMin = (now - lastActive) / 60000;
-          if (diffMin < 5) {
+        if (statusData && statusData.lastActive) {
+          const lastActiveDate = statusData.lastActive.toDate ? statusData.lastActive.toDate() : new Date(statusData.lastActive);
+          const diffMin = (now - lastActiveDate) / 1000 / 60;
+          if (diffMin < 5 && !statusData.explicitlyOffline) {
             isOnline = true;
             timeText = 'Online Now';
-          } else if (diffMin < 60) {
-            timeText = `Last active ${Math.floor(diffMin)} mins ago`;
           } else {
-            timeText = `Last active ${Math.floor(diffMin / 60)} hours ago`;
+            timeText = 'Last active: ' + lastActiveDate.toLocaleString();
           }
         }
         
@@ -471,12 +470,7 @@
       // Listen for user status updates
       db.collection('slw_user_status').onSnapshot(snapshot => {
         snapshot.forEach(doc => {
-           let data = doc.data();
-           if(data.lastActive) {
-               latestStatuses[doc.id] = data.lastActive.toDate();
-           } else {
-               delete latestStatuses[doc.id];
-           }
+           latestStatuses[doc.id] = doc.data();
         });
         renderStatuses();
       });

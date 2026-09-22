@@ -39,7 +39,8 @@ window.slwLogActivity = function(action) {
 window.slwSetUserOnline = function(user) {
   try {
     db.collection('slw_user_status').doc(user).set({
-      lastActive: firebase.firestore.FieldValue.serverTimestamp()
+      lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+      explicitlyOffline: false
     }, { merge: true }).catch(e => console.error("Firestore Status Error:", e));
   } catch(e) {}
 };
@@ -48,7 +49,7 @@ window.slwSetUserOnline = function(user) {
 window.slwSetUserOffline = function(user) {
   try {
     db.collection('slw_user_status').doc(user).set({
-      lastActive: null
+      explicitlyOffline: true
     }, { merge: true }).catch(e => console.error("Firestore Status Error:", e));
   } catch(e) {}
 };

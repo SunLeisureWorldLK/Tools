@@ -6,11 +6,12 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>TH VISA Name Check</title>
+    <title>TH VISA Name Check — Master Cockpit</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     
-    <!-- PDF.js CDN (matches passport-scanner) with local fallback -->
+    <!-- PDF.js with local fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
         if (!window.pdfjsLib) {
@@ -22,593 +23,709 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
     </script>
+
     <!-- Firebase SDK (Firestore verification logging) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="../firebase_init.js?v=2.3"></script>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f172a;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            color: #1e293b;
         }
 
-        .header {
-            background-color: #1a2a3a;
+        /* Top Header Bar */
+        .app-header {
+            background: #1e293b;
             color: white;
-            padding: 15px 20px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 52px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            z-index: 20;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
         }
         
-        .header h1 {
+        .app-header h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .header-badge {
+            background: #3b82f6;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .btn-back {
+        .btn-header {
             background: rgba(255,255,255,0.1);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
-        }
-
-        .btn-back:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .split-container {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 60px);
-        }
-
-        .left-panel {
-            flex: 1;
-            border-right: 2px solid #ddd;
-            display: flex;
-            flex-direction: column;
-            background: white;
-        }
-
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .iframe-container {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .upload-section {
-            border: 2px dashed #007bff;
-            border-radius: 8px;
-            padding: 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8faff;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .upload-section:hover {
-            background: #eef4ff;
-            border-color: #0056b3;
-        }
-
-        .upload-section.dragover {
-            background: #e1edff;
-            border-color: #0056b3;
-            transform: scale(1.01);
-        }
-
-        .upload-section.loaded {
-            border: 2px solid #28a745;
-            background: #f0fdf4;
-            padding: 16px 20px;
-            cursor: default;
-        }
-
-        .upload-section i.upload-icon {
-            font-size: 2.8rem;
-            color: #007bff;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .upload-section p {
-            margin: 0;
-            color: #444;
-            font-size: 1.05rem;
-            font-weight: 500;
-        }
-
-        .btn-change-file {
-            background: #1a2a3a;
-            color: white;
-            border: none;
-            padding: 6px 14px;
+            color: #f8fafc;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 13px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.85rem;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: background 0.2s;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
         }
 
-        .btn-change-file:hover {
-            background: #2c4257;
+        .btn-header:hover {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
         }
 
-        .results-section {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            padding: 20px;
-            margin-bottom: 20px;
-            display: none;
-            border: 1px solid #e2e8f0;
-        }
-
-        .results-section h2 {
-            margin-top: 0;
-            color: #1a2a3a;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 12px;
-            font-size: 1.3rem;
+        /* 3-Column Master Cockpit Container */
+        .cockpit-container {
             display: flex;
-            align-items: center;
+            flex: 1;
+            height: calc(100vh - 52px);
+            overflow: hidden;
+            background: #cbd5e1;
+            gap: 1px;
+        }
+
+        .cockpit-col {
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Column 1: Passport Scanner (31%) */
+        .col-passport {
+            flex: 0 0 31%;
+            max-width: 32%;
+            min-width: 320px;
+            border-right: 1px solid #cbd5e1;
+        }
+
+        /* Column 2: Live Verification Checklist (37%) */
+        .col-verification {
+            flex: 1;
+            min-width: 370px;
+            background: #f8fafc;
+            border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Column 3: Thai e-Visa Document Viewer (32%) */
+        .col-visa-doc {
+            flex: 0 0 32%;
+            max-width: 33%;
+            min-width: 320px;
+            background: #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Column Header Bars */
+        .cockpit-col-header {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+            height: 38px;
+        }
+
+        .col-badge {
+            background: #334155;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .cockpit-col-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
 
         /* Verification Outcome Banners */
         .banner-match {
             background: #f0fdf4;
-            border: 2px solid #22c55e;
-            padding: 14px 18px;
+            border: 1.5px solid #22c55e;
+            padding: 10px 14px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .banner-mismatch {
             background: #fef2f2;
-            border: 2px solid #ef4444;
-            padding: 14px 18px;
+            border: 1.5px solid #ef4444;
+            padding: 10px 14px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 16px;
-        }
-
-        /* Comparison Field Cards */
-        .comparison-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin-bottom: 14px;
-            transition: all 0.2s ease;
-        }
-
-        .comparison-card.is-match {
-            background: #f0fdf4;
-            border: 1.5px solid #86efac;
-        }
-
-        .comparison-card.is-error {
-            background: #fef2f2;
-            border: 1.5px solid #fca5a5;
-        }
-
-        .field-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 1px dashed #cbd5e1;
         }
 
-        .field-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: #475569;
-        }
-
-        .field-badge {
-            font-size: 0.78rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 12px;
-        }
-
-        .field-badge.badge-match {
-            background: #22c55e;
-            color: #ffffff;
-        }
-
-        .field-badge.badge-err {
-            background: #ef4444;
-            color: #ffffff;
-        }
-
-        .val-grid {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 8px 14px;
+        .banner-warning {
+            background: #fffbeb;
+            border: 1.5px solid #f59e0b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
             align-items: center;
-            font-size: 0.95rem;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
-        .val-label {
+        /* Compact Cockpit Verification Table */
+        .cockpit-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+            font-size: 0.86rem;
+        }
+
+        .cockpit-table th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 7px 10px;
+            border-bottom: 1.5px solid #cbd5e1;
+            text-align: left;
+        }
+
+        .cockpit-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .cockpit-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .cockpit-table tr.row-err {
+            background: #fff5f5;
+        }
+
+        .cell-field {
+            font-weight: 700;
+            color: #334155;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .cell-field i {
+            width: 15px;
             color: #64748b;
+            margin-right: 4px;
+        }
+
+        .cell-passport {
             font-weight: 600;
-            font-size: 0.88rem;
+            color: #1e293b;
+        }
+
+        .cell-status {
+            text-align: center;
+            white-space: nowrap;
+            width: 90px;
+        }
+
+        /* Badges */
+        .table-badge-ok {
+            background: #dcfce7;
+            color: #15803d;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 8px;
+            border: 1px solid #86efac;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .table-badge-err {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .table-badge-warn {
+            background: #fef3c7;
+            color: #92400e;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 8px;
+            border: 1px solid #fde68a;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         /* Fully matched name highlight (Green) */
         .name-highlight-green {
             background: #dcfce7;
             color: #15803d;
-            border: 2px solid #22c55e;
-            padding: 6px 14px;
-            border-radius: 6px;
+            border: 1px solid #86efac;
+            padding: 3px 8px;
+            border-radius: 4px;
             font-weight: 700;
-            font-size: 1.05rem;
-            letter-spacing: 0.5px;
+            font-size: 0.88rem;
+            letter-spacing: 0.3px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         /* Character-by-character diff container */
         .char-diff-container {
             display: inline-flex;
             flex-wrap: wrap;
-            gap: 3px;
-            padding: 6px 10px;
+            gap: 2px;
+            padding: 3px 6px;
             background: #ffffff;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.15rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
         }
 
-        /* Matched character */
         .char-ok {
             background: #dcfce7;
             color: #166534;
             font-weight: 700;
-            padding: 2px 4px;
-            border-radius: 3px;
-            border-bottom: 3px solid #22c55e;
+            padding: 1px 3px;
+            border-radius: 2px;
+            border-bottom: 2px solid #22c55e;
         }
 
-        /* Mismatched / Wrong character with top red indicator */
         .char-err {
             background: #fee2e2;
             color: #991b1b;
             font-weight: 900;
-            padding: 2px 5px;
-            border-radius: 3px;
+            padding: 1px 4px;
+            border-radius: 2px;
             border: 1px solid #ef4444;
-            border-bottom: 3px solid #dc2626;
+            border-bottom: 2px solid #dc2626;
             position: relative;
-            box-shadow: 0 0 6px rgba(220, 38, 38, 0.35);
         }
 
         .char-err::before {
             content: '▼';
             position: absolute;
-            top: -14px;
+            top: -12px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             color: #dc2626;
             line-height: 1;
         }
 
         .char-space {
-            width: 8px;
+            width: 6px;
             display: inline-block;
         }
 
-        .match-card.pending {
-            border-left: 5px solid #ffc107;
+        /* 6-Month Validity Bottom Banner */
+        .validity-strip {
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.84rem;
+            margin-bottom: 12px;
+        }
+
+        .validity-strip.is-valid {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+
+        .validity-strip.is-warning {
             background: #fffbeb;
-            padding: 16px;
-            border-radius: 6px;
+            border: 1px solid #fde047;
+            color: #92400e;
         }
 
-        /* Passenger Multi-Check Card Block */
-        .passenger-block {
+        .validity-strip.is-expired {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        /* Passenger Tab Bar (for multi-passengers) */
+        .passenger-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .passenger-tab-btn {
             background: #ffffff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 22px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        .passenger-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .passenger-title {
-            font-size: 1.12rem;
-            font-weight: 700;
-            color: #1a2a3a;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .matched-visa-pill {
-            font-size: 0.82rem;
-            font-weight: 600;
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-            padding: 4px 10px;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
             border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            color: #475569;
+            transition: all 0.15s;
+            white-space: nowrap;
         }
 
-        /* 6-Month Validity Card */
-        .validity-card {
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin-bottom: 14px;
-            transition: all 0.2s ease;
+        .passenger-tab-btn.active {
+            background: #1e293b;
+            color: #ffffff;
+            border-color: #1e293b;
         }
 
-        .validity-card.is-valid {
-            background: #f0fdf4;
-            border-color: #86efac;
+        /* Right Column: Compact Visa Upload & Document Controls */
+        .visa-top-bar {
+            background: #1e293b;
+            padding: 8px 12px;
+            border-bottom: 1px solid #475569;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
         }
 
-        .validity-card.is-warning {
-            background: #fffbeb;
-            border-color: #fde047;
+        .visa-dropzone-compact {
+            border: 1.5px dashed #3b82f6;
+            background: #0f172a;
+            color: #94a3b8;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.82rem;
         }
 
-        .validity-card.is-expired {
-            background: #fef2f2;
-            border-color: #fca5a5;
-        }
-
-        .field-badge.badge-warning {
-            background: #f59e0b;
+        .visa-dropzone-compact:hover, .visa-dropzone-compact.dragover {
+            background: #1e293b;
+            border-color: #60a5fa;
             color: #ffffff;
         }
 
-        /* Visa Badge Tags in Upload Section */
-        .visa-badge-item {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 5px 10px;
-            font-size: 0.85rem;
-            color: #334155;
+        .visa-loaded-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #f8fafc;
+            font-size: 0.82rem;
+        }
+
+        .visa-badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .visa-badge-tag {
+            background: #0f172a;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.75rem;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
         }
 
-        .visa-badge-item .remove-visa-btn {
-            color: #94a3b8;
-            cursor: pointer;
+        .visa-badge-tag.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .visa-badge-tag .remove-tag {
+            color: #ef4444;
             font-weight: bold;
-            padding: 0 4px;
-            font-size: 1.1rem;
-            line-height: 1;
-            transition: color 0.15s;
-        }
-
-        .visa-badge-item .remove-visa-btn:hover {
-            color: #dc2626;
-        }
-
-        /* Preview Switcher Tabs */
-        .preview-tab-btn {
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
             cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.9rem;
+            line-height: 1;
         }
 
-        .preview-tab-btn:hover, .preview-tab-btn.active {
-            background: #fff;
-            color: #1a2a3a;
-            font-weight: 600;
-        }
-        
-        .pdf-canvas-container {
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            display: none;
-            background: #525659;
-            text-align: center;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-
-        .pdf-canvas-header {
-            color: #fff;
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: left;
+        /* PDF Preview Canvas Container */
+        .pdf-canvas-wrapper {
+            flex: 1;
+            overflow: auto;
+            background: #334155;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
+            padding: 12px;
+            position: relative;
         }
-        
+
         #pdf-render {
             max-width: 100%;
             height: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             border-radius: 4px;
-            background: #fff;
+            background: #ffffff;
         }
-        
+
+        .canvas-toolbar {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 4px 8px;
+            border-radius: 20px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .canvas-btn {
+            background: transparent;
+            color: white;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .canvas-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Loader */
         .loader {
             display: none;
             text-align: center;
-            padding: 25px;
+            padding: 20px;
             background: #f8faff;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin: 15px;
             border: 1px solid #d0e2ff;
         }
         
         .loader i {
-            font-size: 2.2rem;
+            font-size: 2rem;
             color: #007bff;
             animation: spin 1s linear infinite;
         }
 
         .loader p {
-            margin: 10px 0 0 0;
+            margin: 8px 0 0 0;
             color: #333;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .match-card.pending {
+            border-left: 4px solid #f59e0b;
+            background: #fffbeb;
+            padding: 14px;
+            border-radius: 6px;
+            margin: 12px;
+        }
+
+        /* Responsive on smaller displays */
+        @media (max-width: 1100px) {
+            .cockpit-container {
+                overflow-x: auto;
+            }
+            .col-passport { min-width: 320px; }
+            .col-verification { min-width: 380px; }
+            .col-visa-doc { min-width: 340px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1><i class="fa-solid fa-passport"></i> TH VISA Name Check</h1>
-        <a href="../index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Portal</a>
-    </div>
+    <!-- Top App Bar -->
+    <header class="app-header">
+        <h1>
+            <i class="fa-solid fa-passport" style="color: #38bdf8;"></i>
+            <span>TH VISA Name Check</span>
+            <span class="header-badge">Master Cockpit</span>
+        </h1>
+        <div class="header-actions">
+            <button class="btn-header" id="btn-toggle-fs" title="Toggle Fullscreen View">
+                <i class="fa-solid fa-expand"></i> Fullscreen
+            </button>
+            <a href="../index.html" class="btn-header">
+                <i class="fa-solid fa-arrow-left"></i> Back to Portal
+            </a>
+        </div>
+    </header>
 
-    <div class="split-container">
-        <!-- Left Side: Passport Scanner (Embedded via iframe) -->
-        <div class="left-panel">
-            <iframe src="../passport-scanner/index.html?mode=visa-check&v=14" class="iframe-container" id="scanner-iframe"></iframe>
+    <!-- 3-Column Cockpit View -->
+    <div class="cockpit-container">
+        
+        <!-- Column 1: Scanned Passport (Left ~31%) -->
+        <div class="cockpit-col col-passport">
+            <div class="cockpit-col-header">
+                <span><i class="fa-solid fa-id-card"></i> 1. Scanned Passport</span>
+                <span id="passport-count-pill" class="col-badge">0 Scanned</span>
+            </div>
+            <div class="cockpit-col-content">
+                <iframe src="../passport-scanner/index.html?mode=visa-check&v=14" class="iframe-container" id="scanner-iframe"></iframe>
+            </div>
         </div>
 
-        <!-- Right Side: PDF Upload & Validation -->
-        <div class="right-panel">
+        <!-- Column 2: Live Verification Checklist (Center ~37%) -->
+        <div class="cockpit-col col-verification">
+            <div class="cockpit-col-header" style="background:#1e293b;">
+                <span><i class="fa-solid fa-scale-balanced" style="color:#38bdf8;"></i> 2. Comparison &amp; Validity Checklist</span>
+                <span id="overall-status-badge"></span>
+            </div>
             
-            <!-- Upload Box -->
-            <div class="upload-section" id="upload-zone">
-                <div id="upload-prompt">
-                    <i class="fa-solid fa-file-pdf upload-icon"></i>
-                    <p id="upload-main-text">Click or drag &amp; drop TH VISA PDF(s)</p>
-                    <span style="font-size:0.85rem; color:#6c757d; margin-top:5px; display:block;">Supports single or batch upload of Thai e-Visa PDF files (select multiple for groups)</span>
+            <div class="cockpit-col-content" style="padding: 14px;">
+                <div class="loader" id="loader">
+                    <i class="fa-solid fa-circle-notch"></i>
+                    <p id="loader-text">Analyzing Visa PDF...</p>
                 </div>
 
-                <div id="upload-success-content" style="display:none; flex-direction:column; gap:12px; width:100%;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
-                        <div style="display:flex; align-items:center; gap:12px; text-align:left;">
-                            <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#28a745;"></i>
-                            <div>
-                                <div id="uploaded-summary-title" style="font-weight:700; font-size:1rem; color:#1a2a3a;"></div>
-                                <div id="uploaded-meta" style="font-size:0.85rem; color:#28a745; font-weight:500;"></div>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-change-file" id="btn-add-more" type="button" style="background:#007bff;">
-                                <i class="fa-solid fa-plus"></i> Add More PDFs
-                            </button>
-                            <button class="btn-change-file" id="btn-clear-all" type="button" style="background:#dc2626;">
-                                <i class="fa-solid fa-trash-can"></i> Clear All
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Badges for each loaded visa -->
-                    <div id="visas-badge-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;"></div>
-                </div>
-            </div>
-
-            <!-- Hidden file input placed outside the clickable zone (multiple allowed) -->
-            <input type="file" id="file-input" accept="application/pdf,.pdf" multiple style="display:none;">
-            
-            <div class="loader" id="loader">
-                <i class="fa-solid fa-circle-notch"></i>
-                <p id="loader-text">Reading &amp; Analyzing Visa PDF(s)...</p>
-            </div>
-
-            <!-- Verification Results -->
-            <div class="results-section" id="results-section">
-                <h2>
-                    <span><i class="fa-solid fa-spell-check" style="color:#007bff; margin-right:8px;"></i> Name &amp; Validity Verification</span>
-                    <span id="overall-status-badge" style="font-size:0.85rem;"></span>
-                </h2>
                 <div id="results-container">
-                    <!-- Dynamic comparison cards inserted here -->
+                    <!-- Default initial state -->
+                    <div class="match-card pending">
+                        <h4 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-info"></i> Ready for Verification</h4>
+                        <p style="margin:0; color:#713f12; font-size:0.88rem; line-height:1.4;">
+                            1. Scan or upload passport(s) on the <strong>Left Panel</strong> and click <strong>"Done (Check Names)"</strong>.<br>
+                            2. Upload Thai e-Visa PDF(s) on the <strong>Right Panel</strong>.<br>
+                            The verification checklist will instantly compare all names, DOB, nationality, and 6-month validity right here.
+                        </p>
+                    </div>
                 </div>
             </div>
-            
-            <!-- PDF Canvas Preview -->
-            <div class="pdf-canvas-container" id="pdf-container">
-                <div class="pdf-canvas-header" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-eye"></i> Visa Document Preview: <span id="preview-active-title" style="color:#93c5fd; font-weight:normal;"></span>
-                    </div>
-                    <!-- Tab switcher if multiple visas are loaded -->
-                    <div id="preview-switcher-tabs" style="display:none; gap:6px; flex-wrap:wrap;"></div>
-                </div>
-                <canvas id="pdf-render"></canvas>
+        </div>
+
+        <!-- Column 3: Thai e-Visa Document Viewer (Right ~32%) -->
+        <div class="cockpit-col col-visa-doc">
+            <div class="cockpit-col-header" style="background:#0f172a;">
+                <span><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> 3. Thai e-Visa Document</span>
+                <span id="visa-page-info" class="col-badge">No PDF</span>
             </div>
 
+            <!-- Compact Upload & Visa Switching Bar -->
+            <div class="visa-top-bar">
+                <div class="visa-dropzone-compact" id="upload-zone">
+                    <i class="fa-solid fa-cloud-arrow-up" style="margin-right:6px; color:#38bdf8;"></i>
+                    <span id="upload-label">Click or Drag &amp; Drop Thai e-Visa PDF(s)</span>
+                </div>
+                <input type="file" id="file-input" accept="application/pdf,.pdf" multiple style="display:none;">
+
+                <!-- Loaded Visas Switcher Row -->
+                <div id="visa-badges-container" style="display:none; align-items:center; justify-content:space-between; gap:6px;">
+                    <div id="visa-badges-list" class="visa-badges-row"></div>
+                    <button id="btn-clear-visas" title="Clear all loaded visas" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem; padding:2px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PDF Canvas Preview -->
+            <div class="pdf-canvas-wrapper" id="pdf-wrapper">
+                <div id="pdf-placeholder" style="color:#94a3b8; text-align:center; margin-top:40%; font-size:0.88rem;">
+                    <i class="fa-solid fa-file-pdf" style="font-size:2.5rem; color:#475569; margin-bottom:10px; display:block;"></i>
+                    Thai e-Visa PDF will be previewed here
+                </div>
+                <canvas id="pdf-render" style="display:none;"></canvas>
+
+                <!-- Floating Zoom Controls -->
+                <div class="canvas-toolbar" id="canvas-toolbar" style="display:none;">
+                    <button class="canvas-btn" id="btn-zoom-out" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+                    <button class="canvas-btn" id="btn-zoom-reset" title="Fit to Column"><i class="fa-solid fa-arrows-to-dot"></i></button>
+                    <button class="canvas-btn" id="btn-zoom-in" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
         </div>
+
     </div>
 
     <script>
@@ -616,6 +733,8 @@
         let loadedVisas = []; // Array of { id, file, fileName, fileSize, numPages, extractedPdfText, visa, pdfDoc }
         let activePreviewVisaId = null;
         let currentRenderTask = null;
+        let currentPdfZoom = 1.0;
+        let selectedPassengerIdx = 0;
         let loggedEventKeys = new Set(); // Prevent duplicate Firestore logging
 
         // Listen for messages from embedded Passport Scanner iframe
@@ -624,6 +743,9 @@
                 passportData = event.data.data || [];
                 console.log("Received Passport Data from Scanner:", passportData);
                 
+                const pill = document.getElementById('passport-count-pill');
+                if (pill) pill.textContent = `${passportData.length} Scanned`;
+
                 if (loadedVisas.length > 0) {
                     validateNames();
                 } else {
@@ -632,31 +754,36 @@
             }
         });
 
+        // Fullscreen Toggle
+        const btnToggleFs = document.getElementById('btn-toggle-fs');
+        if (btnToggleFs) {
+            btnToggleFs.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(console.warn);
+                    btnToggleFs.innerHTML = '<i class="fa-solid fa-compress"></i> Exit Fullscreen';
+                } else {
+                    document.exitFullscreen().catch(console.warn);
+                    btnToggleFs.innerHTML = '<i class="fa-solid fa-expand"></i> Fullscreen';
+                }
+            });
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    btnToggleFs.innerHTML = '<i class="fa-solid fa-expand"></i> Fullscreen';
+                }
+            });
+        }
+
+        // Upload Zone Setup
         const fileInput = document.getElementById('file-input');
         const uploadZone = document.getElementById('upload-zone');
-        const uploadPrompt = document.getElementById('upload-prompt');
-        const uploadSuccessContent = document.getElementById('upload-success-content');
-        const btnAddMore = document.getElementById('btn-add-more');
-        const btnClearAll = document.getElementById('btn-clear-all');
+        const uploadLabel = document.getElementById('upload-label');
+        const btnClearVisas = document.getElementById('btn-clear-visas');
+        const visaBadgesContainer = document.getElementById('visa-badges-container');
+        const visaBadgesList = document.getElementById('visa-badges-list');
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loader-text');
 
-        uploadZone.addEventListener('click', (e) => {
-            if (e.target.closest('#btn-add-more') || e.target.closest('#btn-clear-all') || e.target.closest('.remove-visa-btn')) return;
-            fileInput.click();
-        });
-
-        btnAddMore.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fileInput.click();
-        });
-
-        btnClearAll.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (confirm("Remove all loaded Thai Visa documents?")) {
-                clearAllVisas();
-            }
-        });
+        uploadZone.addEventListener('click', () => fileInput.click());
 
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -682,18 +809,40 @@
             }
         });
 
+        btnClearVisas.addEventListener('click', () => {
+            if (confirm("Clear all loaded Thai Visa documents?")) {
+                clearAllVisas();
+            }
+        });
+
+        // Zoom Controls
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            currentPdfZoom += 0.15;
+            renderActivePdf();
+        });
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            if (currentPdfZoom > 0.4) {
+                currentPdfZoom -= 0.15;
+                renderActivePdf();
+            }
+        });
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+            currentPdfZoom = 1.0;
+            renderActivePdf();
+        });
+
         // Batch PDF File Processor
         async function processVisaFiles(files) {
             if (!files || files.length === 0) return;
             const fileArray = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf');
 
             if (fileArray.length === 0) {
-                showError("No valid PDF file selected. Please select Thai Visa .pdf document(s).");
+                alert("Please select valid Thai Visa .pdf document(s).");
                 return;
             }
 
             if (typeof pdfjsLib === 'undefined') {
-                showError("PDF library failed to load. Please check your network connection and reload the page.");
+                alert("PDF library failed to load. Please check network connection and reload.");
                 return;
             }
 
@@ -702,9 +851,8 @@
 
             for (const file of fileArray) {
                 count++;
-                loaderText.textContent = `Reading & Analyzing Visa PDF (${count}/${fileArray.length}): ${file.name}...`;
+                loaderText.textContent = `Reading Visa PDF (${count}/${fileArray.length}): ${file.name}...`;
 
-                // Skip if already loaded
                 if (loadedVisas.some(v => v.fileName === file.name && v.fileSize === file.size)) {
                     continue;
                 }
@@ -746,8 +894,7 @@
             fileInput.value = '';
 
             if (loadedVisas.length === 0) {
-                showError("Failed to parse the uploaded PDF file(s). Please verify the documents.");
-                renderUploadState();
+                alert("Failed to read the selected PDF file(s). Please verify the files.");
                 return;
             }
 
@@ -755,10 +902,8 @@
                 activePreviewVisaId = loadedVisas[0].id;
             }
 
-            renderUploadState();
-            renderPreviewTabs();
-            renderPdfPreview(loadedVisas.find(v => v.id === activePreviewVisaId));
-
+            renderVisaBar();
+            renderActivePdf();
             validateNames();
         }
 
@@ -767,13 +912,8 @@
             if (activePreviewVisaId === visaId) {
                 activePreviewVisaId = loadedVisas.length > 0 ? loadedVisas[0].id : null;
             }
-            renderUploadState();
-            renderPreviewTabs();
-            if (activePreviewVisaId) {
-                renderPdfPreview(loadedVisas.find(v => v.id === activePreviewVisaId));
-            } else {
-                document.getElementById('pdf-container').style.display = 'none';
-            }
+            renderVisaBar();
+            renderActivePdf();
             validateNames();
         }
 
@@ -784,76 +924,88 @@
                 try { currentRenderTask.cancel(); } catch(e) {}
                 currentRenderTask = null;
             }
-            renderUploadState();
-            document.getElementById('pdf-container').style.display = 'none';
-            document.getElementById('results-section').style.display = 'none';
+            renderVisaBar();
+            document.getElementById('pdf-placeholder').style.display = 'block';
+            document.getElementById('pdf-render').style.display = 'none';
+            document.getElementById('canvas-toolbar').style.display = 'none';
+            document.getElementById('visa-page-info').textContent = 'No PDF';
+
             if (passportData.length > 0) {
                 renderPendingState();
+            } else {
+                document.getElementById('results-container').innerHTML = `
+                    <div class="match-card pending">
+                        <h4 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-info"></i> Ready for Verification</h4>
+                        <p style="margin:0; color:#713f12; font-size:0.88rem;">Scan passport(s) on the left and upload Thai e-Visa PDF on the right.</p>
+                    </div>
+                `;
             }
         }
 
-        function renderUploadState() {
+        function renderVisaBar() {
             if (loadedVisas.length === 0) {
-                uploadPrompt.style.display = 'block';
-                uploadSuccessContent.style.display = 'none';
-                uploadZone.classList.remove('loaded');
+                uploadLabel.textContent = "Click or Drag & Drop Thai e-Visa PDF(s)";
+                visaBadgesContainer.style.display = 'none';
             } else {
-                uploadPrompt.style.display = 'none';
-                uploadSuccessContent.style.display = 'flex';
-                uploadZone.classList.add('loaded');
+                uploadLabel.innerHTML = `<span style="color:#22c55e; font-weight:700;">✓ ${loadedVisas.length} Visa PDF(s) Loaded</span> — Click to add more`;
+                visaBadgesContainer.style.display = 'flex';
+                visaBadgesList.innerHTML = '';
 
-                const summaryTitle = document.getElementById('uploaded-summary-title');
-                const summaryMeta = document.getElementById('uploaded-meta');
-                const badgeList = document.getElementById('visas-badge-list');
-
-                if (loadedVisas.length === 1) {
-                    const v = loadedVisas[0];
-                    const pName = v.visa.fullName || v.fileName;
-                    summaryTitle.textContent = `${v.fileName}`;
-                    summaryMeta.textContent = `✓ ${(v.fileSize / 1024).toFixed(1)} KB • ${v.numPages} Page(s) • Passenger: ${pName}`;
-                } else {
-                    summaryTitle.textContent = `✓ ${loadedVisas.length} Thai Visa PDFs Loaded (Batch Mode)`;
-                    summaryMeta.textContent = `Auto-matching with scanned passports`;
-                }
-
-                badgeList.innerHTML = '';
-                loadedVisas.forEach(v => {
-                    const label = v.visa.fullName ? `${v.visa.fullName} (${v.visa.passportNo || v.visa.visaNumber || 'Visa'})` : v.fileName;
-                    const badge = document.createElement('div');
-                    badge.className = 'visa-badge-item';
-                    badge.innerHTML = `
-                        <i class="fa-solid fa-file-pdf" style="color:#dc2626;"></i>
-                        <span title="${escapeHtml(v.fileName)}" style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;">${escapeHtml(label)}</span>
-                        <span class="remove-visa-btn" title="Remove this Visa" onclick="event.stopPropagation(); removeVisa('${v.id}')">&times;</span>
+                loadedVisas.forEach((v, idx) => {
+                    const tag = document.createElement('div');
+                    tag.className = 'visa-badge-tag' + (v.id === activePreviewVisaId ? ' active' : '');
+                    const shortTitle = v.visa.familyName || v.visa.firstName || `Visa #${idx + 1}`;
+                    tag.innerHTML = `
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>${escapeHtml(shortTitle)}</span>
+                        <span class="remove-tag" title="Remove" onclick="event.stopPropagation(); removeVisa('${v.id}')">&times;</span>
                     `;
-                    badgeList.appendChild(badge);
+                    tag.onclick = () => {
+                        activePreviewVisaId = v.id;
+                        renderVisaBar();
+                        renderActivePdf();
+                    };
+                    visaBadgesList.appendChild(tag);
                 });
             }
         }
 
-        // Render Canvas Preview
-        async function renderPdfPreview(visaItem) {
-            if (!visaItem || !visaItem.pdfDoc) return;
-            const pdfContainer = document.getElementById('pdf-container');
-            const previewTitle = document.getElementById('preview-active-title');
+        // Render PDF Canvas
+        async function renderActivePdf() {
             const canvas = document.getElementById('pdf-render');
-            if (!canvas) return;
+            const placeholder = document.getElementById('pdf-placeholder');
+            const toolbar = document.getElementById('canvas-toolbar');
+            const pageInfo = document.getElementById('visa-page-info');
+            const wrapper = document.getElementById('pdf-wrapper');
+
+            const visaItem = loadedVisas.find(v => v.id === activePreviewVisaId);
+
+            if (!visaItem || !visaItem.pdfDoc) {
+                canvas.style.display = 'none';
+                placeholder.style.display = 'block';
+                toolbar.style.display = 'none';
+                pageInfo.textContent = 'No PDF';
+                return;
+            }
 
             if (currentRenderTask) {
-                try {
-                    currentRenderTask.cancel();
-                } catch(e) {}
+                try { currentRenderTask.cancel(); } catch(e) {}
                 currentRenderTask = null;
             }
 
             try {
                 const page1 = await visaItem.pdfDoc.getPage(1);
-                const viewport = page1.getViewport({ scale: 1.25 });
+                
+                // Calculate scale to fit wrapper width cleanly
+                const containerWidth = Math.max(280, wrapper.clientWidth - 28);
+                const unscaledViewport = page1.getViewport({ scale: 1.0 });
+                const baseScale = containerWidth / unscaledViewport.width;
+                const effectiveScale = baseScale * currentPdfZoom;
+
+                const viewport = page1.getViewport({ scale: effectiveScale });
                 const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-
-                previewTitle.textContent = visaItem.visa.fullName ? `${visaItem.visa.fullName} (${visaItem.fileName})` : visaItem.fileName;
 
                 currentRenderTask = page1.render({
                     canvasContext: context,
@@ -861,70 +1013,17 @@
                 });
 
                 await currentRenderTask.promise;
-                pdfContainer.style.display = 'block';
+
+                canvas.style.display = 'block';
+                placeholder.style.display = 'none';
+                toolbar.style.display = 'flex';
+                pageInfo.textContent = `${visaItem.numPages} Page(s) • ${Math.round(currentPdfZoom * 100)}%`;
+
             } catch (err) {
                 if (err && err.name !== 'RenderingCancelledException') {
-                    console.warn("Preview render error:", err);
+                    console.warn("PDF preview render error:", err);
                 }
             }
-        }
-
-        function renderPreviewTabs() {
-            const tabsContainer = document.getElementById('preview-switcher-tabs');
-            if (!tabsContainer) return;
-
-            if (loadedVisas.length <= 1) {
-                tabsContainer.style.display = 'none';
-                tabsContainer.innerHTML = '';
-                return;
-            }
-
-            tabsContainer.style.display = 'flex';
-            tabsContainer.innerHTML = '';
-
-            loadedVisas.forEach((v, idx) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'preview-tab-btn' + (v.id === activePreviewVisaId ? ' active' : '');
-                const shortName = v.visa.familyName || v.visa.firstName || `Visa #${idx + 1}`;
-                btn.textContent = `📄 ${shortName}`;
-                btn.title = v.fileName;
-                btn.onclick = () => {
-                    activePreviewVisaId = v.id;
-                    renderPreviewTabs();
-                    renderPdfPreview(v);
-                };
-                tabsContainer.appendChild(btn);
-            });
-        }
-
-        function showError(message) {
-            loader.style.display = 'none';
-            document.getElementById('results-section').style.display = 'block';
-            const container = document.getElementById('results-container');
-            container.innerHTML = `
-                <div style="background:#fef2f2; border:1.5px solid #dc3545; border-radius:8px; padding:16px; color:#991b1b;">
-                    <h3 style="margin:0 0 6px 0;"><i class="fa-solid fa-circle-exclamation"></i> Processing Error</h3>
-                    <p style="margin:0;">${message}</p>
-                </div>
-            `;
-        }
-
-        function renderPendingState() {
-            document.getElementById('results-section').style.display = 'block';
-            const container = document.getElementById('results-container');
-            container.innerHTML = `
-                <div class="match-card pending">
-                    <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-clock"></i> Passport Data Received</h3>
-                    <p style="margin:0; color:#713f12;">Received <strong>${passportData.length}</strong> passport(s) from scanner. Please upload the corresponding Thai VISA PDF(s) on the right to compare.</p>
-                </div>
-            `;
-        }
-
-        function escapeHtml(str) {
-            return (str || '').replace(/[&<>"']/g, m => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[m]));
         }
 
         // Parse structured Thai e-Visa data fields
@@ -1082,9 +1181,10 @@
             if (!passportExpiryStr) {
                 return {
                     status: 'MISSING',
-                    badgeClass: 'badge-err',
-                    title: 'Expiry Date Missing in Passport',
-                    message: 'Passport Date of Expiry was not detected. Cannot verify 6-month validity rule.',
+                    badgeText: '✕ Missing Expiry',
+                    badgeClass: 'table-badge-err',
+                    title: 'Date of Expiry Missing',
+                    message: 'Date of Expiry was not detected in passport.',
                     isOk: false
                 };
             }
@@ -1093,9 +1193,10 @@
             if (!pExp) {
                 return {
                     status: 'UNKNOWN',
-                    badgeClass: 'badge-err',
-                    title: 'Unparseable Passport Expiry',
-                    message: `Could not parse passport expiry date: "${passportExpiryStr}"`,
+                    badgeText: '✕ Invalid Date',
+                    badgeClass: 'table-badge-err',
+                    title: 'Unparseable Expiry',
+                    message: `Could not parse date: "${passportExpiryStr}"`,
                     isOk: false
                 };
             }
@@ -1122,7 +1223,8 @@
             if (diffDays <= 0) {
                 return {
                     status: 'EXPIRED',
-                    badgeClass: 'badge-err',
+                    badgeText: '✕ Expired',
+                    badgeClass: 'table-badge-err',
                     title: 'CRITICAL: Passport Expired / Invalid for Travel',
                     message: `Passport expires on ${pExp.display}, which is before or on ${refLabel}!`,
                     isOk: false,
@@ -1133,12 +1235,13 @@
                 };
             }
 
-            if (diffDays < 180) { // Less than 6 months (180 days)
+            if (diffDays < 180) {
                 return {
                     status: 'WARNING',
-                    badgeClass: 'badge-warning',
+                    badgeText: '⚠ < 6 Months',
+                    badgeClass: 'table-badge-warn',
                     title: 'ALERT: Less than 6 Months Validity Remaining',
-                    message: `Passport expires on ${pExp.display} (only ~${monthsRemaining} months / ${diffDays} days validity left after ${refLabel}). International airlines and Thai immigration strictly require at least 6 months validity.`,
+                    message: `Passport expires on ${pExp.display} (only ${monthsRemaining} months / ${diffDays} days left after ${refLabel}). Airlines & Thai immigration require at least 6 months.`,
                     isOk: false,
                     diffDays,
                     monthsRemaining,
@@ -1149,9 +1252,10 @@
 
             return {
                 status: 'VALID',
-                badgeClass: 'badge-match',
+                badgeText: '✓ 6+ Mo Valid',
+                badgeClass: 'table-badge-ok',
                 title: 'VALID: Passport Meets 6-Month Rule',
-                message: `Passport expires on ${pExp.display} (~${monthsRemaining} months / ${diffDays} days validity remaining after ${refLabel}). Sufficient validity for travel!`,
+                message: `Passport expires on ${pExp.display} (${monthsRemaining} months / ${diffDays} days remaining after ${refLabel}). Full validity confirmed!`,
                 isOk: true,
                 diffDays,
                 monthsRemaining,
@@ -1180,12 +1284,7 @@
                 } else {
                     return {
                         isMatch: false,
-                        html: `<div>
-                            <div class="char-diff-container"><span class="char-err">${escapeHtml(act)}</span></div>
-                            <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Date does not match Passport (${escapeHtml(exp)})
-                            </div>
-                        </div>`
+                        html: `<div class="char-diff-container"><span class="char-err">${escapeHtml(act)}</span></div>`
                     };
                 }
             }
@@ -1199,12 +1298,7 @@
 
             return {
                 isMatch: false,
-                html: `<div>
-                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
-                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Date does not match Passport (${escapeHtml(exp)})
-                    </div>
-                </div>`
+                html: `<div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>`
             };
         }
 
@@ -1229,12 +1323,7 @@
 
             return {
                 isMatch: false,
-                html: `<div>
-                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
-                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Gender does not match Passport (${escapeHtml(exp)})
-                    </div>
-                </div>`
+                html: `<div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>`
             };
         }
 
@@ -1258,12 +1347,7 @@
 
             return {
                 isMatch: false,
-                html: `<div>
-                    <div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>
-                    <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Nationality does not match Passport (${escapeHtml(exp)})
-                    </div>
-                </div>`
+                html: `<div class="char-diff-container"><span class="char-err">${escapeHtml(act || 'Missing')}</span></div>`
             };
         }
 
@@ -1343,11 +1427,8 @@
             return {
                 isMatch: false,
                 html: `
-                    <div>
+                    <div style="display:inline-flex; flex-direction:column; gap:2px;">
                         <div class="char-diff-container">${diffHtml}</div>
-                        <div style="font-size:0.8rem; color:#dc2626; margin-top:4px; font-weight:600;">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Letters marked with red do not match Passport
-                        </div>
                     </div>
                 `,
                 notes: 'Letter spelling mismatch detected'
@@ -1359,9 +1440,7 @@
             if (loadedVisas.length === 0) return null;
             const ppPassNo = (pp.passportNumber || '').toUpperCase().trim();
             const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
-            const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
 
-            // 1. Try exact match on Passport Number
             if (ppPassNo) {
                 let m = loadedVisas.find(v => v.visa.passportNo && v.visa.passportNo === ppPassNo);
                 if (m) return m;
@@ -1369,13 +1448,11 @@
                 if (m) return m;
             }
 
-            // 2. Try match on Surname (Family name)
             if (ppSurname) {
                 let m = loadedVisas.find(v => v.visa.familyName && v.visa.familyName === ppSurname);
                 if (m) return m;
             }
 
-            // 3. Fallback: single passport & single visa
             if (loadedVisas.length === 1 && passportData.length === 1) {
                 return loadedVisas[0];
             }
@@ -1423,19 +1500,36 @@
             }
         }
 
-        // Main Verification Runner
+        function renderPendingState() {
+            const container = document.getElementById('results-container');
+            const overallBadge = document.getElementById('overall-status-badge');
+            overallBadge.innerHTML = `<span class="col-badge" style="background:#f59e0b; color:white;">Awaiting Visa PDF</span>`;
+            container.innerHTML = `
+                <div class="match-card pending">
+                    <h4 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-clock"></i> Passport Scanned: ${passportData.length} Passenger(s)</h4>
+                    <p style="margin:0; color:#713f12; font-size:0.88rem;">Please upload the corresponding Thai Visa PDF on the right to compare.</p>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        // Main Verification Runner & Cockpit Renderer
         function validateNames() {
-            document.getElementById('results-section').style.display = 'block';
             const container = document.getElementById('results-container');
             const overallBadge = document.getElementById('overall-status-badge');
             container.innerHTML = '';
             
             if (passportData.length === 0) {
-                overallBadge.innerHTML = `<span class="field-badge" style="background:#f59e0b; color:white;">Awaiting Passport</span>`;
+                overallBadge.innerHTML = `<span class="col-badge" style="background:#f59e0b; color:white;">Awaiting Passport</span>`;
                 container.innerHTML = `
                     <div class="match-card pending">
-                        <h3 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-check"></i> ${loadedVisas.length} Thai Visa Document(s) Loaded</h3>
-                        <p style="margin:0; color:#713f12;">Thai Visa data extracted. Please scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
+                        <h4 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-circle-check"></i> ${loadedVisas.length} Visa PDF(s) Loaded</h4>
+                        <p style="margin:0; color:#713f12; font-size:0.88rem;">Scan or select passport(s) on the left panel and click <strong>"Done (Check Names)"</strong> to run verification.</p>
                     </div>
                 `;
                 return;
@@ -1449,8 +1543,34 @@
             let allOverallMatched = true;
             let hasAnyMismatch = false;
             let hasAnyValidityWarning = false;
-            let awaitingVisaCount = 0;
 
+            // Make sure selected index is within bounds
+            if (selectedPassengerIdx >= passportData.length) {
+                selectedPassengerIdx = 0;
+            }
+
+            // Passenger Selector Bar (if > 1 passport)
+            if (passportData.length > 1) {
+                const tabsDiv = document.createElement('div');
+                tabsDiv.className = 'passenger-tabs';
+
+                passportData.forEach((pp, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'passenger-tab-btn' + (idx === selectedPassengerIdx ? ' active' : '');
+                    const name = (pp.names || pp.firstName || `Pax #${idx+1}`).split(/\s+/)[0];
+                    btn.innerHTML = `<i class="fa-solid fa-user"></i> ${escapeHtml(name)}`;
+                    btn.onclick = () => {
+                        selectedPassengerIdx = idx;
+                        validateNames();
+                    };
+                    tabsDiv.appendChild(btn);
+                });
+
+                container.appendChild(tabsDiv);
+            }
+
+            // Process each passenger to update overall status & log, and render the currently selected passenger
             passportData.forEach((pp, index) => {
                 const ppGiven = (pp.names || pp.firstName || '').toUpperCase().trim();
                 const ppSurname = (pp.surname || pp.lastName || '').toUpperCase().trim();
@@ -1463,35 +1583,24 @@
                 const matchedVisa = findMatchingVisa(pp);
 
                 if (!matchedVisa) {
-                    awaitingVisaCount++;
                     allOverallMatched = false;
-
-                    const pendingCard = document.createElement('div');
-                    pendingCard.className = 'passenger-block';
-                    pendingCard.style.border = '1.5px dashed #f59e0b';
-                    pendingCard.style.background = '#fffbeb';
-                    pendingCard.innerHTML = `
-                        <div class="passenger-header">
-                            <div class="passenger-title">
-                                <i class="fa-solid fa-user-clock" style="color:#f59e0b;"></i>
-                                Passenger #${index + 1}: ${escapeHtml(ppGiven)} ${escapeHtml(ppSurname)}
-                                <span style="font-family:monospace; font-size:0.9rem; background:#ffffff; padding:2px 8px; border-radius:4px; border:1px solid #fde047;">${escapeHtml(ppPassNo || 'No Passport No')}</span>
-                            </div>
-                            <span class="field-badge" style="background:#f59e0b; color:white;">Awaiting Matching Visa PDF</span>
-                        </div>
-                        <p style="margin:0; color:#854d0e; font-size:0.95rem;">
-                            No matching Thai Visa PDF detected for this passport. Please upload this passenger's Thai e-Visa PDF on the right to complete verification.
-                        </p>
-                    `;
-                    container.appendChild(pendingCard);
+                    if (index === selectedPassengerIdx) {
+                        const awaitingDiv = document.createElement('div');
+                        awaitingDiv.className = 'match-card pending';
+                        awaitingDiv.innerHTML = `
+                            <h4 style="margin:0 0 6px 0; color:#854d0e;"><i class="fa-solid fa-user-clock"></i> Awaiting Matching Visa</h4>
+                            <p style="margin:0; color:#713f12; font-size:0.88rem;">
+                                No Thai Visa found matching <strong>${escapeHtml(ppGiven)} ${escapeHtml(ppSurname)}</strong> (Passport: ${escapeHtml(ppPassNo)}). Please upload this passenger's Thai e-Visa PDF.
+                            </p>
+                        `;
+                        container.appendChild(awaitingDiv);
+                    }
                     return;
                 }
 
-                // Matched Visa Details
                 const visa = matchedVisa.visa;
                 const visaText = matchedVisa.extractedPdfText;
 
-                // 1. Given Names
                 let vGiven = visa.givenNames;
                 if (!vGiven && visa.hasStructuredData) {
                     vGiven = [visa.firstName, visa.middleName].filter(Boolean).join(' ').trim();
@@ -1500,7 +1609,6 @@
                     vGiven = ppGiven.split(/\s+/).every(part => visaText.includes(part)) ? ppGiven : '';
                 }
 
-                // 2. Surname
                 let vSurname = visa.familyName;
                 if (!vSurname && visa.hasStructuredData) {
                     vSurname = visa.familyName;
@@ -1509,25 +1617,18 @@
                     vSurname = ppSurname.split(/\s+/).every(part => visaText.includes(part)) ? ppSurname : '';
                 }
 
-                // 3. Passport Number
                 let vPassNo = visa.passportNo;
                 if (!vPassNo && ppPassNo && visaText.includes(ppPassNo)) {
                     vPassNo = ppPassNo;
                 }
 
-                // 4. Date of Birth
                 let vDob = visa.dob;
                 if (!vDob && ppDob && visaText.includes(ppDob)) {
                     vDob = ppDob;
                 }
 
-                // 5. Sex
                 let vSex = visa.sex;
-
-                // 6. Nationality
                 let vNat = visa.nationality;
-
-                // 7. Visa Valid Until
                 let vValidUntil = visa.validUntil;
 
                 // Comparisons
@@ -1555,11 +1656,8 @@
                     passNoHtml = `<div class="char-diff-container"><span class="char-err">${escapeHtml(vPassNo || 'Missing in Visa')}</span></div>`;
                 }
 
-                // 6-Month Validity Rule Evaluation
                 const validityComp = checkPassportValidity(ppExpiry, vValidUntil);
-
                 const detailsMatched = givenComp.isMatch && surnameComp.isMatch && passNoMatch && dobComp.isMatch && sexComp.isMatch && natComp.isMatch;
-                const passengerPassed = detailsMatched && validityComp.isOk;
 
                 if (!detailsMatched) {
                     hasAnyMismatch = true;
@@ -1570,7 +1668,6 @@
                     allOverallMatched = false;
                 }
 
-                // Gather list of mismatch fields
                 const mismatchList = [];
                 if (!givenComp.isMatch) mismatchList.push('Given Names');
                 if (!surnameComp.isMatch) mismatchList.push('Surname');
@@ -1583,193 +1680,138 @@
                 // Log to Firestore
                 logVerificationEvent(pp, matchedVisa, detailsMatched, validityComp, mismatchList);
 
-                // Build Passenger HTML Card
-                const blockDiv = document.createElement('div');
-                blockDiv.className = 'passenger-block';
+                // Render active selected passenger
+                if (index === selectedPassengerIdx) {
+                    // Auto-sync preview canvas with this matched visa
+                    if (activePreviewVisaId !== matchedVisa.id) {
+                        activePreviewVisaId = matchedVisa.id;
+                        renderVisaBar();
+                        renderActivePdf();
+                    }
 
-                blockDiv.innerHTML = `
-                    <!-- Header with Passenger & Matched Visa Info -->
-                    <div class="passenger-header">
-                        <div class="passenger-title">
-                            <i class="fa-solid fa-user-check" style="color:#007bff;"></i>
-                            Passenger #${index + 1}: ${escapeHtml(ppGiven)} ${escapeHtml(ppSurname)}
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="matched-visa-pill" title="Matched Visa Document">
-                                <i class="fa-solid fa-file-pdf"></i> Visa: ${escapeHtml(visa.visaNumber || matchedVisa.fileName)}
-                            </span>
-                            <button type="button" class="preview-tab-btn" style="background:#1a2a3a; color:white;" onclick="activePreviewVisaId='${matchedVisa.id}'; renderPreviewTabs(); renderPdfPreview(loadedVisas.find(v=>v.id==='${matchedVisa.id}'));">
-                                <i class="fa-solid fa-eye"></i> View PDF
-                            </button>
-                        </div>
-                    </div>
+                    const paxBlock = document.createElement('div');
 
-                    <!-- Outcome Banner for this Passenger -->
-                    ${detailsMatched && validityComp.isOk ? `
-                        <div class="banner-match">
-                            <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#22c55e;"></i>
-                            <div>
-                                <h3 style="margin:0; color:#15803d; font-size:1.1rem;">✓ FULL MATCH: All Names, Personal Details &amp; 6-Month Rule Passed!</h3>
-                                <p style="margin:3px 0 0 0; color:#166534; font-size:0.9rem;">Given Names, Surname, Date of Birth, Sex, Nationality, Passport Number, and 6-Month Validity verified 100%.</p>
-                            </div>
-                        </div>
-                    ` : (detailsMatched && validityComp.status === 'WARNING' ? `
-                        <div class="banner-mismatch" style="background:#fffbeb; border-color:#f59e0b;">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#f59e0b;"></i>
-                            <div>
-                                <h3 style="margin:0; color:#b45309; font-size:1.1rem;">⚠ NAMES MATCHED, BUT PASSPORT HAS LESS THAN 6 MONTHS VALIDITY!</h3>
-                                <p style="margin:3px 0 0 0; color:#92400e; font-size:0.9rem;">All spelling &amp; personal data match, but passport expires soon. Airlines and Thai immigration strictly require at least 6 months validity.</p>
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="banner-mismatch">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:#ef4444;"></i>
-                            <div>
-                                <h3 style="margin:0; color:#b91c1c; font-size:1.1rem;">⚠ MISMATCH DETECTED: Differences Found in Details!</h3>
-                                <p style="margin:3px 0 0 0; color:#991b1b; font-size:0.9rem;">Review the fields below. Characters or dates marked with red do not match the passport.</p>
-                            </div>
-                        </div>
-                    `)}
-
-                    <!-- Given Names Row -->
-                    <div class="comparison-card ${givenComp.isMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-user"></i> Given Names (First Name + Middle Name)</span>
-                            <span class="field-badge ${givenComp.isMatch ? 'badge-match' : 'badge-err'}">${givenComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppGiven) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${givenComp.html}</div>
-                        </div>
-                    </div>
-
-                    <!-- Surname / Family Name Row -->
-                    <div class="comparison-card ${surnameComp.isMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-signature"></i> Family Name / Surname</span>
-                            <span class="field-badge ${surnameComp.isMatch ? 'badge-match' : 'badge-err'}">${surnameComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppSurname) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${surnameComp.html}</div>
-                        </div>
-                    </div>
-
-                    <!-- Date of Birth Row -->
-                    <div class="comparison-card ${dobComp.isMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-cake-candles"></i> Date of Birth (DOB)</span>
-                            <span class="field-badge ${dobComp.isMatch ? 'badge-match' : 'badge-err'}">${dobComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppDob) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${dobComp.html}</div>
-                        </div>
-                    </div>
-
-                    <!-- Sex / Gender Row -->
-                    <div class="comparison-card ${sexComp.isMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-venus-mars"></i> Sex / Gender</span>
-                            <span class="field-badge ${sexComp.isMatch ? 'badge-match' : 'badge-err'}">${sexComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppSex) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${sexComp.html}</div>
-                        </div>
-                    </div>
-
-                    <!-- Nationality Row -->
-                    <div class="comparison-card ${natComp.isMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-flag"></i> Nationality</span>
-                            <span class="field-badge ${natComp.isMatch ? 'badge-match' : 'badge-err'}">${natComp.isMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppNat) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${natComp.html}</div>
-                        </div>
-                    </div>
-
-                    <!-- Passport Number Row -->
-                    <div class="comparison-card ${passNoMatch ? 'is-match' : 'is-error'}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-id-card"></i> Passport Number</span>
-                            <span class="field-badge ${passNoMatch ? 'badge-match' : 'badge-err'}">${passNoMatch ? '✓ Matched' : '✕ Mismatch'}</span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport (Scanned):</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">${escapeHtml(ppPassNo) || '—'}</div>
-                            
-                            <div class="val-label">Thai Visa:</div>
-                            <div>${passNoHtml}</div>
-                        </div>
-                    </div>
-
-                    <!-- 6-Month Passport Validity Rule Row -->
-                    <div class="validity-card ${validityComp.status === 'VALID' ? 'is-valid' : (validityComp.status === 'WARNING' ? 'is-warning' : 'is-expired')}">
-                        <div class="field-header">
-                            <span class="field-title"><i class="fa-solid fa-calendar-check"></i> Passport 6-Month Validity Rule</span>
-                            <span class="field-badge ${validityComp.badgeClass}">
-                                ${validityComp.status === 'VALID' ? '✓ 6+ Months Valid' : (validityComp.status === 'WARNING' ? '⚠ Less than 6 Months' : '✕ Expired / Critical')}
-                            </span>
-                        </div>
-                        <div class="val-grid">
-                            <div class="val-label">Passport Expiry:</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">
-                                ${escapeHtml(ppExpiry || 'Not Detected')}
-                                ${validityComp.pExp ? `<span style="font-weight:normal; color:#64748b; font-size:0.85rem; margin-left:6px;">(${validityComp.pExp.display})</span>` : ''}
-                            </div>
-
-                            <div class="val-label">Visa Valid Until:</div>
-                            <div style="font-weight:600; color:#1a2a3a; font-size:1rem;">
-                                ${escapeHtml(vValidUntil || 'Not Specified')}
-                                ${validityComp.pUntil ? `<span style="font-weight:normal; color:#64748b; font-size:0.85rem; margin-left:6px;">(${validityComp.pUntil.display})</span>` : ''}
-                            </div>
-
-                            <div class="val-label">Rule Evaluation:</div>
-                            <div>
-                                <div style="font-size:0.95rem; font-weight:700; color:${validityComp.status === 'VALID' ? '#15803d' : (validityComp.status === 'WARNING' ? '#b45309' : '#b91c1c')};">
-                                    ${validityComp.title}
-                                </div>
-                                <div style="font-size:0.85rem; color:#475569; margin-top:3px;">
-                                    ${validityComp.message}
+                    paxBlock.innerHTML = `
+                        <!-- Outcome Banner -->
+                        ${detailsMatched && validityComp.isOk ? `
+                            <div class="banner-match">
+                                <i class="fa-solid fa-circle-check" style="font-size:1.5rem; color:#22c55e;"></i>
+                                <div>
+                                    <strong style="color:#15803d; font-size:0.92rem; display:block;">✓ 100% FULL MATCH: All Names &amp; 6-Month Rule Passed!</strong>
+                                    <span style="color:#166534; font-size:0.8rem;">Given Names, Surname, DOB, Gender, Nationality, Passport Number &amp; Expiry verified.</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                `;
+                        ` : (detailsMatched && validityComp.status === 'WARNING' ? `
+                            <div class="banner-warning">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem; color:#f59e0b;"></i>
+                                <div>
+                                    <strong style="color:#b45309; font-size:0.92rem; display:block;">⚠ DETAILS MATCHED, BUT PASSPORT &lt; 6 MONTHS VALIDITY!</strong>
+                                    <span style="color:#92400e; font-size:0.8rem;">Spelling matches, but passport validity is under 6 months. Airlines may reject boarding.</span>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="banner-mismatch">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem; color:#ef4444;"></i>
+                                <div>
+                                    <strong style="color:#b91c1c; font-size:0.92rem; display:block;">⚠ MISMATCH DETECTED: Differences Found in Details!</strong>
+                                    <span style="color:#991b1b; font-size:0.8rem;">Review the checklist below. Characters marked with red do not match the passport.</span>
+                                </div>
+                            </div>
+                        `)}
 
-                container.appendChild(blockDiv);
+                        <!-- Cockpit Checklist Table -->
+                        <table class="cockpit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Field</th>
+                                    <th style="width: 35%;">Passport (Scanned)</th>
+                                    <th style="width: 35%;">Thai e-Visa</th>
+                                    <th style="width: 5%; text-align:center;">Match</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="${givenComp.isMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-user"></i> Given Names</td>
+                                    <td class="cell-passport">${escapeHtml(ppGiven) || '—'}</td>
+                                    <td>${givenComp.html}</td>
+                                    <td class="cell-status">
+                                        <span class="${givenComp.isMatch ? 'table-badge-ok' : 'table-badge-err'}">${givenComp.isMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr class="${surnameComp.isMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-signature"></i> Surname</td>
+                                    <td class="cell-passport">${escapeHtml(ppSurname) || '—'}</td>
+                                    <td>${surnameComp.html}</td>
+                                    <td class="cell-status">
+                                        <span class="${surnameComp.isMatch ? 'table-badge-ok' : 'table-badge-err'}">${surnameComp.isMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr class="${dobComp.isMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-cake-candles"></i> Date of Birth</td>
+                                    <td class="cell-passport">${escapeHtml(ppDob) || '—'}</td>
+                                    <td>${dobComp.html}</td>
+                                    <td class="cell-status">
+                                        <span class="${dobComp.isMatch ? 'table-badge-ok' : 'table-badge-err'}">${dobComp.isMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr class="${sexComp.isMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-venus-mars"></i> Sex / Gender</td>
+                                    <td class="cell-passport">${escapeHtml(ppSex) || '—'}</td>
+                                    <td>${sexComp.html}</td>
+                                    <td class="cell-status">
+                                        <span class="${sexComp.isMatch ? 'table-badge-ok' : 'table-badge-err'}">${sexComp.isMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr class="${natComp.isMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-flag"></i> Nationality</td>
+                                    <td class="cell-passport">${escapeHtml(ppNat) || '—'}</td>
+                                    <td>${natComp.html}</td>
+                                    <td class="cell-status">
+                                        <span class="${natComp.isMatch ? 'table-badge-ok' : 'table-badge-err'}">${natComp.isMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr class="${passNoMatch ? '' : 'row-err'}">
+                                    <td class="cell-field"><i class="fa-solid fa-id-card"></i> Passport No</td>
+                                    <td class="cell-passport" style="font-family:monospace;">${escapeHtml(ppPassNo) || '—'}</td>
+                                    <td>${passNoHtml}</td>
+                                    <td class="cell-status">
+                                        <span class="${passNoMatch ? 'table-badge-ok' : 'table-badge-err'}">${passNoMatch ? '✓ Pass' : '✕ Diff'}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="cell-field"><i class="fa-solid fa-calendar-check"></i> 6-Mo Validity</td>
+                                    <td class="cell-passport">Exp: ${escapeHtml(ppExpiry || 'N/A')}</td>
+                                    <td style="font-size:0.84rem;">Until: ${escapeHtml(vValidUntil || 'N/A')}</td>
+                                    <td class="cell-status">
+                                        <span class="${validityComp.badgeClass}">${validityComp.badgeText}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- 6-Month Validity Summary Strip -->
+                        <div class="validity-strip ${validityComp.status === 'VALID' ? 'is-valid' : (validityComp.status === 'WARNING' ? 'is-warning' : 'is-expired')}">
+                            <i class="fa-solid ${validityComp.status === 'VALID' ? 'fa-circle-check' : 'fa-triangle-exclamation'}" style="font-size:1.1rem;"></i>
+                            <span>${validityComp.message}</span>
+                        </div>
+                    `;
+
+                    container.appendChild(paxBlock);
+                }
             });
 
             // Update top overall status badge
             if (allOverallMatched) {
-                overallBadge.innerHTML = `<span class="field-badge badge-match" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> ALL MATCHED &amp; VALID (GREEN)</span>`;
+                overallBadge.innerHTML = `<span class="table-badge-ok" style="font-size:0.78rem; padding:3px 10px;"><i class="fa-solid fa-circle-check"></i> ALL MATCHED (GREEN)</span>`;
             } else if (hasAnyMismatch) {
-                overallBadge.innerHTML = `<span class="field-badge badge-err" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> MISMATCH FOUND (RED)</span>`;
+                overallBadge.innerHTML = `<span class="table-badge-err" style="font-size:0.78rem; padding:3px 10px;"><i class="fa-solid fa-triangle-exclamation"></i> MISMATCH FOUND (RED)</span>`;
             } else if (hasAnyValidityWarning) {
-                overallBadge.innerHTML = `<span class="field-badge badge-warning" style="padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> VALIDITY WARNING (&lt;6 MO)</span>`;
+                overallBadge.innerHTML = `<span class="table-badge-warn" style="font-size:0.78rem; padding:3px 10px;"><i class="fa-solid fa-triangle-exclamation"></i> VALIDITY &lt; 6 MO</span>`;
             } else {
-                overallBadge.innerHTML = `<span class="field-badge" style="background:#f59e0b; color:white; padding:5px 12px; font-size:0.85rem;"><i class="fa-solid fa-clock"></i> PENDING VISA DOCUMENTS</span>`;
+                overallBadge.innerHTML = `<span class="col-badge" style="background:#f59e0b; color:white;">PENDING DOCUMENTS</span>`;
             }
 
-            // Send verification result back to iframe to highlight passport card green/red
+            // Report back to scanner iframe
             const iframe = document.getElementById('scanner-iframe');
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({
@@ -1778,6 +1820,13 @@
                 }, '*');
             }
         }
+
+        // Re-scale PDF on window resize
+        window.addEventListener('resize', () => {
+            if (activePreviewVisaId) {
+                renderActivePdf();
+            }
+        });
     </script>
 </body>
 </html>

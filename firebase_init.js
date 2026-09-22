@@ -28,7 +28,9 @@ window.slwLogActivity = function(action) {
     }).catch(e => console.error("Firestore Log Error:", e));
     
     // Also update last active
-    window.slwSetUserOnline(user);
+    if (action !== 'Logged Out') {
+        window.slwSetUserOnline(user);
+    }
     
   } catch (e) { console.error("Log err", e); }
 };
@@ -38,6 +40,15 @@ window.slwSetUserOnline = function(user) {
   try {
     db.collection('slw_user_status').doc(user).set({
       lastActive: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(e => console.error("Firestore Status Error:", e));
+  } catch(e) {}
+};
+
+// Global function to set user offline status
+window.slwSetUserOffline = function(user) {
+  try {
+    db.collection('slw_user_status').doc(user).set({
+      lastActive: null
     }, { merge: true }).catch(e => console.error("Firestore Status Error:", e));
   } catch(e) {}
 };

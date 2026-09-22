@@ -1663,7 +1663,13 @@ function showMainApp(user) {
 
 
 function handleLogout() {
+  const user = sessionStorage.getItem('slw_user_v3') || localStorage.getItem('slw_user_v3');
   window.slwLogActivity('Logged Out');
+  
+  if (user && window.slwSetUserOffline) {
+      window.slwSetUserOffline(user);
+  }
+  
   currentUser = null;
   sessionStorage.removeItem('slw_user_v3');
   localStorage.removeItem('slw_user_v3');

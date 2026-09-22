@@ -274,6 +274,8 @@
            let data = doc.data();
            if(data.lastActive) {
                latestStatuses[doc.id] = data.lastActive.toDate();
+           } else {
+               delete latestStatuses[doc.id];
            }
         });
         renderStatuses();

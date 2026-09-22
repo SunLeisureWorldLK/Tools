@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
             lastLogin: new Date().toISOString(),
             role: (currentUserStr === 'admin' || currentUserStr === 'BPsanju') ? 'admin' : 'user'
         }, { merge: true }).catch(console.error);
+
+        if (window.slwSetUserOnline) {
+            window.slwSetUserOnline(currentUserStr);
+            setInterval(() => window.slwSetUserOnline(currentUserStr), 60000); // refresh every minute
+        }
         
         window.addEventListener('beforeunload', () => {
             USERS_COL_REF.doc(currentUserStr).update({

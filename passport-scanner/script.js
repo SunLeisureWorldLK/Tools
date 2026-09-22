@@ -1,4 +1,303 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ---- Global Auth & State ----
+    const currentUserStr = sessionStorage.getItem('slw_user_v3') || localStorage.getItem('slw_user_v3');
+    
+    // We assume `db` is available from firebase_init.js
+    const USERS_COL_REF = db.collection('passport_scanner_users');
+    let users = [];
+    
+    USERS_COL_REF.onSnapshot((snapshot) => {
+        users = [];
+        snapshot.forEach(doc => {
+            let data = doc.data();
+            data.username = doc.id;
+            users.push(data);
+        });
+        
+        const adminDash = document.getElementById('admin-dashboard');
+        if (adminDash && !adminDash.classList.contains('hidden')) {
+            renderUserTable();
+        }
+    });
+
+    if (currentUserStr) {
+        USERS_COL_REF.doc(currentUserStr).set({
+            isOnline: true,
+            lastLogin: new Date().toISOString(),
+            role: (currentUserStr === 'admin' || currentUserStr === 'BPsanju') ? 'admin' : 'user'
+        }, { merge: true }).catch(console.error);
+        
+        window.addEventListener('beforeunload', () => {
+            USERS_COL_REF.doc(currentUserStr).update({
+                isOnline: false
+            }).catch(console.error);
+        });
+    }
+
+    const btnAdminPanel = document.getElementById('btn-admin-panel');
+    if (currentUserStr === 'admin' || currentUserStr === 'BPsanju') {
+        if(btnAdminPanel) btnAdminPanel.classList.remove('hidden');
+    }
+
+    // ---- Admin Dashboard Logic ----
+    const adminDashboard = document.getElementById('admin-dashboard');
+    const scannerSection = document.querySelector('.main-content');
+    const userTableBody = document.getElementById('user-table-body');
+    const userModal = document.getElementById('user-modal');
+    const userForm = document.getElementById('user-form');
+    
+    document.getElementById('btn-admin-panel').addEventListener('click', () => {
+        scannerSection.classList.add('hidden');
+        adminDashboard.classList.remove('hidden');
+        renderUserTable();
+    });
+
+    document.getElementById('btn-back-to-scanner').addEventListener('click', () => {
+        adminDashboard.classList.add('hidden');
+        scannerSection.classList.remove('hidden');
+    });
+
+    function renderUserTable() {
+        userTableBody.innerHTML = '';
+        
+        let totalUsers = users.length;
+        let onlineUsers = 0;
+        let totalScans = 0;
+
+        users.forEach((user, index) => {
+            totalScans += (user.scanCount || 0);
+            if(user.isOnline) onlineUsers++;
+
+            const tr = document.createElement('tr');
+            
+            const picCell = user.pic ? `<img src="${user.pic}" class="table-profile-pic">` : `<div class="table-profile-pic"></div>`;
+            
+            const statusBadge = user.isOnline 
+                ? `<span class="status-badge status-online"><div class="status-dot"></div>Online</span>` 
+                : `<span class="status-badge status-offline"><div class="status-dot"></div>Offline</span>`;
+
+            const lastLoginStr = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never';
+            const scanCountStr = user.scanCount || 0;
+            let locationStr = user.location || 'Unknown';
+            if (user.lat && user.lon) {
+                locationStr = `<a href="https://www.google.com/maps/search/?api=1&query=${user.lat},${user.lon}" target="_blank" style="color: var(--primary-color); text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="material-icons" style="font-size: 14px;">place</span> ${locationStr}
+                </a>`;
+            }
+            
+            tr.innerHTML = `
+                <td>${picCell}</td>
+                <td>${statusBadge}</td>
+                <td>${user.username}</td>
+                <td>${locationStr}</td>
+                <td><span style="text-transform: capitalize;">${user.role}</span></td>
+                <td>${lastLoginStr}</td>
+                <td>${scanCountStr}</td>
+                <td>
+                    <div style="display: flex; gap: 6px; flex-wrap: nowrap; min-width: max-content;">
+                        <button class="btn btn-secondary btn-edit-user" data-index="${index}" style="padding: 5px 10px; font-size: 12px;">Edit</button>
+                        <button class="btn btn-secondary btn-reset-stats" data-index="${index}" style="padding: 5px 10px; font-size: 12px;">Reset</button>
+                        ${user.username !== currentUserStr ? `<button class="btn btn-secondary btn-delete-user" data-index="${index}" style="padding: 5px 10px; font-size: 12px; border-color: var(--error-color); color: var(--error-color);">Delete</button>` : ''}
+                    </div>
+                </td>
+            `;
+            userTableBody.appendChild(tr);
+        });
+
+        // Update Summary Cards
+        const elTotalUsers = document.getElementById('stat-total-users');
+        const elOnlineUsers = document.getElementById('stat-online-users');
+        const elTotalScans = document.getElementById('stat-total-scans');
+        
+        if (elTotalUsers) elTotalUsers.innerText = totalUsers;
+        if (elOnlineUsers) elOnlineUsers.innerText = onlineUsers;
+        if (elTotalScans) elTotalScans.innerText = totalScans;
+
+        document.querySelectorAll('.btn-edit-user').forEach(btn => {
+            btn.addEventListener('click', (e) => openUserModal(e.target.dataset.index));
+        });
+        document.querySelectorAll('.btn-delete-user').forEach(btn => {
+            btn.addEventListener('click', (e) => deleteUser(e.target.dataset.index));
+        });
+        document.querySelectorAll('.btn-reset-stats').forEach(btn => {
+            btn.addEventListener('click', (e) => resetUserStats(e.target.dataset.index));
+        });
+    }
+
+    async function resetUserStats(index) {
+        if(confirm(`Are you sure you want to reset scan stats for ${users[index].username}?`)) {
+            try {
+                await USERS_COL_REF.doc(users[index].username).update({
+                    scanCount: 0,
+                    lastScanTime: null
+                });
+            } catch(e) {
+                console.error("Error resetting stats:", e);
+                alert("Failed to reset stats.");
+            }
+        }
+    }
+
+    document.getElementById('btn-open-add-user').addEventListener('click', () => {
+        openUserModal(-1);
+    });
+
+    document.getElementById('close-user-modal').addEventListener('click', () => {
+        userModal.classList.add('hidden');
+    });
+
+    function openUserModal(index) {
+        userForm.reset();
+        const modalTitle = document.getElementById('modal-title');
+        
+        if (index === -1) {
+            modalTitle.textContent = 'Add New User';
+            document.getElementById('edit-original-username').value = '';
+            document.getElementById('trial-days-group').classList.remove('hidden');
+        } else {
+            modalTitle.textContent = 'Edit User';
+            const user = users[index];
+            document.getElementById('edit-original-username').value = user.username;
+            document.getElementById('add-username').value = user.username;
+            document.getElementById('add-password').value = user.password;
+            document.getElementById('add-role').value = user.role || 'user';
+            
+
+        }
+        
+        userModal.classList.remove('hidden');
+    }
+
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = userForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+        
+        const originalUsername = document.getElementById('edit-original-username').value;
+        const newUsername = document.getElementById('add-username').value.trim();
+        const password = document.getElementById('add-password').value;
+        const role = document.getElementById('add-role').value;
+        const fileInput = document.getElementById('add-profile-pic');
+        
+        // Check duplicate
+        if (originalUsername !== newUsername && users.some(u => u.username === newUsername)) {
+            alert('Username already exists!');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save User';
+            return;
+        }
+
+        let picBase64 = null;
+        if (fileInput.files.length > 0) {
+            picBase64 = await resizeImage(fileInput.files[0], 200);
+        }
+
+        const newUserObj = {
+            username: newUsername,
+            password: password,
+            role: role,
+            pic: picBase64,
+            scanCount: 0,
+            lastLogin: null,
+            isOnline: false,
+            lastScanTime: null,
+            location: 'Unknown'
+        };
+
+        try {
+            if (originalUsername) {
+                // Edit existing
+                const index = users.findIndex(u => u.username === originalUsername);
+                // Retain old values if not changing
+                if (!picBase64) newUserObj.pic = users[index].pic;
+                if (type === 'trial' && users[index].type === 'trial' && originalUsername === newUsername) {
+                    newUserObj.trialStartDate = users[index].trialStartDate;
+                }
+                newUserObj.scanCount = users[index].scanCount || 0;
+                newUserObj.lastLogin = users[index].lastLogin || null;
+                newUserObj.isOnline = users[index].isOnline || false;
+                newUserObj.lastScanTime = users[index].lastScanTime || null;
+                newUserObj.location = users[index].location || 'Unknown';
+                
+                // Update Firebase
+                if (originalUsername !== newUsername) {
+                    // Username changed, so delete old doc and create new
+                    await USERS_COL_REF.doc(originalUsername).delete();
+                }
+                await USERS_COL_REF.doc(newUsername).set(newUserObj);
+                
+                // Update local array
+                users[index] = newUserObj;
+                if (currentUserStr === originalUsername) {
+                    // Update something if needed
+                }
+            } else {
+                // Add new
+                await USERS_COL_REF.doc(newUsername).set(newUserObj);
+                users.push(newUserObj);
+            }
+
+            userModal.classList.add('hidden');
+            renderUserTable();
+        } catch (error) {
+            console.error("Error saving to Firebase:", error);
+            alert("Error saving user to database. Check connection.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save User';
+        }
+    });
+
+    async function deleteUser(index) {
+        if (confirm(`Are you sure you want to delete ${users[index].username}?`)) {
+            try {
+                const username = users[index].username;
+                await USERS_COL_REF.doc(username).delete();
+                users.splice(index, 1);
+                renderUserTable();
+            } catch (error) {
+                console.error("Error deleting from Firebase:", error);
+                alert("Error deleting user from database.");
+            }
+        }
+    }
+
+    // Utility: Resize and compress image to base64
+    function resizeImage(file, maxSize) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height *= maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width *= maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     const cardsContainer = document.getElementById('cards-container');
@@ -56,17 +355,198 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function handleFiles(files) {
-        uploadSection.classList.add('hidden');
-        globalActions.classList.remove('hidden');
+    // Paste Image Event
+    window.addEventListener('paste', (e) => {
+        // Ensure user is logged in and not in the admin dashboard
+        if (!currentUserStr) return;
+        const adminDash = document.getElementById('admin-dashboard');
+        if (adminDash && !adminDash.classList.contains('hidden')) return;
 
+        if (e.clipboardData && e.clipboardData.files.length > 0) {
+            const files = Array.from(e.clipboardData.files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf');
+            if (files.length > 0) {
+                e.preventDefault();
+                handleFiles(files);
+            }
+        }
+    });
+
+    // ---- Camera Logic ----
+    const cameraSection = document.getElementById('camera-section');
+    const cameraFeed = document.getElementById('camera-feed');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    let stream = null;
+
+    document.getElementById('btn-open-camera').addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment', // Prefer rear camera
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            });
+            cameraFeed.srcObject = stream;
+            uploadSection.classList.add('hidden');
+            cameraSection.classList.remove('hidden');
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            alert("Could not access camera. Please ensure you have granted permissions.");
+        }
+    });
+
+    document.getElementById('btn-close-camera').addEventListener('click', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        cameraSection.classList.add('hidden');
+        uploadSection.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-capture-camera').addEventListener('click', () => {
+        if (!stream) return;
+        
+        // Draw video frame to canvas
+        cameraCanvas.width = cameraFeed.videoWidth;
+        cameraCanvas.height = cameraFeed.videoHeight;
+        const ctx = cameraCanvas.getContext('2d');
+        ctx.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        
+        // Convert canvas to Blob/File
+        cameraCanvas.toBlob((blob) => {
+            const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+            
+            // Close camera
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            cameraSection.classList.add('hidden');
+            
+            // Process the file
+            handleFiles([file]);
+        }, 'image/jpeg', 0.95);
+    });
+
+    function handleFiles(files) {
         Array.from(files).forEach(file => {
-            if (file.type.startsWith('image/')) {
+            if (file.type === 'application/pdf') {
+                handlePDFFile(file);
+            } else if (file.type.startsWith('image/')) {
+                uploadSection.classList.add('hidden');
+                globalActions.classList.remove('hidden');
                 createPassportCard(file);
             }
         });
         
         processQueue();
+    }
+
+    // PDF Handling
+    const pdfModal = document.getElementById('pdf-modal');
+    const pdfThumbnailsContainer = document.getElementById('pdf-thumbnails-container');
+    const pdfLoadingIndicator = document.getElementById('pdf-loading-indicator');
+    
+    document.getElementById('close-pdf-modal').addEventListener('click', () => {
+        pdfModal.classList.add('hidden');
+    });
+
+    async function handlePDFFile(file) {
+        pdfModal.classList.remove('hidden');
+        pdfThumbnailsContainer.innerHTML = '';
+        pdfLoadingIndicator.classList.remove('hidden');
+        
+        let selectedPages = new Set();
+        const scanBtn = document.getElementById('btn-scan-selected-pdf');
+        const countSpan = document.getElementById('pdf-selection-count');
+        
+        // Reset footer state
+        countSpan.innerText = '0 pages selected';
+        scanBtn.disabled = true;
+        
+        // Remove old event listeners by cloning
+        const newScanBtn = scanBtn.cloneNode(true);
+        scanBtn.parentNode.replaceChild(newScanBtn, scanBtn);
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            
+            pdfLoadingIndicator.classList.add('hidden');
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                
+                // Render thumbnail
+                const viewport = page.getViewport({ scale: 0.5 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = 'pdf-thumbnail';
+                thumbDiv.dataset.page = pageNum;
+                
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/jpeg');
+                
+                const label = document.createElement('div');
+                label.className = 'page-number';
+                label.innerText = `Page ${pageNum}`;
+                
+                thumbDiv.appendChild(img);
+                thumbDiv.appendChild(label);
+                
+                thumbDiv.addEventListener('click', () => {
+                    if (selectedPages.has(pageNum)) {
+                        selectedPages.delete(pageNum);
+                        thumbDiv.classList.remove('selected');
+                    } else {
+                        selectedPages.add(pageNum);
+                        thumbDiv.classList.add('selected');
+                    }
+                    
+                    countSpan.innerText = `${selectedPages.size} pages selected`;
+                    newScanBtn.disabled = selectedPages.size === 0;
+                });
+                
+                pdfThumbnailsContainer.appendChild(thumbDiv);
+            }
+            
+            newScanBtn.addEventListener('click', async () => {
+                if (selectedPages.size === 0) return;
+                
+                pdfModal.classList.add('hidden');
+                
+                // Process selected pages
+                for (const pageNum of Array.from(selectedPages).sort((a,b)=>a-b)) {
+                    const page = await pdf.getPage(pageNum);
+                    const hrViewport = page.getViewport({ scale: 2.0 });
+                    const hrCanvas = document.createElement('canvas');
+                    const hrCtx = hrCanvas.getContext('2d');
+                    hrCanvas.width = hrViewport.width;
+                    hrCanvas.height = hrViewport.height;
+                    
+                    await page.render({ canvasContext: hrCtx, viewport: hrViewport }).promise;
+                    
+                    const blob = await new Promise(resolve => hrCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+                    const imgFile = new File([blob], `passport_page_${pageNum}.jpg`, { type: 'image/jpeg' });
+                    
+                    uploadSection.classList.add('hidden');
+                    globalActions.classList.remove('hidden');
+                    createPassportCard(imgFile);
+                }
+                processQueue();
+            });
+            
+        } catch (error) {
+            console.error("Error loading PDF:", error);
+            pdfLoadingIndicator.classList.add('hidden');
+            alert("Could not load the PDF file. It might be corrupted or password protected.");
+            pdfModal.classList.add('hidden');
+        }
     }
 
     function createPassportCard(file) {
@@ -119,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTransform(card, 0, 0);
         });
 
-        // Mouse Drag to Pan
+        // Mouse and Touch Drag to Pan
         let isDragging = false;
         let startX, startY, initialPanX, initialPanY;
 
@@ -132,7 +612,21 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault(); // Prevent default image drag
         });
 
+        card.ui.imgWrapper.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                initialPanX = card.panX;
+                initialPanY = card.panY;
+            }
+        }, { passive: true });
+
         window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        window.addEventListener('touchend', () => {
             isDragging = false;
         });
 
@@ -147,6 +641,18 @@ document.addEventListener('DOMContentLoaded', () => {
             card.panY = initialPanY + dy;
             updateTransform(card, 0, 0);
         });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            if (e.cancelable) e.preventDefault(); // Prevent scrolling while panning
+            
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+            
+            card.panX = initialPanX + dx;
+            card.panY = initialPanY + dy;
+            updateTransform(card, 0, 0);
+        }, { passive: false });
 
         // Mouse Wheel to Zoom
         card.ui.imgWrapper.addEventListener('wheel', (e) => {
@@ -181,6 +687,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             rescanCard(card);
+        });
+
+        // Remove card logic
+        cardElement.querySelector('.btn-remove-card').addEventListener('click', () => {
+            if (isProcessing && card.status === 'scanning') {
+                alert("Please wait for the scan to finish before removing.");
+                return;
+            }
+            
+            cardElement.remove();
+            cardsData = cardsData.filter(c => c.id !== card.id);
+            scanQueue = scanQueue.filter(c => c.id !== card.id);
+            
+            if (cardsData.length === 0) {
+                uploadSection.classList.remove('hidden');
+                globalActions.classList.add('hidden');
+                document.getElementById('file-input').value = '';
+            }
         });
 
         // Load Image
@@ -382,6 +906,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             card.ui.resultsSection.classList.remove('hidden');
             card.status = 'success';
+            
+            // Increment Scan Count
+            if(currentUserStr) {
+                USERS_COL_REF.doc(currentUserStr).update({
+                    scanCount: firebase.firestore.FieldValue.increment(1),
+                    lastScanTime: new Date().toISOString()
+                }).catch(console.error);
+            }
         } catch (err) {
             console.error("Parsing error:", err);
             showError(card, "Failed to parse passport details. The image might be blurry.");

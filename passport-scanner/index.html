@@ -12,13 +12,24 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-container" id="main-app">
         <header class="app-header">
-            <h1>Passport Scanner</h1>
-            <p>Upload your passport data page to extract details automatically.</p>
+            <div class="header-content">
+                <div class="header-titles">
+                    <h1>Passport Scanner</h1>
+                    <p>Upload your passport data page to extract details automatically.</p>
+                </div>
+                <div id="user-profile" class="user-profile">
+                    <div class="user-info">
+                        <div class="profile-actions">
+                            <button id="btn-admin-panel" class="btn-logout hidden" style="margin-right: 8px;">Admin Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main class="main-content">
@@ -26,10 +37,37 @@
             <section class="upload-section" id="upload-section">
                 <div class="drop-zone" id="drop-zone">
                     <span class="material-icons upload-icon">upload_file</span>
-                    <p class="drop-text">Drag and drop files or <span class="browse-link">browse</span> from computer</p>
-                    <p class="file-limits">(.JPG, .JPEG, .PNG Limit Size is 3 MB, Multiple allowed)</p>
-                    <input type="file" id="file-input" accept="image/jpeg, image/png, image/jpg" multiple hidden>
+                    <p class="drop-text">Drag and drop, <span class="browse-link">browse</span>, or paste (Ctrl+V) an image or PDF</p>
+                    <p class="file-limits">(.JPG, .JPEG, .PNG, .PDF Limit Size is 3 MB, Multiple allowed)</p>
+                    <input type="file" id="file-input" accept="image/jpeg, image/png, image/jpg, application/pdf" multiple hidden>
                 </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="margin-bottom: 15px; color: var(--text-light); font-weight: 500;">OR</p>
+                    <button class="btn btn-primary" id="btn-open-camera" style="width: 100%; max-width: 350px; font-size: 16px; padding: 12px;">
+                        <span class="material-icons" style="vertical-align: text-bottom; margin-right: 8px;">photo_camera</span>
+                        Scan with Camera
+                    </button>
+                </div>
+            </section>
+
+            <!-- Camera Interface -->
+            <section class="camera-section hidden" id="camera-section">
+                <div class="camera-container">
+                    <video id="camera-feed" autoplay playsinline></video>
+                    <div class="camera-overlay">
+                        <div class="mrz-guide"></div>
+                        <p class="guide-text">Align Passport MRZ (Bottom Lines) inside the box</p>
+                    </div>
+                </div>
+                <div class="camera-actions">
+                    <button class="btn btn-secondary" id="btn-close-camera" style="flex: 1; padding: 12px; font-size: 16px;">Cancel</button>
+                    <button class="btn btn-primary" id="btn-capture-camera" style="flex: 2; padding: 12px; font-size: 16px;">
+                        <span class="material-icons" style="vertical-align: text-bottom; margin-right: 5px;">camera</span>
+                        Capture
+                    </button>
+                </div>
+                <canvas id="camera-canvas" hidden></canvas>
             </section>
 
             <!-- Global Actions -->
@@ -45,6 +83,7 @@
             <!-- Template for Passport Card -->
             <template id="passport-card-template">
                 <div class="passport-card">
+                    <button class="btn-remove-card" title="Remove Passport"><span class="material-icons">close</span></button>
                     <!-- Image Preview Section -->
                     <div class="preview-container">
                         <div class="zoom-controls">
@@ -92,8 +131,122 @@
                 </div>
             </template>
         </main>
+
+        <!-- Admin Dashboard Section -->
+        <section id="admin-dashboard" class="admin-dashboard hidden">
+            <div class="admin-header">
+                <h2>User Management</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" id="btn-back-to-scanner">Back to Scanner</button>
+                    <button class="btn btn-primary" id="btn-open-add-user">Add New User</button>
+                </div>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="dashboard-summary">
+                <div class="summary-card">
+                    <div class="summary-icon"><span class="material-icons">group</span></div>
+                    <div class="summary-info">
+                        <h3>Total Users</h3>
+                        <p id="stat-total-users">0</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon"><span class="material-icons" style="color: var(--success-color);">online_prediction</span></div>
+                    <div class="summary-info">
+                        <h3>Online Now</h3>
+                        <p id="stat-online-users">0</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon"><span class="material-icons" style="color: var(--secondary-color);">document_scanner</span></div>
+                    <div class="summary-info">
+                        <h3>Total Scans</h3>
+                        <p id="stat-total-scans">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="user-table" id="user-table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Status</th>
+                            <th>Username</th>
+                            <th>Location</th>
+                            <th>Role</th>
+                            <th>Last Login</th>
+                            <th>Scan Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Add User Modal -->
+    <div id="user-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-user-modal">&times;</span>
+            <h2 id="modal-title">Add New User</h2>
+            <form id="user-form">
+                <input type="hidden" id="edit-original-username">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="add-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="add-role" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">Save User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PDF Page Selector Modal -->
+    <div id="pdf-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+            <span class="close-modal" id="close-pdf-modal">&times;</span>
+            <h2 id="pdf-modal-title">Select Passport Page</h2>
+            <p style="margin-bottom: 15px; color: var(--text-light); flex-shrink: 0;">This PDF has multiple pages. Click on the page that contains the passport bio data to scan it.</p>
+            <div id="pdf-thumbnails-container" class="pdf-thumbnails-grid" style="max-height: none; flex: 1; overflow-y: auto; min-height: 0;">
+                <!-- PDF page thumbnails will be rendered here -->
+            </div>
+            <div id="pdf-loading-indicator" class="hidden" style="text-align: center; padding: 20px;">
+                <div class="spinner" style="margin: 0 auto 10px auto;"></div>
+                <p>Loading PDF pages...</p>
+            </div>
+            <div class="modal-footer" style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span id="pdf-selection-count" style="font-weight: 500; color: var(--text-muted);">0 pages selected</span>
+                <button id="btn-scan-selected-pdf" class="btn btn-primary">
+                    <span class="material-icons" style="vertical-align: text-bottom; margin-right: 5px;">document_scanner</span>
+                    Scan Selected Pages
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="../firebase_init.js"></script>
+    
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <!-- Main Script -->
+    <script src="script.js?v=13"></script>
 </body>
 </html>

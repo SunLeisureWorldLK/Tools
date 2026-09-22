@@ -146,6 +146,16 @@
       </div>
     </div>
     </div>
+
+    <div class="admin-card" style="margin-top: 30px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">
+        <h3 style="margin:0; border:none; padding:0;">Home Page Tools Visibility</h3>
+      </div>
+      <div id="tools-visibility-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+        <!-- Checkboxes -->
+      </div>
+    </div>
+
     <div class="admin-card" style="margin-top: 30px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px;">
         <h3 style="margin:0; border:none; padding:0;">User Management</h3>
@@ -314,6 +324,41 @@
 
     let portalUsers = {};
 
+    const TOOLS_LIST = [
+      { id: 'tool-airasia', name: 'AirAsia Flight Check' },
+      { id: 'tool-quotation', name: 'Airfare Quotation' },
+      { id: 'tool-itinerary', name: 'Tour Itinerary Builder' },
+      { id: 'tool-group-tour', name: 'Group Tour Builder' },
+      { id: 'tool-costing', name: 'Tour Costing Builder' },
+      { id: 'tool-database', name: 'Master Database Manager' },
+      { id: 'tool-ai-assistant', name: 'AI Sales & Costing Assistant' },
+      { id: 'tool-passport-scanner', name: 'Passport Scanner' }
+    ];
+
+    function renderToolsVisibility(visibilityData) {
+      const container = document.getElementById('tools-visibility-container');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      TOOLS_LIST.forEach(tool => {
+        const isVisible = visibilityData[tool.id] !== false; // default true
+        
+        const div = document.createElement('div');
+        div.style = "display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;";
+        div.innerHTML = `
+          <input type="checkbox" id="chk-${tool.id}" ${isVisible ? 'checked' : ''} onchange="updateToolVisibility('${tool.id}', this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="chk-${tool.id}" style="cursor: pointer; font-weight: 500; font-size: 0.95rem;">${tool.name}</label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateToolVisibility(toolId, isVisible) {
+      db.collection('slw_settings').doc('tool_visibility').set({
+        [toolId]: isVisible
+      }, { merge: true }).catch(console.error);
+    }
+
     function renderUserManagementTable() {
       const tbody = document.getElementById('admin-user-table-body');
       if (!tbody) return;
@@ -434,6 +479,11 @@
            }
         });
         renderStatuses();
+      });
+
+      // Listen for tool visibility
+      db.collection('slw_settings').doc('tool_visibility').onSnapshot(doc => {
+        renderToolsVisibility(doc.exists ? doc.data() : {});
       });
 
       // Listen for activity log updates

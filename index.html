@@ -1577,6 +1577,27 @@ if (typeof db !== 'undefined') {
       });
     }
   });
+
+  // Real-time tool visibility sync
+  db.collection('slw_settings').doc('tool_visibility').onSnapshot(doc => {
+    if (doc.exists) {
+      const visibilityData = doc.data();
+      const toolIds = [
+        'tool-airasia', 'tool-quotation', 'tool-itinerary', 'tool-group-tour',
+        'tool-costing', 'tool-database', 'tool-ai-assistant', 'tool-passport-scanner'
+      ];
+      toolIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (visibilityData[id] === false) {
+            el.style.display = 'none';
+          } else {
+            el.style.display = ''; // Revert to stylesheet default (flex/block)
+          }
+        }
+      });
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════

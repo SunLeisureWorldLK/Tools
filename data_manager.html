@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase_init.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
     <div id="app" class="max-w-7xl mx-auto px-4 py-8">
@@ -24,8 +27,8 @@
                     <i class="fas fa-file-import mr-2"></i>Import JSON
                     <input type="file" @change="importDatabase" accept=".json" class="hidden">
                 </label>
-                <button @click="saveToBrowser" class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-md transition-colors">
-                    <i class="fas fa-save mr-2"></i>Save Database
+                <button @click="saveToFirebase" class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-md transition-colors">
+                    <i class="fas fa-save mr-2"></i>Save to Firebase
                 </button>
             </div>
         </div>
@@ -371,6 +374,22 @@
                 // Load initial data
                 onMounted(async () => {
                     try {
+                        const doc = await db.collection('slw_settings').doc('master_inventory').get();
+                        if (doc.exists) {
+                            const parsed = doc.data();
+                            hotels.value = parsed.hotels || [];
+                            tours.value = parsed.tours || [];
+                            transfers.value = parsed.transfers || [];
+                            extras.value = parsed.extras || [];
+                            return; // Stop here if successfully fetched from Firebase
+                        } else {
+                            console.log("Firebase document doesn't exist yet.");
+                        }
+                    } catch(e) {
+                        console.error("Firebase fetch error:", e);
+                    }
+
+                    try {
                         const response = await fetch('./master_db.json?t=' + new Date().getTime());
                         if (response.ok) {
                             const parsed = await response.json();
@@ -381,7 +400,7 @@
                             return; // Stop here if successfully fetched
                         }
                     } catch(e) {
-                        console.log("master_db.json not found via fetch. Falling back to local storage.");
+                        console.log("master_db.json not found via fetch.");
                     }
 
                     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -445,15 +464,21 @@
                     setTimeout(() => { notification.value = null; }, 3000);
                 };
 
-                const saveToBrowser = () => {
+                const saveToFirebase = async () => {
                     const data = {
-                        hotels: hotels.value,
-                        tours: tours.value,
-                        transfers: transfers.value,
-                        extras: extras.value
+                        hotels: JSON.parse(JSON.stringify(hotels.value)),
+                        tours: JSON.parse(JSON.stringify(tours.value)),
+                        transfers: JSON.parse(JSON.stringify(transfers.value)),
+                        extras: JSON.parse(JSON.stringify(extras.value))
                     };
+                    try {
+                        await db.collection('slw_settings').doc('master_inventory').set(data);
+                        showNotify('Database successfully saved to Firebase!');
+                    } catch(e) {
+                        console.error("Firebase save error:", e);
+                        showNotify('Error saving to Firebase: ' + e.message, 'error');
+                    }
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-                    showNotify('Database successfully saved to browser local storage!');
                 };
 
                 const exportDatabase = () => {
@@ -484,7 +509,7 @@
                             if(parsed.tours) tours.value = parsed.tours;
                             if(parsed.transfers) transfers.value = parsed.transfers;
                             if(parsed.extras) extras.value = parsed.extras;
-                            saveToBrowser();
+                            saveToFirebase();
                             showNotify('Database imported successfully!');
                         } catch (error) {
                             showNotify('Failed to import data. Invalid JSON file.', 'error');
@@ -532,7 +557,7 @@
                     } else {
                         extras.value = extras.value.filter(i => i.id !== id);
                     }
-                    saveToBrowser();
+                    saveToFirebase();
                     showNotify('Item deleted successfully!');
                 };
 
@@ -592,7 +617,7 @@
                         }
                     }
 
-                    saveToBrowser();
+                    saveToFirebase();
                     closeModal();
                 };
 
@@ -602,7 +627,7 @@
                     filteredHotels, filteredTours, filteredTransfers, filteredExtras,
                     notification, modal, modalTitle, modalHeaderClass, modalSubmitClass,
                     openModal, editItem, deleteItem, closeModal, saveItem,
-                    saveToBrowser, exportDatabase, importDatabase
+                    saveToFirebase, exportDatabase, importDatabase
                 };
             }
         }).mount('#app');

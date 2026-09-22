@@ -71,6 +71,9 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #106a37; border-radius: 3px; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase_init.js"></script>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
@@ -329,6 +332,24 @@
         });
 
         async function loadDatabase() {
+            try {
+                const doc = await db.collection('slw_settings').doc('master_inventory').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    masterDb = { 
+                        hotels: data.hotels || [], 
+                        tours: data.tours || [], 
+                        transfers: data.transfers || [], 
+                        extras: data.extras || [] 
+                    };
+                    console.log("Master database loaded from Firebase.");
+                    recalculateQuote();
+                    return;
+                }
+            } catch (e) {
+                console.error("Firebase fetch error:", e);
+            }
+
             try {
                 const res = await fetch('./master_db.json?t=' + Date.now());
                 if (res.ok) {

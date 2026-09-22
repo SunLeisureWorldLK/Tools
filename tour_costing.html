@@ -36,6 +36,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="Image/LOGO.png">
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase_init.js"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-12">
 
@@ -611,6 +614,24 @@
 
     async function loadMasterDatabase() {
         let fetchedDb = { hotels: [], tours: [], transfers: [], extras: [] };
+        
+        try {
+            const doc = await db.collection('slw_settings').doc('master_inventory').get();
+            if (doc.exists) {
+                const data = doc.data();
+                masterDb = { 
+                    hotels: data.hotels || [], 
+                    tours: data.tours || [], 
+                    transfers: data.transfers || [], 
+                    extras: data.extras || [] 
+                };
+                console.log("Master database loaded from Firebase.");
+                return;
+            }
+        } catch(e) {
+            console.error("Firebase fetch error:", e);
+        }
+
         try {
             const response = await fetch('./master_db.json?t=' + new Date().getTime());
             if (response.ok) {

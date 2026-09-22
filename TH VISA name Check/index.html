@@ -339,8 +339,8 @@
         });
 
         async function handleFileSelection(file) {
-            if (file.type !== 'application/pdf') {
-                alert("Please upload a valid PDF file.");
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                showError("Please upload a valid PDF file. The selected file does not appear to be a PDF.");
                 return;
             }
 
@@ -383,16 +383,27 @@
                     
                 } catch (err) {
                     console.error("PDF Extraction Error:", err);
-                    alert("Error reading PDF: " + err.message);
-                    document.getElementById('loader').style.display = 'none';
+                    showError("Error reading PDF: " + err.message);
                 } finally {
                     URL.revokeObjectURL(fileUrl);
                 }
             } catch (e) {
                 console.error("File loading error:", e);
-                alert("File loading error: " + e.message);
-                document.getElementById('loader').style.display = 'none';
+                showError("File loading error: " + e.message);
             }
+        }
+
+        function showError(message) {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+            const container = document.getElementById('results-container');
+            container.innerHTML = `
+                <div class="match-card error">
+                    <span class="status-badge" style="background:#dc3545;color:white;">Error</span>
+                    <h3>Failed to Process Document</h3>
+                    <p>${message}</p>
+                </div>
+            `;
         }
         
         async function renderPdfPreview(pdf) {

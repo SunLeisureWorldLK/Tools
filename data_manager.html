@@ -27,6 +27,9 @@
                     <i class="fas fa-file-import mr-2"></i>Import JSON
                     <input type="file" @change="importDatabase" accept=".json" class="hidden">
                 </label>
+                <button @click="loadFromFirebase(true)" class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-medium transition-colors border border-indigo-200" title="Reload fresh data from Firebase">
+                    <i class="fas fa-cloud-download-alt mr-2"></i>Reload Cloud
+                </button>
                 <button @click="saveToFirebase" class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold shadow-md transition-colors">
                     <i class="fas fa-save mr-2"></i>Save to Firebase
                 </button>
@@ -371,29 +374,58 @@
                     data: {}
                 });
 
-                // Load initial data
-                onMounted(async () => {
+                const normalizeHotels = (list) => {
+                    return (list || []).map((h, idx) => ({
+                        id: h.id || ('h_' + (idx + 1)),
+                        name: h.name || '',
+                        location: h.location || h.loc || '',
+                        star: String(h.star || '3'),
+                        price: Number(h.price || 0),
+                        mealPrice: Number(h.mealPrice || 0)
+                    }));
+                };
+
+                const loadFromFirebase = async (showToast = false) => {
                     try {
                         const doc = await db.collection('slw_settings').doc('master_inventory').get();
                         if (doc.exists) {
                             const parsed = doc.data();
-                            hotels.value = parsed.hotels || [];
+                            hotels.value = normalizeHotels(parsed.hotels || []);
                             tours.value = parsed.tours || [];
                             transfers.value = parsed.transfers || [];
                             extras.value = parsed.extras || [];
-                            return; // Stop here if successfully fetched from Firebase
+                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+                                hotels: hotels.value,
+                                tours: tours.value,
+                                transfers: transfers.value,
+                                extras: extras.value
+                            }));
+                            if (showToast) {
+                                showNotify(`Cloud sync complete: ${tours.value.length} Tours, ${hotels.value.length} Hotels loaded!`);
+                            }
+                            return true;
                         } else {
                             console.log("Firebase document doesn't exist yet.");
                         }
                     } catch(e) {
                         console.error("Firebase fetch error:", e);
+                        if (showToast) {
+                            showNotify('Failed to fetch from Firebase: ' + e.message, 'error');
+                        }
                     }
+                    return false;
+                };
+
+                // Load initial data
+                onMounted(async () => {
+                    const fromCloud = await loadFromFirebase(false);
+                    if (fromCloud) return; // Successfully loaded from cloud
 
                     try {
                         const response = await fetch('./master_db.json?t=' + new Date().getTime());
                         if (response.ok) {
                             const parsed = await response.json();
-                            hotels.value = parsed.hotels || [];
+                            hotels.value = normalizeHotels(parsed.hotels || []);
                             tours.value = parsed.tours || [];
                             transfers.value = parsed.transfers || [];
                             extras.value = parsed.extras || [];
@@ -407,7 +439,7 @@
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
-                            hotels.value = parsed.hotels || [];
+                            hotels.value = normalizeHotels(parsed.hotels || []);
                             tours.value = parsed.tours || [];
                             transfers.value = parsed.transfers || [];
                             extras.value = parsed.extras || [];
@@ -627,7 +659,7 @@
                     filteredHotels, filteredTours, filteredTransfers, filteredExtras,
                     notification, modal, modalTitle, modalHeaderClass, modalSubmitClass,
                     openModal, editItem, deleteItem, closeModal, saveItem,
-                    saveToFirebase, exportDatabase, importDatabase
+                    saveToFirebase, exportDatabase, importDatabase, loadFromFirebase
                 };
             }
         }).mount('#app');

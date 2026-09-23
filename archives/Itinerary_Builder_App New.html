@@ -423,7 +423,116 @@ function slwGoHome() {
 <!-- END INJECTION -->
 </html>
 
-<!-- ===== GUARANTEED FLOATING UPDATE BUTTON ===== -->
+<!-- ===== SLW UPDATE JSON BUTTON - GUARANTEED APPROACH ===== -->
+<script>
+window.addEventListener('load', function() {
+    // Wait for React to render, then inject our button
+    var attempts = 0;
+    var timer = setInterval(function() {
+        attempts++;
+        
+        // Find Export JSON button - look for button with exact text
+        var allBtns = document.querySelectorAll('button');
+        var exportBtn = null;
+        for (var i = 0; i < allBtns.length; i++) {
+            var txt = allBtns[i].innerText || allBtns[i].textContent || '';
+            if (txt.trim().indexOf('Export JSON') !== -1) {
+                exportBtn = allBtns[i];
+                break;
+            }
+        }
+        
+        if (exportBtn && !document.getElementById('slw-update-btn')) {
+            // Create Update button styled exactly like Export JSON button
+            var updateBtn = document.createElement('button');
+            updateBtn.id = 'slw-update-btn';
+            updateBtn.className = exportBtn.className; // Copy React classes
+            updateBtn.style.cssText = 'background:#0d9488!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:4px!important;';
+            updateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg> Update JSON file';
+            
+            updateBtn.onclick = function() {
+                var name = window.__slwPresetName;
+                if (!name) {
+                    name = prompt('Itinerary eke cloud name denna:\n(e.g. 03N Pattaya 05N Bangkok)');
+                    if (!name || !name.trim()) return;
+                    name = name.trim().replace(/\.json$/i, '');
+                    window.__slwPresetName = name;
+                } else {
+                    if (!confirm("'" + name + "' update karanawada?")) return;
+                }
+                window.__slwDoUpload = true;
+                window.__slwUploadName = name;
+                
+                // Find and click Export JSON button fresh
+                var btns = document.querySelectorAll('button');
+                for (var j = 0; j < btns.length; j++) {
+                    var t2 = (btns[j].innerText || '').trim();
+                    if (t2.indexOf('Export JSON') !== -1) {
+                        btns[j].click();
+                        break;
+                    }
+                }
+            };
+            
+            // Insert after exportBtn's parent row
+            var parentRow = exportBtn.closest('[class*="grid"]') || exportBtn.parentElement;
+            if (parentRow && parentRow.parentElement) {
+                parentRow.insertAdjacentElement('afterend', updateBtn);
+            }
+            
+            clearInterval(timer);
+            console.log('[SLW] Update JSON button injected!');
+        }
+        
+        if (attempts > 20) clearInterval(timer); // Stop after 20s
+    }, 1000);
+    
+    // Intercept anchor download to upload to Firebase instead
+    var _orig = window.HTMLAnchorElement.prototype.click;
+    window.HTMLAnchorElement.prototype.click = function() {
+        if (window.__slwDoUpload && this.download && this.download.match(/\.json$/i)) {
+            window.__slwDoUpload = false;
+            var name = window.__slwUploadName;
+            var blobUrl = this.href;
+            
+            var overlay = document.getElementById('slw-loading-overlay');
+            if (overlay) { overlay.style.display='flex'; overlay.innerText='Uploading to cloud...'; }
+            
+            fetch(blobUrl)
+              .then(function(r) { return r.text(); })
+              .then(function(jsonStr) {
+                var fb = window.firebase;
+                if (!fb) { alert('Firebase not ready. Try again in a moment.'); return; }
+                var ref = fb.storage().ref('itinerary_presets/' + name + '.json');
+                return ref.putString(jsonStr).then(function() {
+                    return fb.firestore().collection('slw_itinerary_presets').doc(name).set({
+                        updatedAt: fb.firestore.FieldValue.serverTimestamp()
+                    });
+                }).then(function() {
+                    window.__slwPresetName = name;
+                    alert('\u2705 "' + name + '" cloud-eke save vuna!\nJebika PC ekaken Quick Load karana kota penawa.');
+                }).catch(function(err) {
+                    alert('Upload error: ' + err.message);
+                });
+              })
+              .finally(function() {
+                if (overlay) { overlay.style.display='none'; overlay.innerText='Loading...'; }
+              });
+            return; // Block actual download
+        }
+        return _orig.call(this);
+    };
+    
+    // Sync preset name from Quick Load panel (if loaded from cloud)
+    var _origSetPreset = window.setCurrentPreset;
+    Object.defineProperty(window, '__slwCurrentPresetId', {
+        set: function(v) { window.__slwPresetName = v; },
+        get: function() { return window.__slwPresetName; },
+        configurable: true
+    });
+});
+</script>
+
 <script>
 (function() {
     // This runs AFTER everything - guaranteed to work

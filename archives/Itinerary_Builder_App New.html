@@ -250,26 +250,29 @@ function slwGoHome() {
         <i class="fas fa-times" style="cursor:pointer;" onclick="document.getElementById('slw-quick-load-panel').classList.remove('open')"></i>
     </div>
     <div id="slw-panel-content">
-        <div id="slw-loading-overlay">Loading...</div>
-        <div id="slw-preset-list"></div>
-    </div>
-</div>
+        <div id="slw-loading-overlay">Loading...</div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
 <script>
 (function(){
-    const presets = [
-        "01N Pattaya 03N Bangkok.json",
-        "02N Phuket 03N Bangkok.json",
-        "03N 04D Bangkok.json",
-        "03N 04D Phuket.json",
-        "03N Phuket New.json",
-        "04N 05D Bangkok.json",
-        "2N Pattaya 3N Bangkok.json",
-        "2N Phuket  2N Pattaya 2N Bangkok.json",
-        "2N Phuket  2N Pattaya.json",
-        "3N Phuket  2N Krabi.json",
-        "Oct.json"
-    ];
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCpY9ZhcJaRcHOWhPWKBEigb7Tw2_qOYEM",
+        authDomain: "sun-leisure-world-portal.firebaseapp.com",
+        projectId: "sun-leisure-world-portal",
+        storageBucket: "sun-leisure-world-portal.firebasestorage.app",
+        messagingSenderId: "630137017192",
+        appId: "1:630137017192:web:f0dc5a77e74099ec6f7cdd"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    let currentLoadedPresetId = null;
+    let isUpdatingCloud = false;
 
     const panel = document.getElementById('slw-quick-load-panel');
     const toggleBtn = document.getElementById('slw-panel-toggle');
@@ -278,57 +281,138 @@ function slwGoHome() {
 
     toggleBtn.addEventListener('click', () => {
         panel.classList.toggle('open');
+        fetchPresets(); // Refresh presets when opened
     });
 
-    presets.forEach(preset => {
-        const btn = document.createElement('button');
-        btn.className = 'slw-preset-btn';
-        btn.innerHTML = '<i class="fas fa-file-alt text-gray-400 mr-2"></i> ' + preset.replace('.json', '');
-        btn.onclick = () => loadPreset(preset);
-        listContainer.appendChild(btn);
-    });
+    // Initial fetch
+    fetchPresets();
 
-    async function loadPreset(filename) {
-        if(!confirm("Are you sure you want to load '" + filename.replace('.json', '') + "'? Current data will be replaced.")) return;
+    function fetchPresets() {
+        listContainer.innerHTML = '';
+        overlay.style.display = 'flex';
+        
+        db.collection('slw_itinerary_presets').get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const presetName = doc.id;
+                const btn = document.createElement('button');
+                btn.className = 'slw-preset-btn';
+                btn.innerHTML = '<i class="fas fa-cloud-download-alt text-blue-500 mr-2"></i> ' + presetName;
+                btn.onclick = () => loadPresetFromCloud(presetName);
+                listContainer.appendChild(btn);
+            });
+            overlay.style.display = 'none';
+        }).catch(err => {
+            console.error("Firebase Error:", err);
+            overlay.style.display = 'none';
+        });
+    }
+
+    async function loadPresetFromCloud(filename) {
+        if(!confirm("Are you sure you want to load '" + filename + "'? Current data will be replaced.")) return;
         
         overlay.style.display = 'flex';
         try {
-            // First find the React input element
             const fileInput = document.querySelector('input[type="file"][accept=".json"]');
-            if(!fileInput) {
-                throw new Error("Could not find the 'Import JSON' button in the builder.");
-            }
+            if(!fileInput) throw new Error("Could not find the 'Import JSON' button in the builder.");
 
-            // Fetch the JSON from GitHub pages (or relative path)
-            const response = await fetch("../JSON/" + encodeURIComponent(filename));
-            if(!response.ok) throw new Error("Failed to load JSON file from server.");
-            
+            // Download from Firebase Storage
+            const fileRef = storage.ref('itinerary_presets/' + filename + '.json');
+            const url = await fileRef.getDownloadURL();
+            const response = await fetch(url);
             const jsonData = await response.text();
-            
-            // Create a File object
-            const file = new File([jsonData], filename, { type: "application/json" });
+
+            const file = new File([jsonData], filename + ".json", { type: "application/json" });
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             
-            // Set files via native setter to bypass React wrapper
             const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "files").set;
             nativeInputValueSetter.call(fileInput, dataTransfer.files);
             
-            // Dispatch event for React
             const ev = new Event('change', { bubbles: true });
             fileInput.dispatchEvent(ev);
             
-            // Close panel
+            currentLoadedPresetId = filename;
+
             setTimeout(() => { panel.classList.remove('open'); }, 500);
 
         } catch(err) {
             console.error(err);
-            alert("Failed to load preset: " + err.message + "\n\nMake sure you are opening this from GitHub Pages.");
+            alert("Failed to load preset: " + err.message);
         } finally {
             overlay.style.display = 'none';
         }
     }
+
+    // Add 'Update JSON File' button to the left panel
+    setTimeout(() => {
+        const checkInterval = setInterval(() => {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const exportBtn = buttons.find(b => b.textContent && b.textContent.includes('Export JSON'));
+            
+            if (exportBtn && exportBtn.parentElement && !document.getElementById('slw-update-cloud-btn')) {
+                const updateBtn = document.createElement('button');
+                updateBtn.id = 'slw-update-cloud-btn';
+                updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Update JSON file';
+                
+                updateBtn.className = exportBtn.className;
+                updateBtn.style.backgroundColor = '#0d9488'; // teal-600
+                updateBtn.style.color = 'white';
+                
+                updateBtn.onclick = () => {
+                    if (!currentLoadedPresetId) {
+                        const newName = prompt("Enter a name to save this as a new preset on the cloud:");
+                        if (!newName) return;
+                        currentLoadedPresetId = newName.replace('.json', '');
+                    } else {
+                        if (!confirm("Are you sure you want to update the cloud preset: '" + currentLoadedPresetId + "'?")) return;
+                    }
+                    
+                    isUpdatingCloud = true;
+                    // Trigger the export JSON button artificially
+                    exportBtn.click();
+                };
+                
+                exportBtn.parentElement.appendChild(updateBtn);
+                clearInterval(checkInterval);
+            }
+        }, 1000);
+    }, 2000);
+
+    // Monkey-patch Anchor click to intercept JSON blob
+    const originalAnchorClick = window.HTMLAnchorElement.prototype.click;
+    window.HTMLAnchorElement.prototype.click = function() {
+        if (isUpdatingCloud && this.download && this.download.endsWith('.json')) {
+            // Show loading
+            overlay.style.display = 'flex';
+            overlay.innerText = 'Saving to cloud (may take a few seconds due to images)...';
+            
+            // Read the blob URL
+            fetch(this.href).then(res => res.text()).then(jsonString => {
+                // Upload to Firebase Storage first (because it's up to 11MB)
+                const fileRef = storage.ref('itinerary_presets/' + currentLoadedPresetId + '.json');
+                fileRef.putString(jsonString).then(() => {
+                    // Then update Firestore metadata
+                    return db.collection('slw_itinerary_presets').doc(currentLoadedPresetId).set({
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }).then(() => {
+                    alert("✅ Successfully updated '" + currentLoadedPresetId + "' in the cloud! Anyone can now load these changes.");
+                    fetchPresets(); // Refresh the list
+                }).catch(err => {
+                    console.error(err);
+                    alert("Error saving to cloud: " + err.message);
+                }).finally(() => {
+                    overlay.style.display = 'none';
+                    overlay.innerText = 'Loading...';
+                });
+            });
+            isUpdatingCloud = false;
+            return; // Prevent actual download
+        }
+        return originalAnchorClick.call(this);
+    };
+
 })();
 </script>
 <!-- END INJECTION -->
-\n</html>
+</html>

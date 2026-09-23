@@ -1153,6 +1153,70 @@
                     downloadAnchorNode.remove();
                 }
 
+                const presets = [
+                    "01N Pattaya 03N Bangkok.json",
+                    "02N Phuket 03N Bangkok.json",
+                    "03N 04D Bangkok.json",
+                    "03N 04D Phuket.json",
+                    "03N Phuket New.json",
+                    "04N 05D Bangkok.json",
+                    "2N Pattaya 3N Bangkok.json",
+                    "2N Phuket  2N Pattaya 2N Bangkok.json",
+                    "2N Phuket  2N Pattaya.json",
+                    "3N Phuket  2N Krabi.json",
+                    "Oct.json"
+                ];
+                const presetSearch = Vue.ref('');
+                const isLoadingPreset = Vue.ref(false);
+                const filteredPresets = Vue.computed(() => {
+                    const search = presetSearch.value.toLowerCase();
+                    return presets.filter(p => p.toLowerCase().includes(search));
+                });
+
+                async function loadPreset(filename) {
+                    if (!confirm("Are you sure you want to load '" + filename.replace('.json', '') + "'? Current data will be replaced.")) return;
+                    isLoadingPreset.value = true;
+                    try {
+                        const response = await fetch("JSON/" + encodeURIComponent(filename));
+                        if (!response.ok) throw new Error("Network response was not ok");
+                        const importedData = await response.json();
+                        
+                        if (importedData.state) {
+                            if (importedData.contentData && !importedData.state.texts) {
+                                const c = importedData.contentData;
+                                importedData.state.tourName = c[0] || importedData.state.tourName;
+                                importedData.state.texts = {
+                                     durationBadge: c[1] || '5 Nights 6 Days',
+                                     dateBadge: c[2] || '23 - 28 August 2026',
+                                     departureProcedure: c[3] || ''
+                                 };
+                                 let contentIdx = 4;
+                                 if (importedData.state.days) {
+                                     importedData.state.days.forEach(day => {
+                                         day.header = c[contentIdx++] || 'Day - City Name';
+                                         day.date = c[contentIdx++] || 'Date';
+                                         day.mealPlan = c[contentIdx++] || 'Breakfast, Lunch';
+                                         day.description = c[contentIdx++] || 'Description';
+                                     });
+                                 }
+                                 importedData.state.texts.inclusions = c[contentIdx++] || '';
+                                 importedData.state.texts.exclusions = c[contentIdx++] || '';
+                                 importedData.state.texts.flightDeparture = c[contentIdx++] || '';
+                                 importedData.state.texts.flightReturn = c[contentIdx++] || '';
+                                 importedData.state.texts.flightNote = c[contentIdx++] || '';
+                            }
+                            Object.assign(state, importedData.state);
+                        } else {
+                            Object.assign(state, importedData);
+                        }
+                    } catch (err) {
+                        console.error("Error loading preset:", err);
+                        alert("Failed to load preset. Please ensure you are opening this file via a web server or GitHub Pages (not file://).");
+                    } finally {
+                        isLoadingPreset.value = false;
+                    }
+                }
+
                 function importJSON(event) {
                     const file = event.target.files[0];
                     if (!file) return;

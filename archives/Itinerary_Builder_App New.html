@@ -274,6 +274,12 @@ function slwGoHome() {
     let currentLoadedPresetId = null;
     let isUpdatingCloud = false;
 
+    // Sync with floating button's global state
+    function setCurrentPreset(name) {
+        currentLoadedPresetId = name;
+        window.__slwCurrentPresetId = name;
+    }
+
     const panel = document.getElementById('slw-quick-load-panel');
     const toggleBtn = document.getElementById('slw-panel-toggle');
     const listContainer = document.getElementById('slw-preset-list');
@@ -331,7 +337,7 @@ function slwGoHome() {
             const ev = new Event('change', { bubbles: true });
             fileInput.dispatchEvent(ev);
             
-            currentLoadedPresetId = filename;
+            setCurrentPreset(filename);
 
             setTimeout(() => { panel.classList.remove('open'); }, 500);
 
@@ -343,88 +349,40 @@ function slwGoHome() {
         }
     }
 
-    // Add 'Update JSON File' button - inject after Export JSON button
-    function injectUpdateButton() {
-        if (document.getElementById('slw-update-cloud-btn')) return;
-
-        // Try to find Export JSON button by text content
-        const allButtons = Array.from(document.querySelectorAll('button'));
-        const exportBtn = allButtons.find(b => {
-            const txt = (b.textContent || b.innerText || '').trim();
-            return txt.includes('Export JSON') || txt.includes('Export Json');
-        });
-
-        if (exportBtn) {
-            const updateBtn = document.createElement('button');
-            updateBtn.id = 'slw-update-cloud-btn';
-            updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt" style="margin-right:6px;"></i> ☁️ Update JSON file';
-            updateBtn.className = exportBtn.className;
-            // Force styles so it's always visible
-            updateBtn.style.cssText = 'background:#0d9488!important;color:#fff!important;width:100%!important;display:block!important;margin-top:6px!important;cursor:pointer!important;';
-
-            updateBtn.onclick = () => {
-                const currentExportBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                    (b.textContent || '').includes('Export JSON') || (b.textContent || '').includes('Export Json')
-                );
-                if (!currentExportBtn) { alert('Export JSON button not found!'); return; }
-
-                if (!currentLoadedPresetId) {
-                    const newName = prompt("Cloud-eke save karanna preset name ekak denna (e.g. 03N Pattaya):");
-                    if (!newName || !newName.trim()) return;
-                    currentLoadedPresetId = newName.trim().replace(/\.json$/i, '');
-                } else {
-                    if (!confirm("Cloud preset update karanawada: '" + currentLoadedPresetId + "'?")) return;
-                }
-                isUpdatingCloud = true;
-                currentExportBtn.click();
-            };
-
-            // Insert right after exportBtn
-            exportBtn.insertAdjacentElement('afterend', updateBtn);
-            console.log('[SLW] ✅ Update JSON button injected successfully.');
-        } else {
-            // Also add as fixed floating button as fallback so user can always access it
-            if (!document.getElementById('slw-floating-update-btn')) {
-                const fab = document.createElement('button');
-                fab.id = 'slw-floating-update-btn';
-                fab.innerHTML = '☁️ Update JSON';
-                fab.style.cssText = 'position:fixed;bottom:80px;left:10px;z-index:9999;background:#0d9488;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-                fab.onclick = () => {
-                    const currentExportBtn = Array.from(document.querySelectorAll('button')).find(b =>
-                        (b.textContent || '').includes('Export JSON') || (b.textContent || '').includes('Export Json')
-                    );
-                    if (!currentExportBtn) { alert('Export JSON button not found!'); return; }
+    // Add 'Update JSON File' button to the left panel
+    setTimeout(() => {
+        const checkInterval = setInterval(() => {
+            const buttons = Array.from(document.querySelectorAll('button'));
+            const exportBtn = buttons.find(b => b.textContent && b.textContent.includes('Export JSON'));
+            
+            if (exportBtn && exportBtn.parentElement && !document.getElementById('slw-update-cloud-btn')) {
+                const updateBtn = document.createElement('button');
+                updateBtn.id = 'slw-update-cloud-btn';
+                updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Update JSON file';
+                
+                updateBtn.className = exportBtn.className;
+                updateBtn.style.backgroundColor = '#0d9488'; // teal-600
+                updateBtn.style.color = 'white';
+                
+                updateBtn.onclick = () => {
                     if (!currentLoadedPresetId) {
-                        const newName = prompt("Cloud-eke save karanna preset name ekak denna:");
-                        if (!newName || !newName.trim()) return;
-                        currentLoadedPresetId = newName.trim().replace(/\.json$/i, '');
+                        const newName = prompt("Enter a name to save this as a new preset on the cloud:");
+                        if (!newName) return;
+                        currentLoadedPresetId = newName.replace('.json', '');
                     } else {
-                        if (!confirm("Cloud preset update karanawada: '" + currentLoadedPresetId + "'?")) return;
+                        if (!confirm("Are you sure you want to update the cloud preset: '" + currentLoadedPresetId + "'?")) return;
                     }
+                    
                     isUpdatingCloud = true;
-                    currentExportBtn.click();
+                    // Trigger the export JSON button artificially
+                    exportBtn.click();
                 };
-                document.body.appendChild(fab);
+                
+                exportBtn.parentElement.appendChild(updateBtn);
+                clearInterval(checkInterval);
             }
-        }
-    }
-
-    // Try immediately, then keep retrying until found
-    const checkInterval = setInterval(() => {
-        injectUpdateButton();
-        if (document.getElementById('slw-update-cloud-btn')) {
-            clearInterval(checkInterval);
-        }
-    }, 1500);
-    // Also try on any DOM changes (React re-renders)
-    const observer = new MutationObserver(() => {
-        injectUpdateButton();
-        if (document.getElementById('slw-update-cloud-btn')) {
-            observer.disconnect();
-            clearInterval(checkInterval);
-        }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+        }, 1000);
+    }, 2000);
 
     // Monkey-patch Anchor click to intercept JSON blob
     const originalAnchorClick = window.HTMLAnchorElement.prototype.click;
@@ -464,3 +422,120 @@ function slwGoHome() {
 </script>
 <!-- END INJECTION -->
 </html>
+
+<!-- ===== GUARANTEED FLOATING UPDATE BUTTON ===== -->
+<script>
+(function() {
+    // This runs AFTER everything - guaranteed to work
+    // We add a floating teal button at bottom-left that's always visible
+    function addFloatingBtn() {
+        if (document.getElementById('slw-float-btn')) return;
+
+        var btn = document.createElement('button');
+        btn.id = 'slw-float-btn';
+        btn.innerHTML = '&#9729;&#65039; Update JSON';
+        btn.title = 'Save current itinerary to cloud';
+        btn.style.cssText = [
+            'position:fixed',
+            'bottom:16px',
+            'left:16px',
+            'z-index:999999',
+            'background:#0d9488',
+            'color:#ffffff',
+            'border:none',
+            'border-radius:10px',
+            'padding:11px 18px',
+            'font-size:14px',
+            'font-weight:700',
+            'cursor:pointer',
+            'box-shadow:0 4px 16px rgba(13,148,136,0.5)',
+            'display:flex',
+            'align-items:center',
+            'gap:6px',
+            'letter-spacing:0.3px',
+            'font-family:sans-serif'
+        ].join(';');
+
+        btn.onmouseover = function() { this.style.background = '#0f766e'; };
+        btn.onmouseout  = function() { this.style.background = '#0d9488'; };
+
+        btn.onclick = function() {
+            // Find the Export JSON button at click time (React is definitely loaded by now)
+            var allBtns = Array.from(document.querySelectorAll('button'));
+            var exportBtn = allBtns.find(function(b) {
+                var t = (b.textContent || b.innerText || '').trim();
+                return t.indexOf('Export JSON') !== -1 || t.indexOf('Export Json') !== -1;
+            });
+
+            if (!exportBtn) {
+                alert('Export JSON button not found. Please make sure the app is fully loaded.');
+                return;
+            }
+
+            // Get current preset name from existing logic
+            var currentName = window.__slwCurrentPresetId || null;
+
+            if (!currentName) {
+                var entered = prompt('Cloud-eke save karanna itinerary name denna:\n(e.g. 03N Pattaya 05N Bangkok)');
+                if (!entered || !entered.trim()) return;
+                currentName = entered.trim().replace(/\.json$/i, '');
+                window.__slwCurrentPresetId = currentName;
+            } else {
+                if (!confirm("'" + currentName + "' cloud-eke update karanawada?")) return;
+            }
+
+            // Set flag and trigger export
+            window.__slwIsUpdatingCloud = true;
+            window.__slwUploadName = currentName;
+            exportBtn.click();
+        };
+
+        document.body.appendChild(btn);
+        console.log('[SLW] ✅ Floating Update JSON button added.');
+    }
+
+    // Intercept anchor clicks globally to catch the JSON export
+    var _origClick = window.HTMLAnchorElement.prototype.click;
+    window.HTMLAnchorElement.prototype.click = function() {
+        if (window.__slwIsUpdatingCloud && this.download && this.download.indexOf('.json') !== -1) {
+            window.__slwIsUpdatingCloud = false;
+            var name = window.__slwUploadName;
+            var href = this.href;
+
+            var overlay = document.getElementById('slw-loading-overlay');
+            if (overlay) { overlay.style.display = 'flex'; overlay.innerText = 'Saving to cloud...'; }
+
+            fetch(href).then(function(r){ return r.text(); }).then(function(jsonStr) {
+                var fb = window.firebase;
+                if (!fb) { alert('Firebase not loaded!'); return; }
+                var storage = fb.storage();
+                var db = fb.firestore();
+                var fileRef = storage.ref('itinerary_presets/' + name + '.json');
+                fileRef.putString(jsonStr).then(function() {
+                    return db.collection('slw_itinerary_presets').doc(name).set({
+                        updatedAt: fb.firestore.FieldValue.serverTimestamp()
+                    });
+                }).then(function() {
+                    alert('\u2705 "' + name + '" cloud-eke save vuna! Jebika PC ekata load karaganna puluwana.');
+                    window.__slwCurrentPresetId = name;
+                }).catch(function(err) {
+                    alert('Cloud save error: ' + err.message);
+                }).finally(function() {
+                    if (overlay) { overlay.style.display = 'none'; overlay.innerText = 'Loading...'; }
+                });
+            });
+            return; // Don't trigger normal download
+        }
+        return _origClick.call(this);
+    };
+
+    // Add button as soon as DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addFloatingBtn);
+    } else {
+        addFloatingBtn();
+    }
+    // Also try after 3s in case of slow load
+    setTimeout(addFloatingBtn, 3000);
+})();
+</script>

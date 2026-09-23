@@ -343,40 +343,88 @@ function slwGoHome() {
         }
     }
 
-    // Add 'Update JSON File' button to the left panel
-    setTimeout(() => {
-        const checkInterval = setInterval(() => {
-            const buttons = Array.from(document.querySelectorAll('button'));
-            const exportBtn = buttons.find(b => b.textContent && b.textContent.includes('Export JSON'));
-            
-            if (exportBtn && exportBtn.parentElement && !document.getElementById('slw-update-cloud-btn')) {
-                const updateBtn = document.createElement('button');
-                updateBtn.id = 'slw-update-cloud-btn';
-                updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Update JSON file';
-                
-                updateBtn.className = exportBtn.className;
-                updateBtn.style.backgroundColor = '#0d9488'; // teal-600
-                updateBtn.style.color = 'white';
-                
-                updateBtn.onclick = () => {
+    // Add 'Update JSON File' button - inject after Export JSON button
+    function injectUpdateButton() {
+        if (document.getElementById('slw-update-cloud-btn')) return;
+
+        // Try to find Export JSON button by text content
+        const allButtons = Array.from(document.querySelectorAll('button'));
+        const exportBtn = allButtons.find(b => {
+            const txt = (b.textContent || b.innerText || '').trim();
+            return txt.includes('Export JSON') || txt.includes('Export Json');
+        });
+
+        if (exportBtn) {
+            const updateBtn = document.createElement('button');
+            updateBtn.id = 'slw-update-cloud-btn';
+            updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt" style="margin-right:6px;"></i> ☁️ Update JSON file';
+            updateBtn.className = exportBtn.className;
+            // Force styles so it's always visible
+            updateBtn.style.cssText = 'background:#0d9488!important;color:#fff!important;width:100%!important;display:block!important;margin-top:6px!important;cursor:pointer!important;';
+
+            updateBtn.onclick = () => {
+                const currentExportBtn = Array.from(document.querySelectorAll('button')).find(b =>
+                    (b.textContent || '').includes('Export JSON') || (b.textContent || '').includes('Export Json')
+                );
+                if (!currentExportBtn) { alert('Export JSON button not found!'); return; }
+
+                if (!currentLoadedPresetId) {
+                    const newName = prompt("Cloud-eke save karanna preset name ekak denna (e.g. 03N Pattaya):");
+                    if (!newName || !newName.trim()) return;
+                    currentLoadedPresetId = newName.trim().replace(/\.json$/i, '');
+                } else {
+                    if (!confirm("Cloud preset update karanawada: '" + currentLoadedPresetId + "'?")) return;
+                }
+                isUpdatingCloud = true;
+                currentExportBtn.click();
+            };
+
+            // Insert right after exportBtn
+            exportBtn.insertAdjacentElement('afterend', updateBtn);
+            console.log('[SLW] ✅ Update JSON button injected successfully.');
+        } else {
+            // Also add as fixed floating button as fallback so user can always access it
+            if (!document.getElementById('slw-floating-update-btn')) {
+                const fab = document.createElement('button');
+                fab.id = 'slw-floating-update-btn';
+                fab.innerHTML = '☁️ Update JSON';
+                fab.style.cssText = 'position:fixed;bottom:80px;left:10px;z-index:9999;background:#0d9488;color:white;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                fab.onclick = () => {
+                    const currentExportBtn = Array.from(document.querySelectorAll('button')).find(b =>
+                        (b.textContent || '').includes('Export JSON') || (b.textContent || '').includes('Export Json')
+                    );
+                    if (!currentExportBtn) { alert('Export JSON button not found!'); return; }
                     if (!currentLoadedPresetId) {
-                        const newName = prompt("Enter a name to save this as a new preset on the cloud:");
-                        if (!newName) return;
-                        currentLoadedPresetId = newName.replace('.json', '');
+                        const newName = prompt("Cloud-eke save karanna preset name ekak denna:");
+                        if (!newName || !newName.trim()) return;
+                        currentLoadedPresetId = newName.trim().replace(/\.json$/i, '');
                     } else {
-                        if (!confirm("Are you sure you want to update the cloud preset: '" + currentLoadedPresetId + "'?")) return;
+                        if (!confirm("Cloud preset update karanawada: '" + currentLoadedPresetId + "'?")) return;
                     }
-                    
                     isUpdatingCloud = true;
-                    // Trigger the export JSON button artificially
-                    exportBtn.click();
+                    currentExportBtn.click();
                 };
-                
-                exportBtn.parentElement.appendChild(updateBtn);
-                clearInterval(checkInterval);
+                document.body.appendChild(fab);
             }
-        }, 1000);
-    }, 2000);
+        }
+    }
+
+    // Try immediately, then keep retrying until found
+    const checkInterval = setInterval(() => {
+        injectUpdateButton();
+        if (document.getElementById('slw-update-cloud-btn')) {
+            clearInterval(checkInterval);
+        }
+    }, 1500);
+    // Also try on any DOM changes (React re-renders)
+    const observer = new MutationObserver(() => {
+        injectUpdateButton();
+        if (document.getElementById('slw-update-cloud-btn')) {
+            observer.disconnect();
+            clearInterval(checkInterval);
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     // Monkey-patch Anchor click to intercept JSON blob
     const originalAnchorClick = window.HTMLAnchorElement.prototype.click;

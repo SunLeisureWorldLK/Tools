@@ -427,7 +427,66 @@ function slwGoHome() {
     box-shadow: 0 8px 25px rgba(13, 148, 136, 0.55);
 }
 @media print {
-    #slw-global-modal, #slw-float-btn, #slw-quick-load-panel { display: none !important; }
+    #slw-global-modal, #slw-float-btn, #slw-float-history-btn, #slw-quick-load-panel, #slw-history-modal { display: none !important; }
+}
+
+/* SLW Preset Row & History Styling */
+.slw-preset-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+.slw-preset-row .slw-preset-btn {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+.slw-history-trigger-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 9px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.slw-history-trigger-btn:hover {
+    background: #0d9488;
+    color: #ffffff;
+    border-color: #0d9488;
+}
+
+/* Version History Modal */
+#slw-history-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10000005;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+}
+.slw-history-card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+    width: 94%;
+    max-width: 520px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slwModalFadeIn 0.25s ease-out;
 }
 </style>
 
@@ -458,9 +517,37 @@ function slwGoHome() {
         <div id="slw-modal-prog-text">0%</div>
         <div id="slw-modal-stage-desc">දත්ත සකස් කරමින් පවතී...</div>
         <div id="slw-modal-notice-box">
-            💡 <strong>දැනුවත් කිරීම:</strong> මෙම Itinerary ගොනුවේ පින්තූර හා විශාල දත්ත (11MB පමණ) අඩංගු බැවින්, ඔබගේ අන්තර්ජාල වේගය අනුව මද වේලාවක් ගතවිය හැක. කරුණාකර රැඳී සිටින්න.
+            💡 <strong>දැනුවත් කිරීම:</strong> Cloud Patching මඟින් තත්පරයකටත් අඩු කාලයකින් දත්ත Update වීම හෝ Load වීම සිදුවේ.
         </div>
         <button id="slw-modal-ok-btn" onclick="slwCloseModal()">හරි (OK)</button>
+    </div>
+</div>
+
+<!-- SLW VERSION HISTORY MODAL -->
+<div id="slw-history-modal">
+    <div class="slw-history-card">
+        <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;">
+            <div>
+                <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:6px;">
+                    <span>🕒</span> Version History & Rollback
+                </h3>
+                <div id="slw-history-modal-preset" style="font-size:12px;color:#0d9488;font-weight:600;margin-top:2px;">-</div>
+            </div>
+            <button onclick="slwCloseHistoryModal()" style="background:none;border:none;font-size:18px;color:#64748b;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;">✕</button>
+        </div>
+        
+        <div id="slw-history-modal-content" style="padding:16px 20px;overflow-y:auto;flex:1;max-height:60vh;">
+            <!-- Loaded dynamically via slwOpenHistoryModal -->
+        </div>
+        
+        <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <button id="slw-history-reset-btn" onclick="slwResetToBasePreset()" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                🔄 Reset to Original Base
+            </button>
+            <button onclick="slwCloseHistoryModal()" style="background:#e2e8f0;color:#334155;border:none;border-radius:8px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;">
+                Close
+            </button>
+        </div>
     </div>
 </div>
 
@@ -628,6 +715,18 @@ function slwGoHome() {
         slwStopTimer();
     };
 
+    function formatSLWDate(isoStr) {
+        if (!isoStr) return 'වේලාව නොදනී';
+        try {
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
+                   d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        } catch(e) {
+            return isoStr;
+        }
+    }
+
     function slwUpdateActiveBadge(presetName) {
         let badge = document.getElementById('slw-active-preset-indicator');
         if (!badge) {
@@ -639,7 +738,14 @@ function slwGoHome() {
             }
         }
         if (badge) {
-            badge.innerHTML = `📁 Active: <strong style="margin-left:4px;color:#047857;">${presetName}</strong>`;
+            badge.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px;">
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">📁 Active: <strong style="color:#047857;">${presetName}</strong></span>
+                    <button onclick="slwOpenHistoryModal('${presetName}')" style="background:#0d9488;color:white;border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;" title="View Version History & Rollback">
+                        🕒 History
+                    </button>
+                </div>
+            `;
         }
         const floatBadge = document.getElementById('slw-float-name');
         if (floatBadge) {
@@ -665,11 +771,26 @@ function slwGoHome() {
                 } else {
                     jsonFiles.forEach(f => {
                         const presetName = f.name.replace(/\.json$/i, '');
+                        const row = document.createElement('div');
+                        row.className = 'slw-preset-row';
+
                         const btn = document.createElement('button');
                         btn.className = 'slw-preset-btn';
                         btn.innerHTML = '&#128196; ' + presetName;
                         btn.onclick = () => loadPreset(presetName, f.name);
-                        listContainer.appendChild(btn);
+
+                        const histBtn = document.createElement('button');
+                        histBtn.className = 'slw-history-trigger-btn';
+                        histBtn.innerHTML = '🕒';
+                        histBtn.title = 'View Version History for ' + presetName;
+                        histBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            slwOpenHistoryModal(presetName);
+                        };
+
+                        row.appendChild(btn);
+                        row.appendChild(histBtn);
+                        listContainer.appendChild(row);
                     });
                 }
                 listOverlay.style.display = 'none';
@@ -685,11 +806,85 @@ function slwGoHome() {
     const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/sun-leisure-world-portal/databases/(default)/documents';
     window.__slwBaseData = null;
 
-    // Direct REST API for Saving Patch (immune to SDK WebChannel hang)
+    // Direct REST API for Fetching Full Patch Doc with History
+    async function slwGetPatchDocREST(presetName) {
+        try {
+            const url = `${FIRESTORE_BASE}/slw_itinerary_patches/${encodeURIComponent(presetName)}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) return null; // 404 means no patch document yet
+            const data = await res.json();
+            if (!data || !data.fields) return null;
+
+            const fields = data.fields;
+            const patchJson = fields.patchJson?.stringValue || null;
+            const patchSizeKB = fields.patchSizeKB?.doubleValue || fields.patchSizeKB?.integerValue || 0;
+            const changedKeys = fields.changedKeys?.stringValue || '';
+            const updatedAt = fields.updatedAt?.timestampValue || fields.updatedAt?.stringValue || '';
+            let history = [];
+            if (fields.historyJson?.stringValue) {
+                try {
+                    history = JSON.parse(fields.historyJson.stringValue);
+                } catch(e) {}
+            }
+
+            return {
+                presetName: presetName,
+                patchJson: patchJson,
+                patchSizeKB: patchSizeKB,
+                changedKeys: changedKeys,
+                updatedAt: updatedAt,
+                history: Array.isArray(history) ? history : []
+            };
+        } catch(e) {
+            console.warn('[SLW] Failed to get patch doc via REST:', e);
+            return null;
+        }
+    }
+
+    // Direct REST API for Fetching Patch JSON Object
+    async function slwGetPatchREST(presetName) {
+        const doc = await slwGetPatchDocREST(presetName);
+        if (doc && doc.patchJson) {
+            try {
+                return JSON.parse(doc.patchJson);
+            } catch(e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // Direct REST API for Saving Patch with 5-Revision History
     async function slwSavePatchREST(presetName, patchJson, patchKB, changedKeys) {
+        // Read existing doc to preserve/push into history
+        let history = [];
+        try {
+            const existing = await slwGetPatchDocREST(presetName);
+            if (existing && existing.patchJson && existing.patchJson !== patchJson) {
+                history = existing.history || [];
+                history.unshift({
+                    updatedAt: existing.updatedAt || new Date().toISOString(),
+                    patchJson: existing.patchJson,
+                    patchSizeKB: existing.patchSizeKB || 0,
+                    changedKeys: existing.changedKeys || ''
+                });
+                history = history.slice(0, 5); // Keep last 5 revisions
+            } else if (existing && existing.history) {
+                history = existing.history;
+            }
+        } catch(hErr) {
+            console.warn('[SLW] Note: Could not prepare history list:', hErr);
+        }
+
         const url = `${FIRESTORE_BASE}/slw_itinerary_patches/${encodeURIComponent(presetName)}`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        const changedKeysStr = Array.isArray(changedKeys) ? changedKeys.join(',') : String(changedKeys || '');
 
         const res = await fetch(url, {
             method: 'PATCH',
@@ -700,8 +895,9 @@ function slwGoHome() {
                     patchJson: { stringValue: patchJson },
                     presetName: { stringValue: presetName },
                     patchSizeKB: { doubleValue: parseFloat(patchKB) || 0 },
-                    changedKeys: { stringValue: changedKeys.join(',') },
-                    updatedAt: { timestampValue: new Date().toISOString() }
+                    changedKeys: { stringValue: changedKeysStr },
+                    updatedAt: { timestampValue: new Date().toISOString() },
+                    historyJson: { stringValue: JSON.stringify(history) }
                 }
             })
         });
@@ -713,26 +909,251 @@ function slwGoHome() {
         return await res.json();
     }
 
-    // Direct REST API for Fetching Patch
-    async function slwGetPatchREST(presetName) {
+    // Direct REST API to Delete Patch (Reset to Base)
+    async function slwDeletePatchREST(presetName) {
         try {
             const url = `${FIRESTORE_BASE}/slw_itinerary_patches/${encodeURIComponent(presetName)}`;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-            const res = await fetch(url, { signal: controller.signal });
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const res = await fetch(url, { method: 'DELETE', signal: controller.signal });
             clearTimeout(timeoutId);
-            if (!res.ok) return null; // 404 means no patch yet
-            const data = await res.json();
-            if (data && data.fields && data.fields.patchJson && data.fields.patchJson.stringValue) {
-                return JSON.parse(data.fields.patchJson.stringValue);
-            }
-            return null;
+            return res.ok;
         } catch(e) {
-            console.warn('[SLW] Failed to get patch via REST:', e);
-            return null;
+            console.warn('[SLW] Delete patch failed:', e);
+            return false;
         }
     }
+
+    // ── VERSION HISTORY & ROLLBACK FUNCTIONS ──
+    window.slwOpenHistoryModal = async function(presetName) {
+        if (!presetName) return;
+        window.__slwHistoryTargetPreset = presetName;
+
+        const modal = document.getElementById('slw-history-modal');
+        const titleEl = document.getElementById('slw-history-modal-preset');
+        const contentEl = document.getElementById('slw-history-modal-content');
+        const resetBtn = document.getElementById('slw-history-reset-btn');
+
+        if (!modal) return;
+        modal.style.display = 'flex';
+        titleEl.innerText = presetName;
+        if (resetBtn) resetBtn.style.display = 'none';
+
+        contentEl.innerHTML = `
+            <div style="text-align:center;padding:32px 10px;color:#64748b;">
+                <div class="slw-modal-spinner" style="margin:0 auto 12px;width:38px;height:38px;"></div>
+                <div style="font-size:13.5px;font-weight:600;">සංස්කරණ ඉතිහාසය පරීක්ෂා කරමින්...</div>
+            </div>
+        `;
+
+        try {
+            const doc = await slwGetPatchDocREST(presetName);
+
+            if (!doc || !doc.patchJson) {
+                contentEl.innerHTML = `
+                    <div style="text-align:center;padding:28px 12px;">
+                        <div style="font-size:38px;margin-bottom:8px;">📦</div>
+                        <div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:6px;">දැනට Cloud Updates නොමැත</div>
+                        <div style="font-size:12.5px;color:#64748b;line-height:1.5;">මෙම Itinerary එක සඳහා තවමත් Cloud වෙනස්කම් සිදුකර නොමැත.<br>GitHub Base මුල් පිටපත (Clean Official Template) සක්‍රීයව පවතී.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (resetBtn) resetBtn.style.display = 'inline-flex';
+            window.__slwCurrentDocHistory = doc.history || [];
+
+            let html = `
+                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <span style="background:#10b981;color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🟢 CURRENT ACTIVE</span>
+                        <span style="font-size:11.5px;color:#15803d;font-weight:700;">${doc.patchSizeKB || 0} KB</span>
+                    </div>
+                    <div style="font-size:12.5px;font-weight:600;color:#1e293b;">යාවත්කාලීන කළ වේලාව: ${formatSLWDate(doc.updatedAt)}</div>
+                    <div style="font-size:11.5px;color:#64748b;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        වෙනස්කම්: <strong>${doc.changedKeys || 'All fields'}</strong>
+                    </div>
+                </div>
+            `;
+
+            if (doc.history && doc.history.length > 0) {
+                html += `
+                    <div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        <span>📜</span> පෙර සංස්කරණ (Revisions History - අවසන් ${doc.history.length}):
+                    </div>
+                `;
+
+                doc.history.forEach((rev, idx) => {
+                    const revNum = doc.history.length - idx;
+                    html += `
+                        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                                    <span style="background:#e0f2fe;color:#0369a1;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px;">Rev #${revNum}</span>
+                                    <span style="font-size:12px;font-weight:600;color:#1e293b;">${formatSLWDate(rev.updatedAt)}</span>
+                                </div>
+                                <div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    වෙනස්කම්: <strong>${rev.changedKeys || 'fields'}</strong> (${rev.patchSizeKB || 0} KB)
+                                </div>
+                            </div>
+                            <button onclick="slwRevertToRevision('${presetName}', ${idx})" style="background:#0d9488;color:white;border:none;border-radius:6px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+                                ⏪ Revert
+                            </button>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div style="font-size:12px;color:#64748b;background:#f8fafc;border:1px dashed #cbd5e1;padding:10px 14px;border-radius:8px;text-align:center;line-height:1.5;">
+                        💡 පෙර සංස්කරණ (Revisions) තවම නොමැත.<br>ඉදිරියේදී ඔබ කරන සෑම Update එකකදීම අවසන් සංස්කරණ 5 ස්වයංක්‍රීයව මෙහි සටහන් වේ.
+                    </div>
+                `;
+            }
+
+            contentEl.innerHTML = html;
+
+        } catch(err) {
+            console.error('[SLW] Failed to load history:', err);
+            contentEl.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#ef4444;font-size:13px;">
+                    ඉතිහාසය ලබාගැනීමේදී දෝෂයක්: ${err.message}
+                </div>
+            `;
+        }
+    };
+
+    window.slwCloseHistoryModal = function() {
+        const modal = document.getElementById('slw-history-modal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.slwRevertToRevision = async function(presetName, historyIdx) {
+        if (!window.__slwCurrentDocHistory || !window.__slwCurrentDocHistory[historyIdx]) {
+            alert('සංස්කරණය සොයාගත නොහැක.');
+            return;
+        }
+        const targetRev = window.__slwCurrentDocHistory[historyIdx];
+        const targetTime = formatSLWDate(targetRev.updatedAt);
+
+        if (!confirm(`'${presetName}' Itinerary එක මෙම සංස්කරණයට (${targetTime}) Revert කිරීමට අවශ්‍යද?\n\nදැනට ඇති වෙනස්කම් ප්‍රතිස්ථාපනය වේ.`)) {
+            return;
+        }
+
+        slwCloseHistoryModal();
+        slwOpenModal({
+            title: "සංස්කරණය Revert වෙමින් පවතී...",
+            preset: presetName,
+            stage: "පෙර සංස්කරණය Cloud සහ Editor වෙත සකසමින්...",
+            percent: 30,
+            detail: "Reverting to revision..."
+        });
+
+        try {
+            const patchObj = JSON.parse(targetRev.patchJson);
+            const patchBytes = new TextEncoder().encode(targetRev.patchJson).length;
+            const patchKB = (patchBytes / 1024).toFixed(1);
+            const changedKeys = Object.keys(patchObj);
+
+            slwUpdateModalProgress(60, "Cloud Patch යාවත්කාලීන කරමින්...", "Cloud Database එකෙහි සංස්කරණය සටහන් කරමින්...");
+            await slwSavePatchREST(presetName, targetRev.patchJson, patchKB, changedKeys);
+
+            slwUpdateModalProgress(85, "Editor වෙත Load කරමින්...", "Itinerary එක නැවත සකසමින්...");
+            
+            const fileName = presetName + '.json';
+            const githubUrl = GITHUB_RAW + encodeURIComponent(fileName);
+            const baseRes = await fetch(githubUrl);
+            if (!baseRes.ok) throw new Error('Base file download failed from GitHub');
+            const baseData = await baseRes.json();
+
+            Object.assign(baseData, patchObj);
+
+            let fileInput = document.querySelector('input[type="file"][accept=".json"]');
+            if (!fileInput) {
+                const allInputs = document.querySelectorAll('input[type="file"]');
+                fileInput = allInputs[allInputs.length - 1];
+            }
+
+            const finalStr = JSON.stringify(baseData);
+            const blob = new Blob([finalStr], { type: 'application/json' });
+            const file = new File([blob], fileName, { type: 'application/json' });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            window.__slwBaseData = JSON.parse(JSON.stringify(baseData));
+            window.__slwActivePreset = presetName;
+            slwUpdateActiveBadge(presetName);
+
+            slwShowSuccess(
+                "⏪ සාර්ථකව Revert විය!",
+                `'${presetName}' සාර්ථකව ${targetTime} සංස්කරණයට ආපසු හරවන ලදී!`
+            );
+            fetchPresets();
+
+        } catch(err) {
+            console.error('[SLW] Revert error:', err);
+            slwShowError('Revert කිරීමේ දෝෂයක්: ' + err.message);
+        }
+    };
+
+    window.slwResetToBasePreset = async function() {
+        const presetName = window.__slwHistoryTargetPreset;
+        if (!presetName) return;
+
+        if (!confirm(`අවවාදයයි!\n\n'${presetName}' Itinerary එකෙහි ඇති සියලු Cloud Patches සම්පූර්ණයෙන්ම ඉවත් කර මුල් GitHub Base සංස්කරණයට (Reset to Clean Base) පත් කිරීමට අවශ්‍යද?`)) {
+            return;
+        }
+
+        slwCloseHistoryModal();
+        slwOpenModal({
+            title: "Clean Base තත්වයට Reset වෙමින් පවතී...",
+            preset: presetName,
+            stage: "Cloud Patches ඉවත් කරමින්...",
+            percent: 30,
+            detail: "Resetting..."
+        });
+
+        try {
+            slwUpdateModalProgress(60, "Cloud Patches මකාදමමින්...", "Firestore patch document එක ඉවත් කරමින්...");
+            await slwDeletePatchREST(presetName);
+
+            slwUpdateModalProgress(85, "Original Base බාගත කරමින්...", "GitHub වෙතින් Clean Template එක ලබාගනිමින්...");
+            const fileName = presetName + '.json';
+            const githubUrl = GITHUB_RAW + encodeURIComponent(fileName);
+            const baseRes = await fetch(githubUrl);
+            if (!baseRes.ok) throw new Error('Base file download failed from GitHub');
+            const baseData = await baseRes.json();
+
+            let fileInput = document.querySelector('input[type="file"][accept=".json"]');
+            if (!fileInput) {
+                const allInputs = document.querySelectorAll('input[type="file"]');
+                fileInput = allInputs[allInputs.length - 1];
+            }
+
+            const finalStr = JSON.stringify(baseData);
+            const blob = new Blob([finalStr], { type: 'application/json' });
+            const file = new File([blob], fileName, { type: 'application/json' });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            window.__slwBaseData = JSON.parse(JSON.stringify(baseData));
+            window.__slwActivePreset = presetName;
+            slwUpdateActiveBadge(presetName);
+
+            slwShowSuccess(
+                "🔄 Clean Base තත්වයට Reset විය!",
+                `'${presetName}' Itinerary එකෙහි සියලු Patches ඉවත් කර මුල් පිටපතට ප්‍රතිස්ථාපනය කරන ලදී!`
+            );
+            fetchPresets();
+
+        } catch(err) {
+            console.error('[SLW] Reset error:', err);
+            slwShowError('Reset කිරීමේ දෝෂයක්: ' + err.message);
+        }
+    };
 
     // ── LOAD PRESET: Base (GitHub) + Delta Patch (Firestore REST) ──
     async function loadPreset(presetName, fileName) {
@@ -1008,7 +1429,7 @@ function slwGoHome() {
 
     // ── INJECT BUTTONS INTO REACT UI ──
     function injectUIControls() {
-        // 1. Sidebar Button
+        // 1. Sidebar Buttons
         const allBtns = Array.from(document.querySelectorAll('button'));
         const exportBtn = allBtns.find(b => {
             const t = (b.textContent || b.innerText || '').trim();
@@ -1029,7 +1450,25 @@ function slwGoHome() {
             }
         }
 
-        // 2. Floating Bottom-Left Button
+        const updateBtn = document.getElementById('slw-update-cloud-btn');
+        if (exportBtn && updateBtn && !document.getElementById('slw-sidebar-history-btn')) {
+            const histBtn = document.createElement('button');
+            histBtn.id = 'slw-sidebar-history-btn';
+            histBtn.innerHTML = '<span style="font-size:14px;margin-right:4px;">🕒</span> Version History';
+            histBtn.className = exportBtn.className;
+            histBtn.style.cssText = 'background:#0f766e!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:6px!important;cursor:pointer!important;font-weight:600!important;';
+            histBtn.onclick = function() {
+                if (window.__slwActivePreset) {
+                    slwOpenHistoryModal(window.__slwActivePreset);
+                } else {
+                    document.getElementById('slw-quick-load-panel').classList.add('open');
+                    alert('කරුණාකර පළමුව Quick Load Presets මෙනුවෙන් Itinerary එකක් තෝරාගන්න.');
+                }
+            };
+            updateBtn.insertAdjacentElement('afterend', histBtn);
+        }
+
+        // 2. Floating Bottom-Left Buttons
         if (!document.getElementById('slw-float-btn')) {
             const floatBtn = document.createElement('button');
             floatBtn.id = 'slw-float-btn';
@@ -1048,6 +1487,23 @@ function slwGoHome() {
             if (window.__slwActivePreset) {
                 slwUpdateActiveBadge(window.__slwActivePreset);
             }
+        }
+
+        if (!document.getElementById('slw-float-history-btn')) {
+            const floatHistBtn = document.createElement('button');
+            floatHistBtn.id = 'slw-float-history-btn';
+            floatHistBtn.innerHTML = '🕒 <span>History</span>';
+            floatHistBtn.title = "View Version History & Rollback";
+            floatHistBtn.style.cssText = 'position:fixed;bottom:18px;right:255px;z-index:999998;background:#0f766e;color:#ffffff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(15,118,110,0.45);display:flex;align-items:center;gap:6px;font-family:inherit;transition:all 0.2s;';
+            floatHistBtn.onclick = function() {
+                if (window.__slwActivePreset) {
+                    slwOpenHistoryModal(window.__slwActivePreset);
+                } else {
+                    document.getElementById('slw-quick-load-panel').classList.add('open');
+                    alert('කරුණාකර පළමුව Quick Load Presets මෙනුවෙන් Itinerary එකක් තෝරාගන්න.');
+                }
+            };
+            document.body.appendChild(floatHistBtn);
         }
     }
 

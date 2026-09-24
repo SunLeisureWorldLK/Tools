@@ -681,14 +681,17 @@ function slwGoHome() {
             });
     }
 
-    // ── FAST & ROBUST LOAD PRESET ──
+    // ── ULTRA-FAST DELTA / DIFF LOAD & UPDATE ──
+    window.__slwBaseData = null;
+
+    // ── LOAD PRESET: Base (GitHub) + Delta Patch (Firestore) ──
     async function loadPreset(presetName, fileName) {
         if (!confirm("Load '" + presetName + "'?\nදැනට ඇති සියලු දත්ත මෙම Itinerary එකෙන් ප්‍රතිස්ථාපනය වේ.")) return;
 
         slwOpenModal({
             title: "Itinerary Preset බාගත කරමින්...",
             preset: presetName,
-            stage: "Cloud / GitHub පරීක්ෂා කරමින්...",
+            stage: "Base දත්ත සහ Cloud Patches ලබාගනිමින්...",
             percent: 5,
             detail: "සම්බන්ධ වෙමින්..."
         });
@@ -698,38 +701,25 @@ function slwGoHome() {
             if (!fileInput) fileInput = document.querySelector('input[type="file"]');
             if (!fileInput) throw new Error('Import JSON input එක සොයාගත නොහැකි විය.');
 
-            let downloadUrl = null;
-            let sourceName = 'GitHub';
+            const githubUrl = GITHUB_RAW + encodeURIComponent(fileName);
 
-            // Check if updated in Firebase Firestore first (super fast check)
-            try {
-                const docSnap = await db.collection('slw_itinerary_presets').doc(presetName).get();
-                if (docSnap.exists) {
-                    slwUpdateModalProgress(10, "Cloud වෙතින් සබැඳිය ලබාගනිමින්...", "Firebase Cloud Storage පරීක්ෂා කරමින්...");
-                    downloadUrl = await storage.ref('itinerary_presets/' + fileName).getDownloadURL();
-                    sourceName = 'Firebase Cloud (Updated)';
-                }
-            } catch(e) {
-                console.warn('[SLW] Firestore lookup bypassed:', e);
-            }
+            // Fetch Firestore patch in parallel with GitHub base download
+            const patchPromise = db.collection('slw_itinerary_patches').doc(presetName).get().catch(err => {
+                console.warn('[SLW] Patch check bypassed:', err);
+                return null;
+            });
+            const oldMetaPromise = db.collection('slw_itinerary_presets').doc(presetName).get().catch(() => null);
 
-            if (!downloadUrl) {
-                slwUpdateModalProgress(10, "GitHub වෙත සම්බන්ධ වෙමින්...", "GitHub Official Repo වෙතින් බාගත කරමින්...");
-                downloadUrl = GITHUB_RAW + encodeURIComponent(fileName);
-                sourceName = 'GitHub Official';
-            }
+            slwUpdateModalProgress(10, "GitHub වෙතින් බාගත වෙමින්...", "GitHub Official Repo වෙතින් Base ගොනුව ලබාගනිමින්...");
 
-            console.log('[SLW] Downloading preset from:', sourceName, downloadUrl);
-
-            // Fetch with stream reader for live MB & % progress
-            const response = await fetch(downloadUrl);
+            const response = await fetch(githubUrl);
             if (!response.ok) throw new Error(`බාගත කිරීම අසාර්ථක විය (HTTP ${response.status})`);
 
             const contentLength = response.headers.get('content-length');
             const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
             const totalMB = totalBytes > 0 ? (totalBytes / (1024 * 1024)).toFixed(1) : '?';
 
-            let jsonData = '';
+            let baseJsonData = '';
             const reader = response.body ? response.body.getReader() : null;
 
             if (reader && totalBytes > 0) {
@@ -740,40 +730,75 @@ function slwGoHome() {
                     if (done) break;
                     chunks.push(value);
                     loadedBytes += value.length;
-                    const pct = Math.min(92, Math.round((loadedBytes / totalBytes) * 90));
+                    const pct = Math.min(88, Math.round((loadedBytes / totalBytes) * 85));
                     const loadedMB = (loadedBytes / (1024 * 1024)).toFixed(1);
-                    slwUpdateModalProgress(pct, `${loadedMB} MB / ${totalMB} MB (${pct}%)`, `${sourceName} වෙතින් දත්ත බාගත වෙමින්...`);
+                    slwUpdateModalProgress(pct, `${loadedMB} MB / ${totalMB} MB (${pct}%)`, "Base දත්ත බාගත වෙමින් පවතී...");
                 }
                 const blob = new Blob(chunks);
-                jsonData = await blob.text();
+                baseJsonData = await blob.text();
             } else {
-                slwUpdateModalProgress(50, "බාගත වෙමින් පවතී...", `${sourceName} වෙතින් ලබාගනිමින්...`);
-                jsonData = await response.text();
+                slwUpdateModalProgress(50, "බාගත වෙමින් පවතී...", "Base ගොනුව බාගත වෙමින් පවතී...");
+                baseJsonData = await response.text();
             }
 
-            if (!jsonData || jsonData.trim().length === 0) {
-                throw new Error('බාගත වූ දත්ත හිස්ව පවතී (Empty Data)');
+            if (!baseJsonData || baseJsonData.trim().length === 0) {
+                throw new Error('බාගත වූ දත්ත හිස්ව පවතී (Empty Base Data)');
             }
 
-            // Inject into React input
-            slwUpdateModalProgress(95, "App එකට දත්ත ඇතුළත් කරමින්...", "React State යාවත්කාලීන වෙමින් පවතී...");
+            let finalDataObj = JSON.parse(baseJsonData);
 
-            const file = new File([jsonData], fileName, { type: 'application/json' });
+            // Check if Cloud Delta Patch exists in Firestore
+            slwUpdateModalProgress(90, "Cloud Patches පරීක්ෂා කරමින්...", "Cloud එකෙහි යාවත්කාලීන වෙනස්කම් Merge කරමින්...");
+            const patchSnap = await patchPromise;
+            let appliedPatch = false;
+
+            if (patchSnap && patchSnap.exists && patchSnap.data() && patchSnap.data().patchJson) {
+                try {
+                    const patchObj = JSON.parse(patchSnap.data().patchJson);
+                    Object.assign(finalDataObj, patchObj);
+                    appliedPatch = true;
+                    console.log('[SLW] ⚡ Merged Cloud Delta Patch for:', presetName, Object.keys(patchObj));
+                } catch(pe) {
+                    console.error('[SLW] Patch parse error:', pe);
+                }
+            } else {
+                // Backward compatibility: Check if old full Storage update exists
+                const oldMeta = await oldMetaPromise;
+                if (oldMeta && oldMeta.exists && !oldMeta.data().hasPatch) {
+                    try {
+                        const storageUrl = await storage.ref('itinerary_presets/' + fileName).getDownloadURL();
+                        const sRes = await fetch(storageUrl);
+                        if (sRes.ok) {
+                            finalDataObj = await sRes.json();
+                            console.log('[SLW] Loaded full update from Storage for:', presetName);
+                        }
+                    } catch(sErr) {}
+                }
+            }
+
+            // Save in memory for future diff calculations
+            window.__slwBaseData = JSON.parse(JSON.stringify(finalDataObj));
+            window.__slwActivePreset = presetName;
+            slwUpdateActiveBadge(presetName);
+
+            // Inject into React
+            slwUpdateModalProgress(96, "App එකට දත්ත ඇතුළත් කරමින්...", "React State යාවත්කාලීන වෙමින් පවතී...");
+            const finalJsonString = JSON.stringify(finalDataObj);
+            const file = new File([finalJsonString], fileName, { type: 'application/json' });
             const dt = new DataTransfer();
             dt.items.add(file);
             const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
             setter.call(fileInput, dt.files);
             fileInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-            // Update active preset
-            window.__slwActivePreset = presetName;
-            slwUpdateActiveBadge(presetName);
-
             // Close side panel
             panel.classList.remove('open');
 
-            // Success feedback
-            slwShowSuccess("✅ සාර්ථකව Load විය!", `'${presetName}' සාර්ථකව සකස් කරන ලදී.`);
+            // Success message
+            const successDesc = appliedPatch 
+                ? `'${presetName}' නවතම Cloud Patches සමඟ සාර්ථකව සකස් කරන ලදී.`
+                : `'${presetName}' සාර්ථකව සකස් කරන ලදී.`;
+            slwShowSuccess("✅ සාර්ථකව Load විය!", successDesc);
 
         } catch (err) {
             console.error('[SLW] loadPreset error:', err);
@@ -781,7 +806,7 @@ function slwGoHome() {
         }
     }
 
-    // ── ROCK-SOLID UPDATE JSON (CLOUD SAVE) ──
+    // ── TRIGGER CLOUD UPDATE BUTTON ──
     window.slwTriggerCloudUpdate = function() {
         let presetName = window.__slwActivePreset;
         if (!presetName) {
@@ -821,7 +846,7 @@ function slwGoHome() {
         exportBtn.click();
     };
 
-    // ── MONKEY PATCH ANCHOR CLICK (ONE CENTRAL INTERCEPTOR) ──
+    // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST DELTA PATCHING ──
     const _nativeAnchorClick = window.HTMLAnchorElement.prototype.click;
     window.HTMLAnchorElement.prototype.click = function() {
         if (window.__slwIsUpdatingCloud && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
@@ -844,11 +869,81 @@ function slwGoHome() {
                         throw new Error('Export වූ දත්ත වලංගු නොවේ (Invalid JSON export)');
                     }
 
-                    const blob = new Blob([jsonStr], { type: 'application/json' });
-                    const totalBytes = blob.size;
-                    const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
+                    const currentData = JSON.parse(jsonStr);
 
-                    slwUpdateModalProgress(15, `0 / ${totalMB} MB (0%)`, "Cloud Storage වෙත Upload ආරම්භ කරමින්...");
+                    // If baseData not cached in memory, fetch base from GitHub to diff against
+                    if (!window.__slwBaseData) {
+                        slwUpdateModalProgress(15, "Base දත්ත සසඳමින්...", "GitHub මුල් ගොනුව පරීක්ෂා කරමින්...");
+                        try {
+                            const baseRes = await fetch(GITHUB_RAW + encodeURIComponent(presetName + '.json'));
+                            if (baseRes.ok) {
+                                window.__slwBaseData = await baseRes.json();
+                            }
+                        } catch(e) {}
+                    }
+
+                    const baseData = window.__slwBaseData || {};
+
+                    // Compute Delta / Diff (changed keys only!)
+                    const diff = {};
+                    const changedKeys = [];
+                    for (const k of Object.keys(currentData)) {
+                        if (!baseData || JSON.stringify(baseData[k]) !== JSON.stringify(currentData[k])) {
+                            diff[k] = currentData[k];
+                            changedKeys.push(k);
+                        }
+                    }
+
+                    console.log('[SLW] Changed keys:', changedKeys);
+
+                    if (changedKeys.length === 0) {
+                        slwShowSuccess("✅ කිසිදු වෙනසක් සිදුකර නොමැත", "ඔබගේ Itinerary එක දැනටමත් Cloud හි ඇති දත්ත සමඟ සමාන වේ.");
+                        return;
+                    }
+
+                    const patchJson = JSON.stringify(diff);
+                    const patchBytes = new TextEncoder().encode(patchJson).length;
+                    const patchKB = (patchBytes / 1024).toFixed(1);
+
+                    // ── ULTRA FAST DELTA PATCH (< 800 KB) ──
+                    if (patchBytes < 800 * 1024) {
+                        slwUpdateModalProgress(55, `⚡ ${patchKB} KB (Ultra-fast Delta)`, "වෙනස් වූ කොටස් පමණක් Cloud වෙත සුරකිමින්...");
+
+                        // Save patch to Firestore collection 'slw_itinerary_patches'
+                        await db.collection('slw_itinerary_patches').doc(presetName).set({
+                            patchJson: patchJson,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            presetName: presetName,
+                            patchSizeKB: parseFloat(patchKB),
+                            changedKeys: changedKeys
+                        });
+
+                        // Update registry metadata in 'slw_itinerary_presets'
+                        await db.collection('slw_itinerary_presets').doc(presetName).set({
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            title: presetName,
+                            fileName: presetName + '.json',
+                            hasPatch: true,
+                            patchSizeKB: parseFloat(patchKB)
+                        });
+
+                        // Update local base
+                        window.__slwBaseData = JSON.parse(JSON.stringify(currentData));
+                        window.__slwActivePreset = presetName;
+                        slwUpdateActiveBadge(presetName);
+
+                        slwShowSuccess(
+                            "⚡ ක්ෂණිකව Cloud වෙත Update විය!",
+                            `වෙනස් වූ කොටස් ${changedKeys.length} ක් (${patchKB} KB) තත්පර 1 කටත් අඩු කාලයකින් Cloud හි සුරකින ලදී!`
+                        );
+                        fetchPresets();
+                        return;
+                    }
+
+                    // ── FALLBACK FOR GIANT PAYLOADS (> 800 KB) ──
+                    slwUpdateModalProgress(20, `${(patchBytes/1024/1024).toFixed(1)} MB`, "විශාල පින්තූර අඩංගු බැවින් Storage වෙත Upload කරමින්...");
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const totalMB = (blob.size / (1024 * 1024)).toFixed(1);
 
                     const fileName = presetName + '.json';
                     const fileRef = storage.ref('itinerary_presets/' + fileName);
@@ -856,31 +951,31 @@ function slwGoHome() {
 
                     uploadTask.on('state_changed',
                         function(snapshot) {
-                            const pct = Math.max(15, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 85));
+                            const pct = Math.max(20, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 80));
                             const currentMB = (snapshot.bytesTransferred / (1024 * 1024)).toFixed(1);
-                            slwUpdateModalProgress(pct, `${currentMB} MB / ${totalMB} MB (${pct}%)`, "Cloud Storage වෙත දත්ත Upload වෙමින් පවතී...");
+                            slwUpdateModalProgress(pct, `${currentMB} MB / ${totalMB} MB (${pct}%)`, "Cloud Storage වෙත Upload වෙමින් පවතී...");
                         },
                         function(err) {
                             console.error('[SLW] Storage upload error:', err);
                             slwShowError('Cloud වෙත Upload කිරීම අසාර්ථක විය: ' + err.message);
                         },
                         async function() {
-                            slwUpdateModalProgress(92, "Database සටහන් කරමින්...", "Firestore metadata update වෙමින් පවතී...");
+                            slwUpdateModalProgress(95, "Database සටහන් කරමින්...", "Firestore metadata update වෙමින් පවතී...");
                             try {
                                 await db.collection('slw_itinerary_presets').doc(presetName).set({
                                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                                     fileName: fileName,
-                                    sizeBytes: totalBytes,
-                                    title: presetName
+                                    sizeBytes: blob.size,
+                                    title: presetName,
+                                    hasPatch: false
                                 });
 
+                                window.__slwBaseData = JSON.parse(JSON.stringify(currentData));
                                 window.__slwActivePreset = presetName;
                                 slwUpdateActiveBadge(presetName);
-                                slwShowSuccess("✅ Cloud වෙත සාර්ථකව Update විය!", `'${presetName}' දැන් ඕනෑම පරිගණකයකින් Quick Load කළ හැක.`);
-                                fetchPresets(); // Refresh presets list
-
+                                slwShowSuccess("✅ Cloud වෙත සාර්ථකව Update විය!", `'${presetName}' සාර්ථකව Storage හි සුරකින ලදී.`);
+                                fetchPresets();
                             } catch(dbErr) {
-                                console.error('[SLW] Firestore error:', dbErr);
                                 slwShowError('Firestore දෝෂයක්: ' + dbErr.message);
                             }
                         }
@@ -892,7 +987,7 @@ function slwGoHome() {
                 }
             })();
 
-            return; // Block actual download to browser
+            return; // Block download to disk
         }
 
         return _nativeAnchorClick.call(this);

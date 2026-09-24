@@ -207,6 +207,7 @@ function slwGoHome() {
     overflow-y: auto;
     flex: 1;
     background: #f9fafb;
+    position: relative;
 }
 .slw-preset-btn {
     width: 100%;
@@ -230,16 +231,203 @@ function slwGoHome() {
 #slw-loading-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.85);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 10;
     font-weight: bold;
     color: #065f46;
+    border-radius: 8px;
+}
+
+/* GLOBAL SLW PROGRESS MODAL (Always Centered) */
+#slw-global-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10000000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+}
+#slw-modal-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    width: 92%;
+    max-width: 480px;
+    padding: 32px 30px 26px;
+    text-align: center;
+    box-sizing: border-box;
+    animation: slwModalFadeIn 0.25s ease-out;
+}
+@keyframes slwModalFadeIn {
+    from { opacity: 0; transform: scale(0.93); }
+    to { opacity: 1; transform: scale(1); }
+}
+.slw-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.slw-modal-spinner {
+    width: 54px;
+    height: 54px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #0d9488;
+    border-radius: 50%;
+    animation: slwSpin 0.9s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+}
+@keyframes slwSpin {
+    to { transform: rotate(360deg); }
+}
+#slw-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+#slw-modal-preset-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #0f766e;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid #e2e8f0;
+}
+#slw-modal-timer {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0d9488;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
+}
+#slw-modal-timer-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+.slw-prog-track {
+    background: #e2e8f0;
+    border-radius: 12px;
+    height: 12px;
+    overflow: hidden;
+    margin: 0 4px 10px;
+    position: relative;
+}
+#slw-modal-prog-bar {
+    background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
+    height: 100%;
+    width: 0%;
+    transition: width 0.25s ease-out;
+    border-radius: 12px;
+}
+#slw-modal-prog-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+#slw-modal-stage-desc {
+    font-size: 13px;
+    color: #64748b;
+    min-height: 20px;
+    margin-bottom: 16px;
+}
+#slw-modal-notice-box {
+    font-size: 12px;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 14px;
+    line-height: 1.5;
+    text-align: left;
+}
+#slw-modal-ok-btn {
+    display: none;
+    margin: 18px auto 0;
+    background: #0d9488;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 32px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
+    transition: all 0.2s;
+}
+#slw-modal-ok-btn:hover {
+    background: #0f766e;
+    transform: translateY(-1px);
+}
+#slw-active-preset-indicator {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#slw-float-btn {
+    position: fixed;
+    bottom: 18px;
+    right: 80px;
+    z-index: 999998;
+    background: #0d9488;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.45);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+#slw-float-btn:hover {
+    background: #0f766e;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.55);
 }
 @media print {
-    #slw-quick-load-panel { display: none !important; }
+    #slw-global-modal, #slw-float-btn, #slw-quick-load-panel { display: none !important; }
 }
 </style>
 
@@ -251,13 +439,38 @@ function slwGoHome() {
     </div>
     <div id="slw-panel-content">
         <div id="slw-loading-overlay">Loading...</div>
-        <div id="slw-preset-list"></div><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+        <div id="slw-preset-list"></div>
+    </div>
+</div>
+
+<div id="slw-global-modal">
+    <div id="slw-modal-card">
+        <div class="slw-icon-wrapper" id="slw-modal-icon">
+            <div class="slw-modal-spinner" id="slw-modal-spin-el"></div>
+        </div>
+        <h3 id="slw-modal-title">ක්‍රියාත්මක වෙමින් පවතී...</h3>
+        <div id="slw-modal-preset-badge">Itinerary Preset</div>
+        <div id="slw-modal-timer">00:00s</div>
+        <div id="slw-modal-timer-label">⏱️ ගතවූ කාලය (Elapsed Time)</div>
+        <div class="slw-prog-track">
+            <div id="slw-modal-prog-bar"></div>
+        </div>
+        <div id="slw-modal-prog-text">0%</div>
+        <div id="slw-modal-stage-desc">දත්ත සකස් කරමින් පවතී...</div>
+        <div id="slw-modal-notice-box">
+            💡 <strong>දැනුවත් කිරීම:</strong> මෙම Itinerary ගොනුවේ පින්තූර හා විශාල දත්ත (11MB පමණ) අඩංගු බැවින්, ඔබගේ අන්තර්ජාල වේගය අනුව මද වේලාවක් ගතවිය හැක. කරුණාකර රැඳී සිටින්න.
+        </div>
+        <button id="slw-modal-ok-btn" onclick="slwCloseModal()">හරි (OK)</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
 <script>
-(function(){
-    // Initialize Firebase
+(function() {
+    // ── FIREBASE CONFIG & INIT ──
     const firebaseConfig = {
         apiKey: "AIzaSyCpY9ZhcJaRcHOWhPWKBEigb7Tw2_qOYEM",
         authDomain: "sun-leisure-world-portal.firebaseapp.com",
@@ -272,38 +485,173 @@ function slwGoHome() {
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // GitHub repo paths
     const GITHUB_RAW = 'https://raw.githubusercontent.com/SunLeisureWorldLK/Tools/main/JSON/';
     const GITHUB_API = 'https://api.github.com/repos/SunLeisureWorldLK/Tools/contents/JSON';
-
-    let currentLoadedPresetId = null;
-    let isUpdatingCloud = false;
-
-    // Sync with floating button's global state
-    function setCurrentPreset(name) {
-        currentLoadedPresetId = name;
-        window.__slwCurrentPresetId = name;
-        window.__slwPresetName = name;
-    }
 
     const panel = document.getElementById('slw-quick-load-panel');
     const toggleBtn = document.getElementById('slw-panel-toggle');
     const listContainer = document.getElementById('slw-preset-list');
-    const overlay = document.getElementById('slw-loading-overlay');
+    const listOverlay = document.getElementById('slw-loading-overlay');
+
+    // Track active preset globally
+    window.__slwActivePreset = window.__slwActivePreset || null;
+    window.__slwIsUpdatingCloud = false;
+    window.__slwPendingPresetName = null;
 
     toggleBtn.addEventListener('click', () => {
         panel.classList.toggle('open');
         if (panel.classList.contains('open')) fetchPresets();
     });
 
-    // Initial fetch
-    fetchPresets();
+    // ── MODAL & TIMER HELPERS ──
+    let modalTimerInterval = null;
+    let modalStartTime = 0;
 
-    // ── FETCH LIST: GitHub API (shows all JSON files in /JSON folder) ──
+    function slwStartTimer() {
+        modalStartTime = Date.now();
+        const timerEl = document.getElementById('slw-modal-timer');
+        if (modalTimerInterval) clearInterval(modalTimerInterval);
+        modalTimerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - modalStartTime) / 1000);
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            if (timerEl) timerEl.innerText = `${m}:${s}s`;
+        }, 200);
+    }
+
+    function slwStopTimer() {
+        if (modalTimerInterval) {
+            clearInterval(modalTimerInterval);
+            modalTimerInterval = null;
+        }
+        return Math.floor((Date.now() - modalStartTime) / 1000);
+    }
+
+    function slwOpenModal(cfg) {
+        const modal = document.getElementById('slw-global-modal');
+        const iconBox = document.getElementById('slw-modal-icon');
+        const titleEl = document.getElementById('slw-modal-title');
+        const presetEl = document.getElementById('slw-modal-preset-badge');
+        const barEl = document.getElementById('slw-modal-prog-bar');
+        const textEl = document.getElementById('slw-modal-prog-text');
+        const stageEl = document.getElementById('slw-modal-stage-desc');
+        const noticeEl = document.getElementById('slw-modal-notice-box');
+        const okBtn = document.getElementById('slw-modal-ok-btn');
+
+        iconBox.innerHTML = '<div class="slw-modal-spinner" id="slw-modal-spin-el"></div>';
+        titleEl.innerText = cfg.title || 'ක්‍රියාත්මක වෙමින් පවතී...';
+        titleEl.style.color = '#0f172a';
+        presetEl.innerText = '📁 ' + (cfg.preset || 'Itinerary Preset');
+        barEl.style.width = (cfg.percent || 5) + '%';
+        barEl.style.background = 'linear-gradient(90deg, #0d9488 0%, #10b981 100%)';
+        textEl.innerText = cfg.detail || (cfg.percent ? cfg.percent + '%' : '0%');
+        textEl.style.color = '#1e293b';
+        stageEl.innerText = cfg.stage || 'දත්ත බාගත වෙමින්...';
+        noticeEl.style.display = 'block';
+        okBtn.style.display = 'none';
+
+        modal.style.display = 'flex';
+        slwStartTimer();
+    }
+
+    function slwUpdateModalProgress(percent, detail, stage) {
+        const barEl = document.getElementById('slw-modal-prog-bar');
+        const textEl = document.getElementById('slw-modal-prog-text');
+        const stageEl = document.getElementById('slw-modal-stage-desc');
+        if (barEl) barEl.style.width = Math.min(100, Math.max(0, percent)) + '%';
+        if (textEl && detail) textEl.innerText = detail;
+        if (stageEl && stage) stageEl.innerText = stage;
+    }
+
+    function slwShowSuccess(title, message) {
+        const totalSecs = slwStopTimer();
+        const iconBox = document.getElementById('slw-modal-icon');
+        const titleEl = document.getElementById('slw-modal-title');
+        const barEl = document.getElementById('slw-modal-prog-bar');
+        const textEl = document.getElementById('slw-modal-prog-text');
+        const stageEl = document.getElementById('slw-modal-stage-desc');
+        const noticeEl = document.getElementById('slw-modal-notice-box');
+        const okBtn = document.getElementById('slw-modal-ok-btn');
+
+        iconBox.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" fill="#ecfdf5"></circle>
+                <polyline points="9 11 12 14 22 4"></polyline>
+            </svg>
+        `;
+        titleEl.innerText = title || '✅ සාර්ථකයි!';
+        titleEl.style.color = '#065f46';
+        barEl.style.width = '100%';
+        barEl.style.background = '#10b981';
+        textEl.innerText = '100% අවසන් විය';
+        textEl.style.color = '#065f46';
+        stageEl.innerText = message || `සාර්ථකව නිම කරන ලදී (මුළු කාලය: තත්පර ${totalSecs})`;
+        noticeEl.style.display = 'none';
+        okBtn.style.display = 'inline-block';
+
+        setTimeout(() => {
+            slwCloseModal();
+        }, 3200);
+    }
+
+    function slwShowError(errorMsg) {
+        slwStopTimer();
+        const iconBox = document.getElementById('slw-modal-icon');
+        const titleEl = document.getElementById('slw-modal-title');
+        const barEl = document.getElementById('slw-modal-prog-bar');
+        const textEl = document.getElementById('slw-modal-prog-text');
+        const stageEl = document.getElementById('slw-modal-stage-desc');
+        const noticeEl = document.getElementById('slw-modal-notice-box');
+        const okBtn = document.getElementById('slw-modal-ok-btn');
+
+        iconBox.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" fill="#fef2f2"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        `;
+        titleEl.innerText = '❌ දෝෂයක් සිදුවිය (Error)';
+        titleEl.style.color = '#991b1b';
+        barEl.style.width = '100%';
+        barEl.style.background = '#ef4444';
+        textEl.innerText = 'අසාර්ථක විය';
+        textEl.style.color = '#b91c1c';
+        stageEl.innerText = errorMsg;
+        noticeEl.style.display = 'none';
+        okBtn.style.display = 'inline-block';
+    }
+
+    window.slwCloseModal = function() {
+        const modal = document.getElementById('slw-global-modal');
+        if (modal) modal.style.display = 'none';
+        slwStopTimer();
+    };
+
+    function slwUpdateActiveBadge(presetName) {
+        let badge = document.getElementById('slw-active-preset-indicator');
+        if (!badge) {
+            const container = document.getElementById('slw-panel-header');
+            if (container && container.parentElement) {
+                badge = document.createElement('div');
+                badge.id = 'slw-active-preset-indicator';
+                container.parentElement.insertBefore(badge, container.nextSibling);
+            }
+        }
+        if (badge) {
+            badge.innerHTML = `📁 Active: <strong style="margin-left:4px;color:#047857;">${presetName}</strong>`;
+        }
+        const floatBadge = document.getElementById('slw-float-name');
+        if (floatBadge) {
+            floatBadge.innerText = presetName;
+        }
+    }
+
+    // ── FETCH LIST FROM GITHUB ──
     function fetchPresets() {
         listContainer.innerHTML = '';
-        overlay.style.display = 'flex';
-        overlay.innerText = 'Loading...';
+        listOverlay.style.display = 'flex';
+        listOverlay.innerText = 'Loading list...';
 
         fetch(GITHUB_API)
             .then(r => r.json())
@@ -324,45 +672,92 @@ function slwGoHome() {
                         listContainer.appendChild(btn);
                     });
                 }
-                overlay.style.display = 'none';
+                listOverlay.style.display = 'none';
             })
             .catch(err => {
                 console.error('GitHub API error:', err);
-                overlay.innerText = 'Error loading list.';
-                setTimeout(() => { overlay.style.display = 'none'; }, 3000);
+                listOverlay.innerText = 'Error loading list.';
+                setTimeout(() => { listOverlay.style.display = 'none'; }, 3000);
             });
     }
 
-    // ── LOAD: Try Firebase first (updated version), fallback to GitHub raw ──
+    // ── FAST & ROBUST LOAD PRESET ──
     async function loadPreset(presetName, fileName) {
-        if (!confirm("Load '" + presetName + "'?\nCurrent data will be replaced.")) return;
+        if (!confirm("Load '" + presetName + "'?\nදැනට ඇති සියලු දත්ත මෙම Itinerary එකෙන් ප්‍රතිස්ථාපනය වේ.")) return;
 
-        overlay.style.display = 'flex';
-        overlay.innerText = 'Loading...';
+        slwOpenModal({
+            title: "Itinerary Preset බාගත කරමින්...",
+            preset: presetName,
+            stage: "Cloud / GitHub පරීක්ෂා කරමින්...",
+            percent: 5,
+            detail: "සම්බන්ධ වෙමින්..."
+        });
 
         try {
-            const fileInput = document.querySelector('input[type="file"][accept=".json"]');
-            if (!fileInput) throw new Error('Import JSON input not found.');
+            let fileInput = document.querySelector('input[type="file"][accept=".json"]');
+            if (!fileInput) fileInput = document.querySelector('input[type="file"]');
+            if (!fileInput) throw new Error('Import JSON input එක සොයාගත නොහැකි විය.');
 
-            let jsonData = null;
+            let downloadUrl = null;
+            let sourceName = 'GitHub';
 
-            // 1st: Try Firebase Storage (has user-updated version?)
+            // Check if updated in Firebase Firestore first (super fast check)
             try {
-                const fileRef = storage.ref('itinerary_presets/' + fileName);
-                const url = await fileRef.getDownloadURL();
-                const res = await fetch(url);
-                jsonData = await res.text();
-                console.log('[SLW] Loaded from Firebase:', fileName);
-            } catch (_) {
-                // Not in Firebase yet — load from GitHub raw
-                console.log('[SLW] Loading from GitHub:', fileName);
-                const res = await fetch(GITHUB_RAW + encodeURIComponent(fileName));
-                if (!res.ok) throw new Error('GitHub fetch failed: ' + res.status);
-                jsonData = await res.text();
-                console.log('[SLW] Loaded from GitHub:', fileName);
+                const docSnap = await db.collection('slw_itinerary_presets').doc(presetName).get();
+                if (docSnap.exists) {
+                    slwUpdateModalProgress(10, "Cloud වෙතින් සබැඳිය ලබාගනිමින්...", "Firebase Cloud Storage පරීක්ෂා කරමින්...");
+                    downloadUrl = await storage.ref('itinerary_presets/' + fileName).getDownloadURL();
+                    sourceName = 'Firebase Cloud (Updated)';
+                }
+            } catch(e) {
+                console.warn('[SLW] Firestore lookup bypassed:', e);
             }
 
-            // Inject into React file input
+            if (!downloadUrl) {
+                slwUpdateModalProgress(10, "GitHub වෙත සම්බන්ධ වෙමින්...", "GitHub Official Repo වෙතින් බාගත කරමින්...");
+                downloadUrl = GITHUB_RAW + encodeURIComponent(fileName);
+                sourceName = 'GitHub Official';
+            }
+
+            console.log('[SLW] Downloading preset from:', sourceName, downloadUrl);
+
+            // Fetch with stream reader for live MB & % progress
+            const response = await fetch(downloadUrl);
+            if (!response.ok) throw new Error(`බාගත කිරීම අසාර්ථක විය (HTTP ${response.status})`);
+
+            const contentLength = response.headers.get('content-length');
+            const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
+            const totalMB = totalBytes > 0 ? (totalBytes / (1024 * 1024)).toFixed(1) : '?';
+
+            let jsonData = '';
+            const reader = response.body ? response.body.getReader() : null;
+
+            if (reader && totalBytes > 0) {
+                let loadedBytes = 0;
+                const chunks = [];
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    loadedBytes += value.length;
+                    const pct = Math.min(92, Math.round((loadedBytes / totalBytes) * 90));
+                    const loadedMB = (loadedBytes / (1024 * 1024)).toFixed(1);
+                    slwUpdateModalProgress(pct, `${loadedMB} MB / ${totalMB} MB (${pct}%)`, `${sourceName} වෙතින් දත්ත බාගත වෙමින්...`);
+                }
+                const blob = new Blob(chunks);
+                jsonData = await blob.text();
+            } else {
+                slwUpdateModalProgress(50, "බාගත වෙමින් පවතී...", `${sourceName} වෙතින් ලබාගනිමින්...`);
+                jsonData = await response.text();
+            }
+
+            if (!jsonData || jsonData.trim().length === 0) {
+                throw new Error('බාගත වූ දත්ත හිස්ව පවතී (Empty Data)');
+            }
+
+            // Inject into React input
+            slwUpdateModalProgress(95, "App එකට දත්ත ඇතුළත් කරමින්...", "React State යාවත්කාලීන වෙමින් පවතී...");
+
             const file = new File([jsonData], fileName, { type: 'application/json' });
             const dt = new DataTransfer();
             dt.items.add(file);
@@ -370,314 +765,198 @@ function slwGoHome() {
             setter.call(fileInput, dt.files);
             fileInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-            setCurrentPreset(presetName);
-            setTimeout(() => { panel.classList.remove('open'); }, 500);
+            // Update active preset
+            window.__slwActivePreset = presetName;
+            slwUpdateActiveBadge(presetName);
+
+            // Close side panel
+            panel.classList.remove('open');
+
+            // Success feedback
+            slwShowSuccess("✅ සාර්ථකව Load විය!", `'${presetName}' සාර්ථකව සකස් කරන ලදී.`);
 
         } catch (err) {
-            console.error(err);
-            alert('Failed to load: ' + err.message);
-        } finally {
-            overlay.style.display = 'none';
-            overlay.innerText = 'Loading...';
+            console.error('[SLW] loadPreset error:', err);
+            slwShowError(err.message || 'Load කිරීමේදී දෝෂයක් සිදුවිය.');
         }
     }
 
-    // Add 'Update JSON File' button to the left panel
-    setTimeout(() => {
-        const checkInterval = setInterval(() => {
-            const buttons = Array.from(document.querySelectorAll('button'));
-            const exportBtn = buttons.find(b => b.textContent && b.textContent.includes('Export JSON'));
-            
-            if (exportBtn && exportBtn.parentElement && !document.getElementById('slw-update-cloud-btn')) {
-                const updateBtn = document.createElement('button');
-                updateBtn.id = 'slw-update-cloud-btn';
-                updateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Update JSON file';
-                
-                updateBtn.className = exportBtn.className;
-                updateBtn.style.backgroundColor = '#0d9488'; // teal-600
-                updateBtn.style.color = 'white';
-                
-                updateBtn.onclick = () => {
-                    if (!currentLoadedPresetId) {
-                        const newName = prompt("Enter a name to save this as a new preset on the cloud:");
-                        if (!newName) return;
-                        currentLoadedPresetId = newName.replace('.json', '');
-                    } else {
-                        if (!confirm("Are you sure you want to update the cloud preset: '" + currentLoadedPresetId + "'?")) return;
-                    }
-                    
-                    isUpdatingCloud = true;
-                    // Trigger the export JSON button artificially
-                    exportBtn.click();
-                };
-                
-                exportBtn.parentElement.appendChild(updateBtn);
-                clearInterval(checkInterval);
-            }
-        }, 1000);
-    }, 2000);
-
-    // Monkey-patch Anchor click to intercept JSON blob
-    const originalAnchorClick = window.HTMLAnchorElement.prototype.click;
-    window.HTMLAnchorElement.prototype.click = function() {
-        if (isUpdatingCloud && this.download && this.download.endsWith('.json')) {
-            // Show loading
-            overlay.style.display = 'flex';
-            overlay.innerText = 'Saving to cloud (may take a few seconds due to images)...';
-            
-            // Read the blob URL
-            fetch(this.href).then(res => res.text()).then(jsonString => {
-                // Upload to Firebase Storage first (because it's up to 11MB)
-                const fileRef = storage.ref('itinerary_presets/' + currentLoadedPresetId + '.json');
-                fileRef.putString(jsonString).then(() => {
-                    // Then update Firestore metadata
-                    return db.collection('slw_itinerary_presets').doc(currentLoadedPresetId).set({
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }).then(() => {
-                    alert("✅ Successfully updated '" + currentLoadedPresetId + "' in the cloud! Anyone can now load these changes.");
-                    fetchPresets(); // Refresh the list
-                }).catch(err => {
-                    console.error(err);
-                    alert("Error saving to cloud: " + err.message);
-                }).finally(() => {
-                    overlay.style.display = 'none';
-                    overlay.innerText = 'Loading...';
-                });
-            });
-            isUpdatingCloud = false;
-            return; // Prevent actual download
+    // ── ROCK-SOLID UPDATE JSON (CLOUD SAVE) ──
+    window.slwTriggerCloudUpdate = function() {
+        let presetName = window.__slwActivePreset;
+        if (!presetName) {
+            const entered = prompt("මෙම Itinerary එක Cloud හි සුරැකීමට නමක් ඇතුළත් කරන්න:\n(උදා: 01N Pattaya 03N Bangkok)");
+            if (!entered || !entered.trim()) return;
+            presetName = entered.trim().replace(/\.json$/i, '');
+            window.__slwActivePreset = presetName;
+        } else {
+            const ok = confirm("'" + presetName + "' Itinerary එකෙහි ඔබ සිදුකළ වෙනස්කම් Cloud වෙත Update කිරීමට අවශ්‍යද?");
+            if (!ok) return;
         }
-        return originalAnchorClick.call(this);
+
+        slwOpenModal({
+            title: "Cloud වෙත Update කරමින්...",
+            preset: presetName,
+            stage: "වත්මන් දත්ත සකස් කරමින් (Preparing JSON)...",
+            percent: 8,
+            detail: "Export ආරම්භ කරමින්..."
+        });
+
+        window.__slwIsUpdatingCloud = true;
+        window.__slwPendingPresetName = presetName;
+
+        // Trigger React's Export JSON button
+        const allBtns = Array.from(document.querySelectorAll('button'));
+        const exportBtn = allBtns.find(b => {
+            const t = (b.textContent || b.innerText || '').trim();
+            return t.includes('Export JSON') || t.includes('Export Json');
+        });
+
+        if (!exportBtn) {
+            window.__slwIsUpdatingCloud = false;
+            slwShowError('Export JSON බොත්තම සොයාගත නොහැකි විය. කරුණාකර පිටුව Refresh කරන්න.');
+            return;
+        }
+
+        exportBtn.click();
     };
 
-})();
-</script>
-<!-- END INJECTION -->
-</html>
+    // ── MONKEY PATCH ANCHOR CLICK (ONE CENTRAL INTERCEPTOR) ──
+    const _nativeAnchorClick = window.HTMLAnchorElement.prototype.click;
+    window.HTMLAnchorElement.prototype.click = function() {
+        if (window.__slwIsUpdatingCloud && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
+            window.__slwIsUpdatingCloud = false;
+            const presetName = window.__slwPendingPresetName;
+            const href = this.href;
 
-<!-- ===== SLW UPDATE JSON BUTTON - GUARANTEED APPROACH ===== -->
-<script>
-window.addEventListener('load', function() {
-    // Wait for React to render, then inject our button
-    var attempts = 0;
-    var timer = setInterval(function() {
-        attempts++;
-        
-        // Find Export JSON button - look for button with exact text
-        var allBtns = document.querySelectorAll('button');
-        var exportBtn = null;
-        for (var i = 0; i < allBtns.length; i++) {
-            var txt = allBtns[i].innerText || allBtns[i].textContent || '';
-            if (txt.trim().indexOf('Export JSON') !== -1) {
-                exportBtn = allBtns[i];
-                break;
-            }
-        }
-        
-        if (exportBtn && !document.getElementById('slw-update-btn')) {
-            // Create Update button styled exactly like Export JSON button
-            var updateBtn = document.createElement('button');
-            updateBtn.id = 'slw-update-btn';
-            updateBtn.className = exportBtn.className; // Copy React classes
-            updateBtn.style.cssText = 'background:#0d9488!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:4px!important;';
-            updateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg> Update JSON file';
-            
-            updateBtn.onclick = function() {
-                var name = window.__slwPresetName;
-                if (!name) {
-                    name = prompt('Itinerary eke cloud name denna:\n(e.g. 03N Pattaya 05N Bangkok)');
-                    if (!name || !name.trim()) return;
-                    name = name.trim().replace(/\.json$/i, '');
-                    window.__slwPresetName = name;
-                } else {
-                    if (!confirm("'" + name + "' update karanawada?")) return;
-                }
-                window.__slwDoUpload = true;
-                window.__slwUploadName = name;
-                
-                // Find and click Export JSON button fresh
-                var btns = document.querySelectorAll('button');
-                for (var j = 0; j < btns.length; j++) {
-                    var t2 = (btns[j].innerText || '').trim();
-                    if (t2.indexOf('Export JSON') !== -1) {
-                        btns[j].click();
-                        break;
+            (async () => {
+                try {
+                    let jsonStr = '';
+                    if (href.startsWith('data:')) {
+                        const commaIdx = href.indexOf(',');
+                        jsonStr = decodeURIComponent(href.substring(commaIdx + 1));
+                    } else {
+                        const r = await fetch(href);
+                        jsonStr = await r.text();
                     }
+
+                    if (!jsonStr || jsonStr.length < 10) {
+                        throw new Error('Export වූ දත්ත වලංගු නොවේ (Invalid JSON export)');
+                    }
+
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const totalBytes = blob.size;
+                    const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
+
+                    slwUpdateModalProgress(15, `0 / ${totalMB} MB (0%)`, "Cloud Storage වෙත Upload ආරම්භ කරමින්...");
+
+                    const fileName = presetName + '.json';
+                    const fileRef = storage.ref('itinerary_presets/' + fileName);
+                    const uploadTask = fileRef.put(blob);
+
+                    uploadTask.on('state_changed',
+                        function(snapshot) {
+                            const pct = Math.max(15, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 85));
+                            const currentMB = (snapshot.bytesTransferred / (1024 * 1024)).toFixed(1);
+                            slwUpdateModalProgress(pct, `${currentMB} MB / ${totalMB} MB (${pct}%)`, "Cloud Storage වෙත දත්ත Upload වෙමින් පවතී...");
+                        },
+                        function(err) {
+                            console.error('[SLW] Storage upload error:', err);
+                            slwShowError('Cloud වෙත Upload කිරීම අසාර්ථක විය: ' + err.message);
+                        },
+                        async function() {
+                            slwUpdateModalProgress(92, "Database සටහන් කරමින්...", "Firestore metadata update වෙමින් පවතී...");
+                            try {
+                                await db.collection('slw_itinerary_presets').doc(presetName).set({
+                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                    fileName: fileName,
+                                    sizeBytes: totalBytes,
+                                    title: presetName
+                                });
+
+                                window.__slwActivePreset = presetName;
+                                slwUpdateActiveBadge(presetName);
+                                slwShowSuccess("✅ Cloud වෙත සාර්ථකව Update විය!", `'${presetName}' දැන් ඕනෑම පරිගණකයකින් Quick Load කළ හැක.`);
+                                fetchPresets(); // Refresh presets list
+
+                            } catch(dbErr) {
+                                console.error('[SLW] Firestore error:', dbErr);
+                                slwShowError('Firestore දෝෂයක්: ' + dbErr.message);
+                            }
+                        }
+                    );
+
+                } catch(procErr) {
+                    console.error('[SLW] Process error:', procErr);
+                    slwShowError('දත්ත සකස් කිරීමේ දෝෂයක්: ' + procErr.message);
                 }
-            };
-            
-            // Insert after exportBtn's parent row
-            var parentRow = exportBtn.closest('[class*="grid"]') || exportBtn.parentElement;
+            })();
+
+            return; // Block actual download to browser
+        }
+
+        return _nativeAnchorClick.call(this);
+    };
+
+    // ── INJECT BUTTONS INTO REACT UI ──
+    function injectUIControls() {
+        // 1. Sidebar Button
+        const allBtns = Array.from(document.querySelectorAll('button'));
+        const exportBtn = allBtns.find(b => {
+            const t = (b.textContent || b.innerText || '').trim();
+            return t.includes('Export JSON') || t.includes('Export Json');
+        });
+
+        if (exportBtn && !document.getElementById('slw-update-cloud-btn')) {
+            const updateBtn = document.createElement('button');
+            updateBtn.id = 'slw-update-cloud-btn';
+            updateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line></svg> Update JSON (Cloud)';
+            updateBtn.className = exportBtn.className;
+            updateBtn.style.cssText = 'background:#0d9488!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:6px!important;cursor:pointer!important;font-weight:600!important;';
+            updateBtn.onclick = window.slwTriggerCloudUpdate;
+
+            const parentRow = exportBtn.closest('[class*="grid"]') || exportBtn.parentElement;
             if (parentRow && parentRow.parentElement) {
                 parentRow.insertAdjacentElement('afterend', updateBtn);
             }
-            
-            clearInterval(timer);
-            console.log('[SLW] Update JSON button injected!');
         }
-        
-        if (attempts > 20) clearInterval(timer); // Stop after 20s
-    }, 1000);
-    
-    // Intercept anchor download to upload to Firebase instead
-    var _orig = window.HTMLAnchorElement.prototype.click;
-    window.HTMLAnchorElement.prototype.click = function() {
-        if (window.__slwDoUpload && this.download && this.download.match(/\.json$/i)) {
-            window.__slwDoUpload = false;
-            var name = window.__slwUploadName;
-            var blobUrl = this.href;
-            
-            var overlay = document.getElementById('slw-loading-overlay');
-            if (overlay) { overlay.style.display='flex'; overlay.innerText='Uploading to cloud...'; }
-            
-            fetch(blobUrl)
-              .then(function(r) { return r.text(); })
-              .then(function(jsonStr) {
-                var fb = window.firebase;
-                if (!fb) { alert('Firebase not ready. Try again in a moment.'); return; }
-                var ref = fb.storage().ref('itinerary_presets/' + name + '.json');
-                return ref.putString(jsonStr).then(function() {
-                    return fb.firestore().collection('slw_itinerary_presets').doc(name).set({
-                        updatedAt: fb.firestore.FieldValue.serverTimestamp()
-                    });
-                }).then(function() {
-                    window.__slwPresetName = name;
-                    alert('\u2705 "' + name + '" cloud-eke save vuna!\nJebika PC ekaken Quick Load karana kota penawa.');
-                }).catch(function(err) {
-                    alert('Upload error: ' + err.message);
-                });
-              })
-              .finally(function() {
-                if (overlay) { overlay.style.display='none'; overlay.innerText='Loading...'; }
-              });
-            return; // Block actual download
+
+        // 2. Floating Bottom-Left Button
+        if (!document.getElementById('slw-float-btn')) {
+            const floatBtn = document.createElement('button');
+            floatBtn.id = 'slw-float-btn';
+            floatBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                    <polyline points="16 16 12 12 8 16"></polyline>
+                    <line x1="12" y1="12" x2="12" y2="21"></line>
+                </svg>
+                <span>Update JSON</span>
+                <span id="slw-float-name" style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:10px;margin-left:4px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Preset</span>
+            `;
+            floatBtn.title = "Save current changes to Cloud Preset";
+            floatBtn.onclick = window.slwTriggerCloudUpdate;
+            document.body.appendChild(floatBtn);
+            if (window.__slwActivePreset) {
+                slwUpdateActiveBadge(window.__slwActivePreset);
+            }
         }
-        return _orig.call(this);
-    };
-    
-    // Sync preset name from Quick Load panel (if loaded from cloud)
-    var _origSetPreset = window.setCurrentPreset;
-    Object.defineProperty(window, '__slwCurrentPresetId', {
-        set: function(v) { window.__slwPresetName = v; },
-        get: function() { return window.__slwPresetName; },
-        configurable: true
-    });
-});
-</script>
-
-<script>
-(function() {
-    // This runs AFTER everything - guaranteed to work
-    // We add a floating teal button at bottom-left that's always visible
-    function addFloatingBtn() {
-        if (document.getElementById('slw-float-btn')) return;
-
-        var btn = document.createElement('button');
-        btn.id = 'slw-float-btn';
-        btn.innerHTML = '&#9729;&#65039; Update JSON';
-        btn.title = 'Save current itinerary to cloud';
-        btn.style.cssText = [
-            'position:fixed',
-            'bottom:16px',
-            'left:16px',
-            'z-index:999999',
-            'background:#0d9488',
-            'color:#ffffff',
-            'border:none',
-            'border-radius:10px',
-            'padding:11px 18px',
-            'font-size:14px',
-            'font-weight:700',
-            'cursor:pointer',
-            'box-shadow:0 4px 16px rgba(13,148,136,0.5)',
-            'display:flex',
-            'align-items:center',
-            'gap:6px',
-            'letter-spacing:0.3px',
-            'font-family:sans-serif'
-        ].join(';');
-
-        btn.onmouseover = function() { this.style.background = '#0f766e'; };
-        btn.onmouseout  = function() { this.style.background = '#0d9488'; };
-
-        btn.onclick = function() {
-            // Find the Export JSON button at click time (React is definitely loaded by now)
-            var allBtns = Array.from(document.querySelectorAll('button'));
-            var exportBtn = allBtns.find(function(b) {
-                var t = (b.textContent || b.innerText || '').trim();
-                return t.indexOf('Export JSON') !== -1 || t.indexOf('Export Json') !== -1;
-            });
-
-            if (!exportBtn) {
-                alert('Export JSON button not found. Please make sure the app is fully loaded.');
-                return;
-            }
-
-            // Get current preset name from existing logic
-            var currentName = window.__slwCurrentPresetId || null;
-
-            if (!currentName) {
-                var entered = prompt('Cloud-eke save karanna itinerary name denna:\n(e.g. 03N Pattaya 05N Bangkok)');
-                if (!entered || !entered.trim()) return;
-                currentName = entered.trim().replace(/\.json$/i, '');
-                window.__slwCurrentPresetId = currentName;
-            } else {
-                if (!confirm("'" + currentName + "' cloud-eke update karanawada?")) return;
-            }
-
-            // Set flag and trigger export
-            window.__slwIsUpdatingCloud = true;
-            window.__slwUploadName = currentName;
-            exportBtn.click();
-        };
-
-        document.body.appendChild(btn);
-        console.log('[SLW] ✅ Floating Update JSON button added.');
     }
 
-    // Intercept anchor clicks globally to catch the JSON export
-    var _origClick = window.HTMLAnchorElement.prototype.click;
-    window.HTMLAnchorElement.prototype.click = function() {
-        if (window.__slwIsUpdatingCloud && this.download && this.download.indexOf('.json') !== -1) {
-            window.__slwIsUpdatingCloud = false;
-            var name = window.__slwUploadName;
-            var href = this.href;
-
-            var overlay = document.getElementById('slw-loading-overlay');
-            if (overlay) { overlay.style.display = 'flex'; overlay.innerText = 'Saving to cloud...'; }
-
-            fetch(href).then(function(r){ return r.text(); }).then(function(jsonStr) {
-                var fb = window.firebase;
-                if (!fb) { alert('Firebase not loaded!'); return; }
-                var storage = fb.storage();
-                var db = fb.firestore();
-                var fileRef = storage.ref('itinerary_presets/' + name + '.json');
-                fileRef.putString(jsonStr).then(function() {
-                    return db.collection('slw_itinerary_presets').doc(name).set({
-                        updatedAt: fb.firestore.FieldValue.serverTimestamp()
-                    });
-                }).then(function() {
-                    alert('\u2705 "' + name + '" cloud-eke save vuna! Jebika PC ekata load karaganna puluwana.');
-                    window.__slwCurrentPresetId = name;
-                }).catch(function(err) {
-                    alert('Cloud save error: ' + err.message);
-                }).finally(function() {
-                    if (overlay) { overlay.style.display = 'none'; overlay.innerText = 'Loading...'; }
-                });
-            });
-            return; // Don't trigger normal download
+    // Auto-detect when user manually imports a JSON file
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.type === 'file' && e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.name && file.name.match(/\.json$/i)) {
+                const cleanName = file.name.replace(/\.json$/i, '');
+                window.__slwActivePreset = cleanName;
+                slwUpdateActiveBadge(cleanName);
+            }
         }
-        return _origClick.call(this);
-    };
+    }, true);
 
-    // Add button as soon as DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addFloatingBtn);
-    } else {
-        addFloatingBtn();
-    }
-    // Also try after 3s in case of slow load
-    setTimeout(addFloatingBtn, 3000);
+    setInterval(injectUIControls, 1000);
+    fetchPresets();
 })();
 </script>
+</html>

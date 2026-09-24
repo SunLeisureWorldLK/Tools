@@ -681,10 +681,60 @@ function slwGoHome() {
             });
     }
 
-    // ── ULTRA-FAST DELTA / DIFF LOAD & UPDATE ──
+    // ── ULTRA-FAST DELTA / DIFF LOAD & UPDATE (REST-POWERED) ──
+    const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/sun-leisure-world-portal/databases/(default)/documents';
     window.__slwBaseData = null;
 
-    // ── LOAD PRESET: Base (GitHub) + Delta Patch (Firestore) ──
+    // Direct REST API for Saving Patch (immune to SDK WebChannel hang)
+    async function slwSavePatchREST(presetName, patchJson, patchKB, changedKeys) {
+        const url = `${FIRESTORE_BASE}/slw_itinerary_patches/${encodeURIComponent(presetName)}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        const res = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+                fields: {
+                    patchJson: { stringValue: patchJson },
+                    presetName: { stringValue: presetName },
+                    patchSizeKB: { doubleValue: parseFloat(patchKB) || 0 },
+                    changedKeys: { stringValue: changedKeys.join(',') },
+                    updatedAt: { timestampValue: new Date().toISOString() }
+                }
+            })
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error('Firestore REST Error: ' + res.status + ' ' + err.substring(0, 100));
+        }
+        return await res.json();
+    }
+
+    // Direct REST API for Fetching Patch
+    async function slwGetPatchREST(presetName) {
+        try {
+            const url = `${FIRESTORE_BASE}/slw_itinerary_patches/${encodeURIComponent(presetName)}`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) return null; // 404 means no patch yet
+            const data = await res.json();
+            if (data && data.fields && data.fields.patchJson && data.fields.patchJson.stringValue) {
+                return JSON.parse(data.fields.patchJson.stringValue);
+            }
+            return null;
+        } catch(e) {
+            console.warn('[SLW] Failed to get patch via REST:', e);
+            return null;
+        }
+    }
+
+    // ── LOAD PRESET: Base (GitHub) + Delta Patch (Firestore REST) ──
     async function loadPreset(presetName, fileName) {
         if (!confirm("Load '" + presetName + "'?\nදැනට ඇති සියලු දත්ත මෙම Itinerary එකෙන් ප්‍රතිස්ථාපනය වේ.")) return;
 
@@ -703,12 +753,8 @@ function slwGoHome() {
 
             const githubUrl = GITHUB_RAW + encodeURIComponent(fileName);
 
-            // Fetch Firestore patch in parallel with GitHub base download
-            const patchPromise = db.collection('slw_itinerary_patches').doc(presetName).get().catch(err => {
-                console.warn('[SLW] Patch check bypassed:', err);
-                return null;
-            });
-            const oldMetaPromise = db.collection('slw_itinerary_presets').doc(presetName).get().catch(() => null);
+            // Fetch Firestore patch in parallel via fast REST API
+            const patchPromise = slwGetPatchREST(presetName);
 
             slwUpdateModalProgress(10, "GitHub වෙතින් බාගත වෙමින්...", "GitHub Official Repo වෙතින් Base ගොනුව ලබාගනිමින්...");
 
@@ -747,33 +793,15 @@ function slwGoHome() {
 
             let finalDataObj = JSON.parse(baseJsonData);
 
-            // Check if Cloud Delta Patch exists in Firestore
+            // Apply Cloud Delta Patch if found
             slwUpdateModalProgress(90, "Cloud Patches පරීක්ෂා කරමින්...", "Cloud එකෙහි යාවත්කාලීන වෙනස්කම් Merge කරමින්...");
-            const patchSnap = await patchPromise;
+            const patchObj = await patchPromise;
             let appliedPatch = false;
 
-            if (patchSnap && patchSnap.exists && patchSnap.data() && patchSnap.data().patchJson) {
-                try {
-                    const patchObj = JSON.parse(patchSnap.data().patchJson);
-                    Object.assign(finalDataObj, patchObj);
-                    appliedPatch = true;
-                    console.log('[SLW] ⚡ Merged Cloud Delta Patch for:', presetName, Object.keys(patchObj));
-                } catch(pe) {
-                    console.error('[SLW] Patch parse error:', pe);
-                }
-            } else {
-                // Backward compatibility: Check if old full Storage update exists
-                const oldMeta = await oldMetaPromise;
-                if (oldMeta && oldMeta.exists && !oldMeta.data().hasPatch) {
-                    try {
-                        const storageUrl = await storage.ref('itinerary_presets/' + fileName).getDownloadURL();
-                        const sRes = await fetch(storageUrl);
-                        if (sRes.ok) {
-                            finalDataObj = await sRes.json();
-                            console.log('[SLW] Loaded full update from Storage for:', presetName);
-                        }
-                    } catch(sErr) {}
-                }
+            if (patchObj && typeof patchObj === 'object') {
+                Object.assign(finalDataObj, patchObj);
+                appliedPatch = true;
+                console.log('[SLW] ⚡ Merged Cloud Delta Patch for:', presetName, Object.keys(patchObj));
             }
 
             // Save in memory for future diff calculations
@@ -846,7 +874,7 @@ function slwGoHome() {
         exportBtn.click();
     };
 
-    // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST DELTA PATCHING ──
+    // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST REST DELTA PATCHING ──
     const _nativeAnchorClick = window.HTMLAnchorElement.prototype.click;
     window.HTMLAnchorElement.prototype.click = function() {
         if (window.__slwIsUpdatingCloud && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
@@ -905,27 +933,12 @@ function slwGoHome() {
                     const patchBytes = new TextEncoder().encode(patchJson).length;
                     const patchKB = (patchBytes / 1024).toFixed(1);
 
-                    // ── ULTRA FAST DELTA PATCH (< 800 KB) ──
+                    // ── ULTRA FAST DELTA PATCH VIA REST (< 800 KB) ──
                     if (patchBytes < 800 * 1024) {
-                        slwUpdateModalProgress(55, `⚡ ${patchKB} KB (Ultra-fast Delta)`, "වෙනස් වූ කොටස් පමණක් Cloud වෙත සුරකිමින්...");
+                        slwUpdateModalProgress(55, `⚡ ${patchKB} KB (Ultra-fast Delta)`, "වෙනස් වූ කොටස් ක්ෂණිකව Cloud වෙත සුරකිමින්...");
 
-                        // Save patch to Firestore collection 'slw_itinerary_patches'
-                        await db.collection('slw_itinerary_patches').doc(presetName).set({
-                            patchJson: patchJson,
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            presetName: presetName,
-                            patchSizeKB: parseFloat(patchKB),
-                            changedKeys: changedKeys
-                        });
-
-                        // Update registry metadata in 'slw_itinerary_presets'
-                        await db.collection('slw_itinerary_presets').doc(presetName).set({
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            title: presetName,
-                            fileName: presetName + '.json',
-                            hasPatch: true,
-                            patchSizeKB: parseFloat(patchKB)
-                        });
+                        // Save patch via REST API (Super Fast, No WebChannel Hang!)
+                        await slwSavePatchREST(presetName, patchJson, patchKB, changedKeys);
 
                         // Update local base
                         window.__slwBaseData = JSON.parse(JSON.stringify(currentData));
@@ -934,7 +947,7 @@ function slwGoHome() {
 
                         slwShowSuccess(
                             "⚡ ක්ෂණිකව Cloud වෙත Update විය!",
-                            `වෙනස් වූ කොටස් ${changedKeys.length} ක් (${patchKB} KB) තත්පර 1 කටත් අඩු කාලයකින් Cloud හි සුරකින ලදී!`
+                            `වෙනස් වූ කොටස් ${changedKeys.length} ක් (${patchKB} KB) තත්පර 1 කටත් අඩු කාලයකින් සාර්ථකව සුරකින ලදී!`
                         );
                         fetchPresets();
                         return;

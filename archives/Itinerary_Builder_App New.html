@@ -84,12 +84,12 @@ let renderBoxesForSlot=(slotId)=>{
                     children:[
                       (0,b.jsx)(`span`,{className:`${th.iconColor} text-lg select-none`,children:box.icon||th.icon}),
                       (0,b.jsx)(O,{tag:`h3`,value:box.title!==undefined?box.title:`Special Note / Important Remarks`,onChange:val=>updateBoxField(box.id,`title`,val),className:`font-bold tracking-tight flex-1 ${th.title}`,style:{fontSize:`${tSize}px`}}),
-                      (0,b.jsx)(`button`,{onClick:()=>updateBoxField(box.id,`hasTitle`,!1),className:`opacity-0 group-hover/cbox:opacity-100 text-gray-400 hover:text-red-500 text-xs px-1 print:hidden cursor-pointer`,title:`Remove Title`,children:`✕`})
+                      (0,b.jsx)(`button`,{onClick:()=>updateBoxField(box.id,`hasTitle`,!1),className:`text-gray-400 hover:text-red-500 text-xs px-1.5 py-0.5 rounded hover:bg-red-50 print:hidden cursor-pointer font-bold`,title:`Remove Title`,children:`✕`})
                     ]
                   }):(0,b.jsx)(`div`,{className:`flex-1`}),
 
                   (0,b.jsxs)(`div`,{
-                    className:`flex items-center gap-1.5 opacity-0 group-hover/cbox:opacity-100 group-focus-within/cbox:opacity-100 transition-opacity print:hidden z-20 bg-white/95 p-1 rounded-lg shadow-sm border border-gray-200 text-xs flex-wrap`,
+                    className:`flex items-center gap-1.5 print:hidden z-20 bg-white/95 p-1.5 rounded-lg shadow-sm border border-gray-200 text-xs flex-wrap`,
                     children:[
                       !hasTitle&&(0,b.jsx)(`button`,{onClick:()=>{let boxes=(e.customBoxes||[]).map(b=>b.id===box.id?{...b,hasTitle:!0,title:b.title||`Special Note / Important Remarks`}:{...b});d(`customBoxes`,boxes);},className:`px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded cursor-pointer border border-amber-200`,title:`Add Title`,children:`+ Title`}),
                       !hasContent&&(0,b.jsx)(`button`,{onClick:()=>{let boxes=(e.customBoxes||[]).map(b=>b.id===box.id?{...b,hasContent:!0,content:b.content||`Type your custom text, instructions, flight details, or notes here...`}:{...b});d(`customBoxes`,boxes);},className:`px-1.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold rounded cursor-pointer border border-blue-200`,title:`Add Description`,children:`+ Text`}),
@@ -152,7 +152,7 @@ let renderBoxesForSlot=(slotId)=>{
                         }),
                         (0,b.jsx)(`button`,{
                           onClick:()=>{let updated=(box.flights||[]).filter((_,i)=>i!==flIdx);updateBoxField(box.id,`flights`,updated);},
-                          className:`opacity-0 group-hover/flight:opacity-100 p-1 text-gray-400 hover:text-red-600 rounded cursor-pointer print:hidden transition-opacity`,
+                          className:`p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer print:hidden transition-colors`,
                           title:`Delete Flight Segment`,
                           children:(0,b.jsx)(we,{size:14})
                         })
@@ -212,7 +212,7 @@ let renderBoxesForSlot=(slotId)=>{
               }),
 
               (0,b.jsxs)(`div`,{
-                className:`mt-3 flex items-center gap-2 opacity-0 group-hover/cbox:opacity-100 transition-opacity print:hidden text-xs`,
+                className:`mt-3 flex items-center gap-2 print:hidden text-xs flex-wrap`,
                 children:[
                   (0,b.jsxs)(`button`,{
                     onClick:()=>{let cur=box.flights||[];let newFl={id:Date.now(),type:`departure`,airline:`SriLankan Airlines (UL 504)`,departure:`BKK Bangkok (09:15 AM)`,arrival:`CMB Colombo (11:30 AM)`,info:`Date: 15 Oct 2026 | Baggage: 30kg | Terminal 1`};updateBoxField(box.id,`flights`,[...cur,newFl]);},

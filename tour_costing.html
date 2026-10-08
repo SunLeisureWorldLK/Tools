@@ -69,12 +69,250 @@
         <button onclick="loadMasterDatabase(true)" title="Force sync Master DB from Firebase" class="py-2 px-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 text-xs font-bold transition">
             <i class="fas fa-sync-alt mr-1"></i> Sync Cloud
         </button>
+        <button onclick="toggleMasterDbCards()" id="btnToggleMasterCards" class="py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg shadow text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fas fa-magic"></i> <span>⚡ Live Master DB Editor</span>
+            <span id="quickCardsChevron" class="text-[10px] ml-0.5">▼</span>
+        </button>
         <div class="flex items-center">
              <button onclick="document.getElementById('logoUpload').click()" class="py-2 px-6 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
                 Upload Logo
             </button>
             <input type="file" id="logoUpload" style="display: none;" accept="image/*" onchange="handleLogoUpload(event)">
             <img id="logoPreview" src="" alt="Logo Preview" class="ml-4 h-10 w-auto" style="display: none;">
+        </div>
+    </div>
+
+    <!-- Master Database Live Quick Editor Cards Section -->
+    <div id="masterDbQuickSection" class="mb-8 p-6 bg-gradient-to-br from-purple-50/60 via-white to-indigo-50/50 rounded-xl border-2 border-purple-200 shadow-lg transition-all duration-300" style="display: none;">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 mb-4 border-b border-purple-100 gap-2">
+            <div>
+                <h3 class="text-xl font-bold text-purple-900 flex items-center gap-2">
+                    <i class="fas fa-cloud-upload-alt text-purple-600"></i> Master Database Live Editor & Cloud Sync
+                </h3>
+                <p class="text-xs text-gray-500 mt-0.5">Edit prices, names, or add new items directly to Master DB. All changes instantly sync to Firebase Cloud across all PCs.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="saveMasterDatabaseToFirebase()" class="py-1.5 px-3 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1">
+                    <i class="fas fa-save"></i> Force Save All to Cloud
+                </button>
+                <button onclick="toggleMasterDbCards(false)" class="text-gray-400 hover:text-gray-600 text-lg px-2" title="Close Panel">✕</button>
+            </div>
+        </div>
+
+        <!-- 3 Quick Editor Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- CARD 1: TOURS -->
+            <div class="bg-white rounded-lg p-4 border border-purple-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-purple-100">
+                        <span class="font-bold text-sm text-purple-900 flex items-center gap-1.5">
+                            <i class="fas fa-map-marked-alt text-purple-600"></i> Tours & Activities
+                        </span>
+                        <span id="quickTourCountBadge" class="text-[11px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">0 Tours</span>
+                    </div>
+                    
+                    <!-- Search & Select Tour -->
+                    <div class="space-y-2 mb-3">
+                        <div class="relative">
+                            <input type="text" id="quickTourSearch" oninput="filterQuickTourList()" placeholder="🔍 Search tour to edit..." class="w-full p-2 pr-7 text-xs border border-purple-200 rounded-md bg-purple-50/30 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                            <button type="button" onclick="clearQuickTourSearch()" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                        </div>
+                        <select id="quickTourSelect" onchange="loadTourIntoQuickEditor()" class="w-full p-2 text-xs border border-purple-300 rounded-md bg-white font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                            <option value="">-- Select Tour to Edit (or create new) --</option>
+                        </select>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <input type="hidden" id="quickTourId" value="">
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Tour Name</label>
+                            <input type="text" id="quickTourName" placeholder="Tour Name (e.g. Safari World)" class="w-full p-2 border rounded font-semibold text-gray-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">City / Location</label>
+                            <input type="text" id="quickTourLocation" list="quickTourLocationList" placeholder="City (e.g. Bangkok, Pattaya, Phuket)" class="w-full p-2 border rounded text-gray-700">
+                            <datalist id="quickTourLocationList"></datalist>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Join Price (THB)</label>
+                                <input type="number" id="quickTourJoinPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-purple-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Ticket Only (THB)</label>
+                                <input type="number" id="quickTourTicketPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-gray-700">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Private Car (THB)</label>
+                                <input type="number" id="quickTourCarPrice" placeholder="0" class="w-full p-2 border rounded text-gray-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Private Van (THB)</label>
+                                <input type="number" id="quickTourVanPrice" placeholder="0" class="w-full p-2 border rounded text-gray-700">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-1.5 mt-3 pt-3 border-t border-purple-100">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveQuickTour(false)" class="flex-1 py-2 px-3 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center gap-1">
+                            <i class="fas fa-cloud-upload-alt"></i> <span>Update Tour in Cloud</span>
+                        </button>
+                        <button type="button" onclick="saveQuickTour(true)" class="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition" title="Add as a new tour in Master DB">
+                            <i class="fas fa-plus"></i> New
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
+                        <span id="quickTourStatus">Ready to edit or add</span>
+                        <button type="button" onclick="resetQuickTourEditor()" class="text-blue-500 hover:underline">Clear Fields</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: HOTELS -->
+            <div class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-blue-100">
+                        <span class="font-bold text-sm text-blue-900 flex items-center gap-1.5">
+                            <i class="fas fa-hotel text-blue-600"></i> Hotels & Lodging
+                        </span>
+                        <span id="quickHotelCountBadge" class="text-[11px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">0 Hotels</span>
+                    </div>
+                    
+                    <!-- Search & Select Hotel -->
+                    <div class="space-y-2 mb-3">
+                        <div class="relative">
+                            <input type="text" id="quickHotelSearch" oninput="filterQuickHotelList()" placeholder="🔍 Search hotel by name or city..." class="w-full p-2 pr-7 text-xs border border-blue-200 rounded-md bg-blue-50/30 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <button type="button" onclick="clearQuickHotelSearch()" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                        </div>
+                        <select id="quickHotelSelect" onchange="loadHotelIntoQuickEditor()" class="w-full p-2 text-xs border border-blue-300 rounded-md bg-white font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="">-- Select Hotel to Edit (or create new) --</option>
+                        </select>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <input type="hidden" id="quickHotelId" value="">
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Hotel Name</label>
+                            <input type="text" id="quickHotelName" placeholder="Hotel Name" class="w-full p-2 border rounded font-semibold text-gray-800">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">City / Location</label>
+                                <input type="text" id="quickHotelLocation" list="quickHotelLocationList" placeholder="City" class="w-full p-2 border rounded text-gray-700">
+                                <datalist id="quickHotelLocationList"></datalist>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Star Rating</label>
+                                <select id="quickHotelStar" class="w-full p-2 border rounded font-semibold text-gray-700 bg-white">
+                                    <option value="3">3 Star</option>
+                                    <option value="4">4 Star</option>
+                                    <option value="5">5 Star</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Room Price / Night (THB)</label>
+                                <input type="number" id="quickHotelPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-blue-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Child Meal / Night (THB)</label>
+                                <input type="number" id="quickHotelMealPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-gray-700">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-1.5 mt-3 pt-3 border-t border-blue-100">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveQuickHotel(false)" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center gap-1">
+                            <i class="fas fa-cloud-upload-alt"></i> <span>Update Hotel in Cloud</span>
+                        </button>
+                        <button type="button" onclick="saveQuickHotel(true)" class="py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg transition" title="Add as a new hotel in Master DB">
+                            <i class="fas fa-plus"></i> New
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
+                        <span id="quickHotelStatus">Ready to edit or add</span>
+                        <button type="button" onclick="resetQuickHotelEditor()" class="text-blue-500 hover:underline">Clear Fields</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: TRANSFERS -->
+            <div class="bg-white rounded-lg p-4 border border-orange-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-orange-100">
+                        <span class="font-bold text-sm text-orange-900 flex items-center gap-1.5">
+                            <i class="fas fa-car text-orange-600"></i> Transfers & Vehicles
+                        </span>
+                        <span id="quickTransferCountBadge" class="text-[11px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">0 Transfers</span>
+                    </div>
+                    
+                    <!-- Search & Select Transfer -->
+                    <div class="space-y-2 mb-3">
+                        <div class="relative">
+                            <input type="text" id="quickTransferSearch" oninput="filterQuickTransferList()" placeholder="🔍 Search transfer route..." class="w-full p-2 pr-7 text-xs border border-orange-200 rounded-md bg-orange-50/30 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                            <button type="button" onclick="clearQuickTransferSearch()" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                        </div>
+                        <select id="quickTransferSelect" onchange="loadTransferIntoQuickEditor()" class="w-full p-2 text-xs border border-orange-300 rounded-md bg-white font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                            <option value="">-- Select Transfer to Edit (or create new) --</option>
+                        </select>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <input type="hidden" id="quickTransferId" value="">
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Route / Transfer Name</label>
+                            <input type="text" id="quickTransferName" placeholder="e.g. Airport to Hotel" class="w-full p-2 border rounded font-semibold text-gray-800">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">City / Location</label>
+                            <input type="text" id="quickTransferLocation" list="quickTransferLocationList" placeholder="City (e.g. Bangkok, Pattaya, Phuket)" class="w-full p-2 border rounded text-gray-700">
+                            <datalist id="quickTransferLocationList"></datalist>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Car Price (THB)</label>
+                                <input type="number" id="quickTransferCarPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-orange-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Van Price (THB)</label>
+                                <input type="number" id="quickTransferVanPrice" placeholder="0" class="w-full p-2 border rounded font-bold text-gray-700">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Bus Price (THB) [Optional]</label>
+                            <input type="number" id="quickTransferBusPrice" placeholder="0" class="w-full p-2 border rounded text-gray-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-1.5 mt-3 pt-3 border-t border-orange-100">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveQuickTransfer(false)" class="flex-1 py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center gap-1">
+                            <i class="fas fa-cloud-upload-alt"></i> <span>Update in Cloud</span>
+                        </button>
+                        <button type="button" onclick="saveQuickTransfer(true)" class="py-2 px-3 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold rounded-lg transition" title="Add as a new transfer in Master DB">
+                            <i class="fas fa-plus"></i> New
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
+                        <span id="quickTransferStatus">Ready to edit or add</span>
+                        <button type="button" onclick="resetQuickTransferEditor()" class="text-orange-500 hover:underline">Clear Fields</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -523,23 +761,98 @@
 
 <!-- Modals -->
 <div id="tourModal" class="modal-backdrop"><div class="modal-content"><h3 id="tourModalTitle" class="text-2xl font-bold mb-4">Add New Tour</h3>
-<select id="tourCityFilter" onchange="populateDbDropdowns()" class="w-full p-2 border border-gray-300 rounded-md mb-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+<select id="tourCityFilter" onchange="filterTourDbOptions(true)" class="w-full p-2 border border-gray-300 rounded-md mb-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
     <option value="">-- All Cities --</option>
 </select>
+<div class="relative mb-2">
+    <input type="text" id="tourDbSearch" oninput="filterTourDbOptions()" placeholder="🔍 Search tour (e.g. Safari, Cruise, Dream World)..." class="w-full p-2.5 pr-8 border border-purple-300 rounded-md text-sm bg-purple-50/50 text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium">
+    <button type="button" onclick="clearTourDbSearch()" class="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 text-sm font-bold" title="Clear">✕</button>
+</div>
 <select id="tourDbSelect" onchange="fillTourFromDb()" class="w-full p-2 border border-purple-300 rounded-md mb-4 bg-purple-50 text-purple-900 font-bold focus:outline-none focus:ring-2 focus:ring-purple-500">
     <option value="">-- Select from Master Database --</option>
 </select>
-<div class="space-y-4"><input type="text" id="newTourName" placeholder="Tour Name" class="w-full p-3 border rounded-md"><input type="number" id="newTourPrice" placeholder="Per Person Price (THB) [Join or Ticket]" class="w-full p-3 border rounded-md"><input type="number" id="newTourTransferPrice" placeholder="Fixed Transfer Price (THB) [Private]" class="w-full p-3 border rounded-md"></div><div class="flex gap-4 mt-6"><button id="saveTourButton" onclick="saveTour()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Tour</button><button onclick="closeModal('tourModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button></div></div></div>
+<div class="space-y-4">
+    <input type="text" id="newTourName" placeholder="Tour Name" class="w-full p-3 border rounded-md">
+    <input type="number" id="newTourPrice" placeholder="Per Person Price (THB) [Join or Ticket]" class="w-full p-3 border rounded-md">
+    <input type="number" id="newTourTransferPrice" placeholder="Fixed Transfer Price (THB) [Private]" class="w-full p-3 border rounded-md">
+</div>
+
+<!-- Master DB Sync Card inside Tour Modal -->
+<div id="modalTourMasterSyncCard" class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-3 my-3">
+    <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold text-purple-900 flex items-center gap-1">
+            <i class="fas fa-cloud-upload-alt text-purple-600"></i> Master Database & Cloud Sync
+        </span>
+        <span id="modalTourMasterStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700">Custom / New</span>
+    </div>
+    <div class="flex items-center justify-between gap-2 mb-2">
+        <label class="text-[11px] text-gray-600 font-medium">City / Location:</label>
+        <input type="text" id="modalTourMasterCity" placeholder="e.g. Bangkok, Pattaya, Phuket" class="flex-1 p-1 text-xs border rounded bg-white">
+    </div>
+    <div class="flex items-center justify-between gap-2 pt-1 border-t border-purple-100">
+        <label class="flex items-center text-xs text-purple-900 font-semibold cursor-pointer">
+            <input type="checkbox" id="modalSyncTourToDbCheckbox" class="mr-1.5 h-4 w-4 text-purple-600 rounded">
+            <span>Also save/update in Master DB & Cloud (All PCs)</span>
+        </label>
+        <button type="button" onclick="quickSaveModalTourToMasterDb()" class="py-1 px-2.5 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold rounded shadow transition flex items-center gap-1" title="Save changes directly to Master DB now">
+            <i class="fas fa-save"></i> <span>Save to Cloud</span>
+        </button>
+    </div>
+</div>
+
+<div class="flex gap-4 mt-4">
+    <button id="saveTourButton" onclick="saveTour()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Tour</button>
+    <button onclick="closeModal('tourModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button>
+</div></div></div>
 <div id="transferModal" class="modal-backdrop"><div class="modal-content"><h3 id="transferModalTitle" class="text-2xl font-bold mb-4">Add New Transfer</h3>
-<select id="transferCityFilter" onchange="populateDbDropdowns()" class="w-full p-2 border border-gray-300 rounded-md mb-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+<select id="transferCityFilter" onchange="filterTransferDbOptions(true)" class="w-full p-2 border border-gray-300 rounded-md mb-2 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
     <option value="">-- All Cities --</option>
 </select>
+<div class="relative mb-2">
+    <input type="text" id="transferDbSearch" oninput="filterTransferDbOptions()" placeholder="🔍 Search transfer (e.g. DMK, BKK, Airport, Pattaya, Van, Car)..." class="w-full p-2.5 pr-8 border border-orange-300 rounded-md text-sm bg-orange-50/50 text-orange-900 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium">
+    <button type="button" onclick="clearTransferDbSearch()" class="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600 text-sm font-bold" title="Clear">✕</button>
+</div>
 <select id="transferDbSelect" onchange="fillTransferFromDb()" class="w-full p-2 border border-orange-300 rounded-md mb-4 bg-orange-50 text-orange-900 font-bold focus:outline-none focus:ring-2 focus:ring-orange-500">
     <option value="">-- Select from Master Database --</option>
 </select>
-<div class="space-y-4"><input type="text" id="newTransferName" placeholder="Transfer Name" class="w-full p-3 border rounded-md"><input type="number" id="newTransferPrice" placeholder="Transfer Price (THB)" class="w-full p-3 border rounded-md"></div><div class="flex gap-4 mt-6"><button id="saveTransferButton" onclick="saveTransfer()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Transfer</button><button onclick="closeModal('transferModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button></div></div></div>
+<div class="space-y-4">
+    <input type="text" id="newTransferName" placeholder="Transfer Name" class="w-full p-3 border rounded-md">
+    <input type="number" id="newTransferPrice" placeholder="Transfer Price (THB)" class="w-full p-3 border rounded-md">
+</div>
+
+<!-- Master DB Sync Card inside Transfer Modal -->
+<div id="modalTransferMasterSyncCard" class="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-3 my-3">
+    <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold text-orange-900 flex items-center gap-1">
+            <i class="fas fa-cloud-upload-alt text-orange-600"></i> Master Database & Cloud Sync
+        </span>
+        <span id="modalTransferMasterStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700">Custom / New</span>
+    </div>
+    <div class="flex items-center justify-between gap-2 mb-2">
+        <label class="text-[11px] text-gray-600 font-medium">City / Location:</label>
+        <input type="text" id="modalTransferMasterCity" placeholder="e.g. Bangkok, Pattaya" class="flex-1 p-1 text-xs border rounded bg-white">
+    </div>
+    <div class="flex items-center justify-between gap-2 pt-1 border-t border-orange-100">
+        <label class="flex items-center text-xs text-orange-900 font-semibold cursor-pointer">
+            <input type="checkbox" id="modalSyncTransferToDbCheckbox" class="mr-1.5 h-4 w-4 text-orange-600 rounded">
+            <span>Also save/update in Master DB & Cloud (All PCs)</span>
+        </label>
+        <button type="button" onclick="quickSaveModalTransferToMasterDb()" class="py-1 px-2.5 bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold rounded shadow transition flex items-center gap-1" title="Save changes directly to Master DB now">
+            <i class="fas fa-save"></i> <span>Save to Cloud</span>
+        </button>
+    </div>
+</div>
+
+<div class="flex gap-4 mt-4">
+    <button id="saveTransferButton" onclick="saveTransfer()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Transfer</button>
+    <button onclick="closeModal('transferModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button>
+</div></div></div>
 <div id="cityModal" class="modal-backdrop"><div class="modal-content overflow-y-auto max-h-[90vh]"><h3 id="cityModalTitle" class="text-2xl font-bold mb-4">Add New City Stay</h3><div class="space-y-4">
     <label class="block text-sm font-bold text-gray-600 mb-1">Select City from Database (or type manually below)</label>
+    <div class="relative mb-1">
+        <input type="text" id="cityDbSearch" oninput="filterCityNameOptions()" placeholder="🔍 Search city (e.g. Bangkok, Phuket, Pattaya)..." class="w-full p-2 pr-8 border border-teal-300 rounded-md text-sm bg-teal-50/40 text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <button type="button" onclick="clearCityDbSearch()" class="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs font-bold" title="Clear">✕</button>
+    </div>
     <select id="cityNameDbSelect" onchange="fillCityNameFromDb()" class="w-full p-2 border border-teal-300 rounded-md mb-2 bg-teal-50 text-teal-900 font-bold focus:outline-none focus:ring-2 focus:ring-teal-500">
         <option value="">-- Select City from Database --</option>
     </select>
@@ -552,7 +865,11 @@
         <input type="number" id="newCityNights" placeholder="Total Number of Nights" class="w-full p-3 border rounded-md">
     </div>
     <div class="border p-3 rounded-md bg-blue-50">
-        <label class="block text-sm font-bold text-blue-800 mb-2">3-Star Option</label>
+        <label class="block text-sm font-bold text-blue-800 mb-1.5">3-Star Option</label>
+        <div class="relative mb-1.5">
+            <input type="text" id="hotel3DbSearch" oninput="filterHotelDbOptions(3)" placeholder="🔍 Search 3* Hotel (name or area, e.g. Pratunam)..." class="w-full p-1.5 pr-6 border border-blue-300 rounded-md text-xs bg-white text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="button" onclick="clearHotelDbSearch(3)" class="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600 text-xs font-bold" title="Clear">✕</button>
+        </div>
         <select id="city3StarDbSelect" onchange="fillHotelFromDb(3)" class="w-full p-2 border border-blue-300 rounded-md mb-2 bg-white text-sm">
             <option value="">-- Search 3* Database --</option>
         </select>
@@ -564,7 +881,11 @@
         </div>
     </div>
     <div class="border p-3 rounded-md bg-amber-50">
-        <label class="block text-sm font-bold text-amber-800 mb-2">4-Star Option</label>
+        <label class="block text-sm font-bold text-amber-800 mb-1.5">4-Star Option</label>
+        <div class="relative mb-1.5">
+            <input type="text" id="hotel4DbSearch" oninput="filterHotelDbOptions(4)" placeholder="🔍 Search 4* Hotel (name or area)..." class="w-full p-1.5 pr-6 border border-amber-300 rounded-md text-xs bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <button type="button" onclick="clearHotelDbSearch(4)" class="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600 text-xs font-bold" title="Clear">✕</button>
+        </div>
         <select id="city4StarDbSelect" onchange="fillHotelFromDb(4)" class="w-full p-2 border border-amber-300 rounded-md mb-2 bg-white text-sm">
             <option value="">-- Search 4* Database --</option>
         </select>
@@ -576,7 +897,11 @@
         </div>
     </div>
     <div class="border p-3 rounded-md bg-purple-50">
-        <label class="block text-sm font-bold text-purple-800 mb-2">5-Star Option (Optional)</label>
+        <label class="block text-sm font-bold text-purple-800 mb-1.5">5-Star Option (Optional)</label>
+        <div class="relative mb-1.5">
+            <input type="text" id="hotel5DbSearch" oninput="filterHotelDbOptions(5)" placeholder="🔍 Search 5* Hotel (name or area)..." class="w-full p-1.5 pr-6 border border-purple-300 rounded-md text-xs bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button type="button" onclick="clearHotelDbSearch(5)" class="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600 text-xs font-bold" title="Clear">✕</button>
+        </div>
         <select id="city5StarDbSelect" onchange="fillHotelFromDb(5)" class="w-full p-2 border border-purple-300 rounded-md mb-2 bg-white text-sm">
             <option value="">-- Search 5* Database --</option>
         </select>
@@ -595,6 +920,16 @@
             <option value="5">Use 5-Star Hotel</option>
             <option value="none">None (Disable Mixed Package)</option>
         </select>
+    </div>
+    <!-- Master DB Hotel Sync Option -->
+    <div class="bg-blue-50/80 p-3 rounded-lg border border-blue-200 flex items-center justify-between">
+        <label class="flex items-center text-xs text-blue-900 font-bold cursor-pointer">
+            <input type="checkbox" id="modalSyncHotelsToDbCheckbox" class="mr-2 h-4 w-4 text-blue-600 rounded">
+            <span>Also save/update newly entered Hotels to Master DB & Cloud (All PCs)</span>
+        </label>
+        <button type="button" onclick="quickSaveModalHotelsToMasterDb()" class="py-1 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow transition">
+            Save Hotels
+        </button>
     </div>
 </div><div class="flex gap-4 mt-6"><button id="saveCityButton" onclick="saveCity()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add City</button><button onclick="closeModal('cityModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button></div></div></div>
 
@@ -627,10 +962,449 @@
         if (source === 'cloud') {
             badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200 shadow-sm";
             text.innerHTML = `<i class="fas fa-cloud text-green-600 mr-1"></i> Cloud Synced: ${tourCount} Tours, ${hotelCount} Hotels`;
+        } else if (source === 'syncing') {
+            badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 shadow-sm";
+            text.innerHTML = `<i class="fas fa-spinner fa-spin text-purple-600 mr-1"></i> Syncing to Cloud...`;
         } else {
             badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shadow-sm";
             text.innerHTML = `<i class="fas fa-database text-amber-600 mr-1"></i> Local Cache: ${tourCount} Tours, ${hotelCount} Hotels`;
         }
+    }
+
+    async function saveMasterDatabaseToFirebase(silent = false) {
+        updateCloudSyncStatus('syncing', (masterDb.tours || []).length, (masterDb.hotels || []).length);
+        
+        const cleanDb = {
+            hotels: (masterDb.hotels || []).map(h => ({
+                id: String(h.id || ('h_' + Date.now())),
+                name: String(h.name || '').trim(),
+                location: String(h.location || '').trim(),
+                star: String(h.star || '3'),
+                price: Number(h.price) || 0,
+                mealPrice: Number(h.mealPrice) || 0
+            })),
+            tours: (masterDb.tours || []).map(t => ({
+                id: String(t.id || ('t_' + Date.now())),
+                name: String(t.name || '').trim(),
+                location: String(t.location || '').trim(),
+                joinPrice: t.joinPrice !== null && t.joinPrice !== undefined && t.joinPrice !== '' ? Number(t.joinPrice) : null,
+                ticketOnlyPrice: t.ticketOnlyPrice !== null && t.ticketOnlyPrice !== undefined && t.ticketOnlyPrice !== '' ? Number(t.ticketOnlyPrice) : null,
+                privateCarPrice: t.privateCarPrice !== null && t.privateCarPrice !== undefined && t.privateCarPrice !== '' ? Number(t.privateCarPrice) : null,
+                privateVanPrice: t.privateVanPrice !== null && t.privateVanPrice !== undefined && t.privateVanPrice !== '' ? Number(t.privateVanPrice) : null,
+                privateBusPrice: t.privateBusPrice !== null && t.privateBusPrice !== undefined && t.privateBusPrice !== '' ? Number(t.privateBusPrice) : null
+            })),
+            transfers: (masterDb.transfers || []).map(tr => ({
+                id: String(tr.id || ('tr_' + Date.now())),
+                name: String(tr.name || '').trim(),
+                location: String(tr.location || '').trim(),
+                carPrice: tr.carPrice !== null && tr.carPrice !== undefined && tr.carPrice !== '' ? Number(tr.carPrice) : null,
+                vanPrice: tr.vanPrice !== null && tr.vanPrice !== undefined && tr.vanPrice !== '' ? Number(tr.vanPrice) : null,
+                busPrice: tr.busPrice !== null && tr.busPrice !== undefined && tr.busPrice !== '' ? Number(tr.busPrice) : null
+            })),
+            extras: masterDb.extras || []
+        };
+        
+        masterDb = cleanDb;
+        localStorage.setItem('SLW_Master_Inventory', JSON.stringify(cleanDb));
+        
+        try {
+            if (typeof db !== 'undefined' && db) {
+                await db.collection('slw_settings').doc('master_inventory').set(cleanDb);
+                updateCloudSyncStatus('cloud', cleanDb.tours.length, cleanDb.hotels.length);
+                if (window.slwLogActivity) {
+                    window.slwLogActivity('Updated Master Database from Tour Costing Calculator');
+                }
+                if (!silent) {
+                    showNotification("☁️ Master Database successfully saved to Firebase Cloud!", false);
+                }
+            } else {
+                updateCloudSyncStatus('local', cleanDb.tours.length, cleanDb.hotels.length);
+                if (!silent) {
+                    showNotification("⚠️ Saved to Local Cache (Firebase offline)", false);
+                }
+            }
+        } catch(err) {
+            console.error("Firebase sync error:", err);
+            updateCloudSyncStatus('local', cleanDb.tours.length, cleanDb.hotels.length);
+            if (!silent) {
+                showNotification("⚠️ Firebase Sync Error: " + err.message + " (Saved Locally)", true);
+            }
+        }
+        
+        populateDbDropdowns();
+        updateMasterDbCounts();
+        return true;
+    }
+
+    function toggleMasterDbCards(forceOpen = null) {
+        const section = document.getElementById('masterDbQuickSection');
+        const chevron = document.getElementById('quickCardsChevron');
+        if (!section) return;
+        
+        const isHidden = section.style.display === 'none' || section.style.display === '';
+        const willOpen = forceOpen !== null ? forceOpen : isHidden;
+        section.style.display = willOpen ? 'block' : 'none';
+        if (chevron) chevron.innerText = willOpen ? '▲' : '▼';
+        
+        if (willOpen) {
+            updateMasterDbCounts();
+            populateQuickTourDropdown();
+            populateQuickHotelDropdown();
+            populateQuickTransferDropdown();
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function updateMasterDbCounts() {
+        const tourCount = (masterDb.tours || []).length;
+        const hotelCount = (masterDb.hotels || []).length;
+        const transferCount = (masterDb.transfers || []).length;
+        
+        const tourBadge = document.getElementById('quickTourCountBadge');
+        if (tourBadge) tourBadge.innerText = `${tourCount} Tours`;
+        const hotelBadge = document.getElementById('quickHotelCountBadge');
+        if (hotelBadge) hotelBadge.innerText = `${hotelCount} Hotels`;
+        const transferBadge = document.getElementById('quickTransferCountBadge');
+        if (transferBadge) transferBadge.innerText = `${transferCount} Transfers`;
+        
+        const allCities = [...new Set([
+            ...(masterDb.tours || []).map(t => (t.location || '').trim()),
+            ...(masterDb.hotels || []).map(h => (h.location || '').trim()),
+            ...(masterDb.transfers || []).map(tr => (tr.location || '').trim())
+        ])].filter(Boolean).sort();
+        
+        const updateDatalist = (id) => {
+            const dl = document.getElementById(id);
+            if (dl) dl.innerHTML = allCities.map(c => `<option value="${c}">`).join('');
+        };
+        updateDatalist('quickTourLocationList');
+        updateDatalist('quickHotelLocationList');
+        updateDatalist('quickTransferLocationList');
+    }
+
+    // ── QUICK TOURS LIVE EDITOR ──
+    function populateQuickTourDropdown(searchVal = '') {
+        const select = document.getElementById('quickTourSelect');
+        if (!select) return;
+        searchVal = (searchVal || '').trim().toLowerCase();
+        
+        let tours = masterDb.tours || [];
+        if (searchVal) {
+            tours = tours.filter(t => (t.name || '').toLowerCase().includes(searchVal) || (t.location || '').toLowerCase().includes(searchVal));
+        }
+        
+        let html = `<option value="">-- Select Tour to Edit (${tours.length} available) --</option>`;
+        tours.forEach(t => {
+            const loc = t.location ? ` [${t.location}]` : '';
+            const priceInfo = t.joinPrice ? `Join: ${t.joinPrice}` : (t.ticketOnlyPrice ? `Ticket: ${t.ticketOnlyPrice}` : 'Pvt');
+            html += `<option value="${t.id}">${t.name}${loc} (${priceInfo})</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    function filterQuickTourList() {
+        const val = document.getElementById('quickTourSearch')?.value || '';
+        populateQuickTourDropdown(val);
+    }
+
+    function clearQuickTourSearch() {
+        const inp = document.getElementById('quickTourSearch');
+        if (inp) inp.value = '';
+        populateQuickTourDropdown('');
+    }
+
+    function loadTourIntoQuickEditor() {
+        const select = document.getElementById('quickTourSelect');
+        if (!select || !select.value) {
+            resetQuickTourEditor();
+            return;
+        }
+        const tour = (masterDb.tours || []).find(t => t.id === select.value);
+        if (!tour) return;
+        
+        document.getElementById('quickTourId').value = tour.id;
+        document.getElementById('quickTourName').value = tour.name || '';
+        document.getElementById('quickTourLocation').value = (tour.location || '').trim();
+        document.getElementById('quickTourJoinPrice').value = tour.joinPrice !== null && tour.joinPrice !== undefined ? tour.joinPrice : '';
+        document.getElementById('quickTourTicketPrice').value = tour.ticketOnlyPrice !== null && tour.ticketOnlyPrice !== undefined ? tour.ticketOnlyPrice : '';
+        document.getElementById('quickTourCarPrice').value = tour.privateCarPrice !== null && tour.privateCarPrice !== undefined ? tour.privateCarPrice : '';
+        document.getElementById('quickTourVanPrice').value = tour.privateVanPrice !== null && tour.privateVanPrice !== undefined ? tour.privateVanPrice : '';
+        
+        const status = document.getElementById('quickTourStatus');
+        if (status) status.innerHTML = `<span class="text-purple-600 font-semibold">Editing: "${(tour.name || '').substring(0, 25)}..."</span>`;
+    }
+
+    async function saveQuickTour(isNew = false) {
+        const name = document.getElementById('quickTourName')?.value.trim();
+        const location = document.getElementById('quickTourLocation')?.value.trim();
+        const joinPrice = document.getElementById('quickTourJoinPrice')?.value;
+        const ticketOnlyPrice = document.getElementById('quickTourTicketPrice')?.value;
+        const privateCarPrice = document.getElementById('quickTourCarPrice')?.value;
+        const privateVanPrice = document.getElementById('quickTourVanPrice')?.value;
+        const tourId = document.getElementById('quickTourId')?.value;
+        
+        if (!name) {
+            showNotification("Please enter a Tour Name.", true);
+            return;
+        }
+        
+        const tourObj = {
+            name,
+            location,
+            joinPrice: joinPrice !== '' ? Number(joinPrice) : null,
+            ticketOnlyPrice: ticketOnlyPrice !== '' ? Number(ticketOnlyPrice) : null,
+            privateCarPrice: privateCarPrice !== '' ? Number(privateCarPrice) : null,
+            privateVanPrice: privateVanPrice !== '' ? Number(privateVanPrice) : null,
+            privateBusPrice: null
+        };
+        
+        if (isNew || !tourId) {
+            tourObj.id = 't_' + Date.now();
+            (masterDb.tours = masterDb.tours || []).push(tourObj);
+            showNotification(`✅ Added new tour "${name}" to Master DB & Cloud!`, false);
+        } else {
+            tourObj.id = tourId;
+            const idx = (masterDb.tours || []).findIndex(t => t.id === tourId);
+            if (idx !== -1) {
+                masterDb.tours[idx] = tourObj;
+                showNotification(`✅ Updated tour "${name}" in Master DB & Cloud!`, false);
+            } else {
+                (masterDb.tours = masterDb.tours || []).push(tourObj);
+            }
+        }
+        
+        await saveMasterDatabaseToFirebase(true);
+        populateQuickTourDropdown();
+        document.getElementById('quickTourSelect').value = tourObj.id;
+        document.getElementById('quickTourId').value = tourObj.id;
+        const status = document.getElementById('quickTourStatus');
+        if (status) status.innerHTML = `<span class="text-green-600 font-bold">Saved to Cloud!</span>`;
+    }
+
+    function resetQuickTourEditor() {
+        document.getElementById('quickTourId').value = '';
+        document.getElementById('quickTourName').value = '';
+        document.getElementById('quickTourLocation').value = '';
+        document.getElementById('quickTourJoinPrice').value = '';
+        document.getElementById('quickTourTicketPrice').value = '';
+        document.getElementById('quickTourCarPrice').value = '';
+        document.getElementById('quickTourVanPrice').value = '';
+        if (document.getElementById('quickTourSelect')) document.getElementById('quickTourSelect').value = '';
+        const status = document.getElementById('quickTourStatus');
+        if (status) status.innerText = 'Ready to edit or add';
+    }
+
+    // ── QUICK HOTELS LIVE EDITOR ──
+    function populateQuickHotelDropdown(searchVal = '') {
+        const select = document.getElementById('quickHotelSelect');
+        if (!select) return;
+        searchVal = (searchVal || '').trim().toLowerCase();
+        
+        let hotels = masterDb.hotels || [];
+        if (searchVal) {
+            hotels = hotels.filter(h => (h.name || '').toLowerCase().includes(searchVal) || (h.location || '').toLowerCase().includes(searchVal));
+        }
+        
+        let html = `<option value="">-- Select Hotel to Edit (${hotels.length} available) --</option>`;
+        hotels.forEach(h => {
+            const loc = h.location ? ` [${h.location}]` : '';
+            html += `<option value="${h.id}">${h.name}${loc} (${h.star}* - ${h.price} THB)</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    function filterQuickHotelList() {
+        const val = document.getElementById('quickHotelSearch')?.value || '';
+        populateQuickHotelDropdown(val);
+    }
+
+    function clearQuickHotelSearch() {
+        const inp = document.getElementById('quickHotelSearch');
+        if (inp) inp.value = '';
+        populateQuickHotelDropdown('');
+    }
+
+    function loadHotelIntoQuickEditor() {
+        const select = document.getElementById('quickHotelSelect');
+        if (!select || !select.value) {
+            resetQuickHotelEditor();
+            return;
+        }
+        const hotel = (masterDb.hotels || []).find(h => h.id === select.value);
+        if (!hotel) return;
+        
+        document.getElementById('quickHotelId').value = hotel.id;
+        document.getElementById('quickHotelName').value = hotel.name || '';
+        document.getElementById('quickHotelLocation').value = (hotel.location || '').trim();
+        document.getElementById('quickHotelStar').value = String(hotel.star || '3');
+        document.getElementById('quickHotelPrice').value = hotel.price || '';
+        document.getElementById('quickHotelMealPrice').value = hotel.mealPrice || '';
+        
+        const status = document.getElementById('quickHotelStatus');
+        if (status) status.innerHTML = `<span class="text-blue-600 font-semibold">Editing: "${(hotel.name || '').substring(0, 25)}..."</span>`;
+    }
+
+    async function saveQuickHotel(isNew = false) {
+        const name = document.getElementById('quickHotelName')?.value.trim();
+        const location = document.getElementById('quickHotelLocation')?.value.trim();
+        const star = document.getElementById('quickHotelStar')?.value || '3';
+        const price = parseFloat(document.getElementById('quickHotelPrice')?.value) || 0;
+        const mealPrice = parseFloat(document.getElementById('quickHotelMealPrice')?.value) || 0;
+        const hotelId = document.getElementById('quickHotelId')?.value;
+        
+        if (!name || price <= 0) {
+            showNotification("Please enter a Hotel Name and valid Room Price.", true);
+            return;
+        }
+        
+        const hotelObj = {
+            name,
+            location,
+            star: String(star),
+            price: Number(price),
+            mealPrice: Number(mealPrice)
+        };
+        
+        if (isNew || !hotelId) {
+            hotelObj.id = 'h_' + Date.now();
+            (masterDb.hotels = masterDb.hotels || []).push(hotelObj);
+            showNotification(`✅ Added new hotel "${name}" to Master DB & Cloud!`, false);
+        } else {
+            hotelObj.id = hotelId;
+            const idx = (masterDb.hotels || []).findIndex(h => h.id === hotelId);
+            if (idx !== -1) {
+                masterDb.hotels[idx] = hotelObj;
+                showNotification(`✅ Updated hotel "${name}" in Master DB & Cloud!`, false);
+            } else {
+                (masterDb.hotels = masterDb.hotels || []).push(hotelObj);
+            }
+        }
+        
+        await saveMasterDatabaseToFirebase(true);
+        populateQuickHotelDropdown();
+        document.getElementById('quickHotelSelect').value = hotelObj.id;
+        document.getElementById('quickHotelId').value = hotelObj.id;
+        const status = document.getElementById('quickHotelStatus');
+        if (status) status.innerHTML = `<span class="text-green-600 font-bold">Saved to Cloud!</span>`;
+    }
+
+    function resetQuickHotelEditor() {
+        document.getElementById('quickHotelId').value = '';
+        document.getElementById('quickHotelName').value = '';
+        document.getElementById('quickHotelLocation').value = '';
+        document.getElementById('quickHotelStar').value = '3';
+        document.getElementById('quickHotelPrice').value = '';
+        document.getElementById('quickHotelMealPrice').value = '';
+        if (document.getElementById('quickHotelSelect')) document.getElementById('quickHotelSelect').value = '';
+        const status = document.getElementById('quickHotelStatus');
+        if (status) status.innerText = 'Ready to edit or add';
+    }
+
+    // ── QUICK TRANSFERS LIVE EDITOR ──
+    function populateQuickTransferDropdown(searchVal = '') {
+        const select = document.getElementById('quickTransferSelect');
+        if (!select) return;
+        searchVal = (searchVal || '').trim().toLowerCase();
+        
+        let transfers = masterDb.transfers || [];
+        if (searchVal) {
+            transfers = transfers.filter(tr => (tr.name || '').toLowerCase().includes(searchVal) || (tr.location || '').toLowerCase().includes(searchVal));
+        }
+        
+        let html = `<option value="">-- Select Transfer to Edit (${transfers.length} available) --</option>`;
+        transfers.forEach(tr => {
+            const loc = tr.location ? ` [${tr.location}]` : '';
+            const priceInfo = tr.carPrice ? `Car: ${tr.carPrice}` : (tr.vanPrice ? `Van: ${tr.vanPrice}` : '');
+            html += `<option value="${tr.id}">${tr.name}${loc} (${priceInfo})</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    function filterQuickTransferList() {
+        const val = document.getElementById('quickTransferSearch')?.value || '';
+        populateQuickTransferDropdown(val);
+    }
+
+    function clearQuickTransferSearch() {
+        const inp = document.getElementById('quickTransferSearch');
+        if (inp) inp.value = '';
+        populateQuickTransferDropdown('');
+    }
+
+    function loadTransferIntoQuickEditor() {
+        const select = document.getElementById('quickTransferSelect');
+        if (!select || !select.value) {
+            resetQuickTransferEditor();
+            return;
+        }
+        const tr = (masterDb.transfers || []).find(t => t.id === select.value);
+        if (!tr) return;
+        
+        document.getElementById('quickTransferId').value = tr.id;
+        document.getElementById('quickTransferName').value = tr.name || '';
+        document.getElementById('quickTransferLocation').value = (tr.location || '').trim();
+        document.getElementById('quickTransferCarPrice').value = tr.carPrice !== null && tr.carPrice !== undefined ? tr.carPrice : '';
+        document.getElementById('quickTransferVanPrice').value = tr.vanPrice !== null && tr.vanPrice !== undefined ? tr.vanPrice : '';
+        document.getElementById('quickTransferBusPrice').value = tr.busPrice !== null && tr.busPrice !== undefined ? tr.busPrice : '';
+        
+        const status = document.getElementById('quickTransferStatus');
+        if (status) status.innerHTML = `<span class="text-orange-600 font-semibold">Editing: "${(tr.name || '').substring(0, 25)}..."</span>`;
+    }
+
+    async function saveQuickTransfer(isNew = false) {
+        const name = document.getElementById('quickTransferName')?.value.trim();
+        const location = document.getElementById('quickTransferLocation')?.value.trim();
+        const carPrice = document.getElementById('quickTransferCarPrice')?.value;
+        const vanPrice = document.getElementById('quickTransferVanPrice')?.value;
+        const busPrice = document.getElementById('quickTransferBusPrice')?.value;
+        const trId = document.getElementById('quickTransferId')?.value;
+        
+        if (!name) {
+            showNotification("Please enter a Transfer Route Name.", true);
+            return;
+        }
+        
+        const trObj = {
+            name,
+            location,
+            carPrice: carPrice !== '' ? Number(carPrice) : null,
+            vanPrice: vanPrice !== '' ? Number(vanPrice) : null,
+            busPrice: busPrice !== '' ? Number(busPrice) : null
+        };
+        
+        if (isNew || !trId) {
+            trObj.id = 'tr_' + Date.now();
+            (masterDb.transfers = masterDb.transfers || []).push(trObj);
+            showNotification(`✅ Added new transfer "${name}" to Master DB & Cloud!`, false);
+        } else {
+            trObj.id = trId;
+            const idx = (masterDb.transfers || []).findIndex(t => t.id === trId);
+            if (idx !== -1) {
+                masterDb.transfers[idx] = trObj;
+                showNotification(`✅ Updated transfer "${name}" in Master DB & Cloud!`, false);
+            } else {
+                (masterDb.transfers = masterDb.transfers || []).push(trObj);
+            }
+        }
+        
+        await saveMasterDatabaseToFirebase(true);
+        populateQuickTransferDropdown();
+        document.getElementById('quickTransferSelect').value = trObj.id;
+        document.getElementById('quickTransferId').value = trObj.id;
+        const status = document.getElementById('quickTransferStatus');
+        if (status) status.innerHTML = `<span class="text-green-600 font-bold">Saved to Cloud!</span>`;
+    }
+
+    function resetQuickTransferEditor() {
+        document.getElementById('quickTransferId').value = '';
+        document.getElementById('quickTransferName').value = '';
+        document.getElementById('quickTransferLocation').value = '';
+        document.getElementById('quickTransferCarPrice').value = '';
+        document.getElementById('quickTransferVanPrice').value = '';
+        document.getElementById('quickTransferBusPrice').value = '';
+        if (document.getElementById('quickTransferSelect')) document.getElementById('quickTransferSelect').value = '';
+        const status = document.getElementById('quickTransferStatus');
+        if (status) status.innerText = 'Ready to edit or add';
     }
 
     async function loadMasterDatabase(forceReload = false) {
@@ -769,94 +1543,192 @@
         }
     }
 
-    function populateDbDropdowns() {
-        populateCityFilters();
-
+    // ── LIVE FILTERING FOR MASTER DATABASE MODALS ──
+    function filterTourDbOptions(resetSearch = false) {
+        const searchInput = document.getElementById('tourDbSearch');
+        if (resetSearch && searchInput) searchInput.value = '';
+        const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const selectedTourCity = document.getElementById('tourCityFilter') ? document.getElementById('tourCityFilter').value : '';
-        const selectedTransferCity = document.getElementById('transferCityFilter') ? document.getElementById('transferCityFilter').value : '';
-
-        // Tours
         const tourSelect = document.getElementById('tourDbSelect');
-        if (tourSelect) {
-            let html = '<option value="">-- Select from Master Database --</option>';
-            (masterDb.tours || [])
-                .filter(t => !selectedTourCity || t.location === selectedTourCity)
-                .forEach(t => {
+        if (!tourSelect) return;
+
+        let options = [];
+        (masterDb.tours || [])
+            .filter(t => !selectedTourCity || t.location === selectedTourCity)
+            .forEach(t => {
+                const loc = t.location || '';
                 if (t.joinPrice) {
-                    const data = { type: 'join', name: t.name + ' (Join Tour)', price: t.joinPrice, transfer: 0 };
-                    html += `<option value='${JSON.stringify(data)}'>${t.name} (Join Tour) - ${t.joinPrice} THB</option>`;
+                    const data = { id: t.id, baseName: t.name, location: loc, type: 'join', name: t.name + ' (Join Tour)', price: t.joinPrice, transfer: 0 };
+                    const label = `${t.name} (Join Tour) - ${t.joinPrice} THB`;
+                    options.push({ data, label, name: t.name, location: loc });
                 }
                 if (t.ticketOnlyPrice || t.privateCarPrice || t.privateVanPrice || t.privateBusPrice || t.privateTransferPrice) {
                     if (t.privateCarPrice || (!t.privateVanPrice && !t.privateBusPrice && t.privateTransferPrice)) {
                         const carPrice = t.privateCarPrice || t.privateTransferPrice || 0;
-                        const data = { type: 'private', name: t.name + ' (Private - Car)', price: t.ticketOnlyPrice || 0, transfer: carPrice };
-                        html += `<option value='${JSON.stringify(data)}'>${t.name} (Private - Car) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${carPrice}</option>`;
+                        const data = { id: t.id, baseName: t.name, location: loc, type: 'private', name: t.name + ' (Private - Car)', price: t.ticketOnlyPrice || 0, transfer: carPrice };
+                        const label = `${t.name} (Private - Car) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${carPrice}`;
+                        options.push({ data, label, name: t.name, location: loc });
                     }
                     if (t.privateVanPrice) {
-                        const data = { type: 'private', name: t.name + ' (Private - Van)', price: t.ticketOnlyPrice || 0, transfer: t.privateVanPrice };
-                        html += `<option value='${JSON.stringify(data)}'>${t.name} (Private - Van) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${t.privateVanPrice}</option>`;
+                        const data = { id: t.id, baseName: t.name, location: loc, type: 'private', name: t.name + ' (Private - Van)', price: t.ticketOnlyPrice || 0, transfer: t.privateVanPrice };
+                        const label = `${t.name} (Private - Van) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${t.privateVanPrice}`;
+                        options.push({ data, label, name: t.name, location: loc });
                     }
                     if (t.privateBusPrice) {
-                        const data = { type: 'private', name: t.name + ' (Private - Bus)', price: t.ticketOnlyPrice || 0, transfer: t.privateBusPrice };
-                        html += `<option value='${JSON.stringify(data)}'>${t.name} (Private - Bus) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${t.privateBusPrice}</option>`;
+                        const data = { id: t.id, baseName: t.name, location: loc, type: 'private', name: t.name + ' (Private - Bus)', price: t.ticketOnlyPrice || 0, transfer: t.privateBusPrice };
+                        const label = `${t.name} (Private - Bus) - Ticket: ${t.ticketOnlyPrice || 0}, Transfer: ${t.privateBusPrice}`;
+                        options.push({ data, label, name: t.name, location: loc });
                     }
                 }
             });
-            tourSelect.innerHTML = html;
+
+        if (searchVal) {
+            options = options.filter(opt => 
+                opt.label.toLowerCase().includes(searchVal) || 
+                opt.location.toLowerCase().includes(searchVal)
+            );
         }
 
-        // Transfers
+        const placeholder = searchVal 
+            ? `-- Found ${options.length} Tour(s) matching "${searchVal}" --`
+            : '-- Select from Master Database --';
+        let html = `<option value="">${placeholder}</option>`;
+        options.forEach(opt => {
+            html += `<option value='${JSON.stringify(opt.data)}'>${opt.label}</option>`;
+        });
+        tourSelect.innerHTML = html;
+    }
+
+    function clearTourDbSearch() {
+        const inp = document.getElementById('tourDbSearch');
+        if (inp) inp.value = '';
+        filterTourDbOptions();
+    }
+
+    function filterTransferDbOptions(resetSearch = false) {
+        const searchInput = document.getElementById('transferDbSearch');
+        if (resetSearch && searchInput) searchInput.value = '';
+        const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const selectedTransferCity = document.getElementById('transferCityFilter') ? document.getElementById('transferCityFilter').value : '';
         const transferSelect = document.getElementById('transferDbSelect');
-        if (transferSelect) {
-            let html = '<option value="">-- Select from Master Database --</option>';
-            (masterDb.transfers || [])
-                .filter(t => !selectedTransferCity || t.location === selectedTransferCity)
-                .forEach(t => {
+        if (!transferSelect) return;
+
+        let options = [];
+        (masterDb.transfers || [])
+            .filter(t => !selectedTransferCity || t.location === selectedTransferCity)
+            .forEach(t => {
+                const loc = t.location || '';
                 if (t.carPrice || (!t.vanPrice && !t.busPrice && t.price)) {
                     const price = t.carPrice || t.price || 0;
                     const name = t.name + (t.vehicleType && t.vehicleType !== 'Any' ? ` (${t.vehicleType})` : ' (Car)');
-                    const data = { name: name, price: price };
-                    html += `<option value='${JSON.stringify(data)}'>${name} - ${price} THB</option>`;
+                    const data = { id: t.id, baseName: t.name, location: loc, name: name, price: price };
+                    const label = `${name} - ${price} THB`;
+                    options.push({ data, label, name: t.name, location: loc });
                 }
                 if (t.vanPrice) {
                     const name = t.name + ' (Van)';
-                    const data = { name: name, price: t.vanPrice };
-                    html += `<option value='${JSON.stringify(data)}'>${name} - ${t.vanPrice} THB</option>`;
+                    const data = { id: t.id, baseName: t.name, location: loc, name: name, price: t.vanPrice };
+                    const label = `${name} - ${t.vanPrice} THB`;
+                    options.push({ data, label, name: t.name, location: loc });
                 }
                 if (t.busPrice) {
                     const name = t.name + ' (Bus)';
-                    const data = { name: name, price: t.busPrice };
-                    html += `<option value='${JSON.stringify(data)}'>${name} - ${t.busPrice} THB</option>`;
+                    const data = { id: t.id, baseName: t.name, location: loc, name: name, price: t.busPrice };
+                    const label = `${name} - ${t.busPrice} THB`;
+                    options.push({ data, label, name: t.name, location: loc });
                 }
             });
-            transferSelect.innerHTML = html;
+
+        if (searchVal) {
+            options = options.filter(opt => 
+                opt.label.toLowerCase().includes(searchVal) || 
+                opt.location.toLowerCase().includes(searchVal)
+            );
         }
 
-        // Hotels
-        [3, 4, 5].forEach(star => {
-            const select = document.getElementById('city' + star + 'StarDbSelect');
-            if (select) {
-                let html = `<option value="">-- Search ${star}* Database --</option>`;
-                (masterDb.hotels || []).filter(h => parseInt(h.star) === star).forEach(h => {
-                    const data = { name: h.name, price: h.price, meal: h.mealPrice || 0 };
-                    const locText = h.location ? ` [${h.location}]` : '';
-                    html += `<option value='${JSON.stringify(data)}'>${h.name}${locText} - ${h.price} THB</option>`;
-                });
-                select.innerHTML = html;
-            }
+        const placeholder = searchVal 
+            ? `-- Found ${options.length} Transfer(s) matching "${searchVal}" --`
+            : '-- Select from Master Database --';
+        let html = `<option value="">${placeholder}</option>`;
+        options.forEach(opt => {
+            html += `<option value='${JSON.stringify(opt.data)}'>${opt.label}</option>`;
         });
+        transferSelect.innerHTML = html;
+    }
 
-        // City Names dropdown (unique city/location names from hotels)
-        const cityNameSelect = document.getElementById('cityNameDbSelect');
-        if (cityNameSelect) {
-            const hotelLocations = (masterDb.hotels || []).map(h => (h.location || '').trim()).filter(Boolean);
-            const tourLocations = (masterDb.tours || []).map(t => (t.location || '').trim()).filter(Boolean);
-            const transferLocations = (masterDb.transfers || []).map(t => (t.location || '').trim()).filter(Boolean);
-            const allCities = [...new Set([...hotelLocations, ...tourLocations, ...transferLocations])].sort();
-            let html = '<option value="">-- Select City from Database --</option>';
-            allCities.forEach(c => html += `<option value="${c}">${c}</option>`);
-            cityNameSelect.innerHTML = html;
+    function clearTransferDbSearch() {
+        const inp = document.getElementById('transferDbSearch');
+        if (inp) inp.value = '';
+        filterTransferDbOptions();
+    }
+
+    function filterHotelDbOptions(star, resetSearch = false) {
+        const searchInput = document.getElementById(`hotel${star}DbSearch`);
+        if (resetSearch && searchInput) searchInput.value = '';
+        const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const select = document.getElementById('city' + star + 'StarDbSelect');
+        if (!select) return;
+
+        let hotels = (masterDb.hotels || []).filter(h => parseInt(h.star) === star);
+        if (searchVal) {
+            hotels = hotels.filter(h => 
+                (h.name || '').toLowerCase().includes(searchVal) || 
+                (h.location || '').toLowerCase().includes(searchVal)
+            );
         }
+
+        const placeholder = searchVal 
+            ? `-- Found ${hotels.length} Hotel(s) (${star}*) --`
+            : `-- Search ${star}* Database --`;
+        let html = `<option value="">${placeholder}</option>`;
+        hotels.forEach(h => {
+            const data = { name: h.name, price: h.price, meal: h.mealPrice || 0 };
+            const locText = h.location ? ` [${h.location}]` : '';
+            html += `<option value='${JSON.stringify(data)}'>${h.name}${locText} - ${h.price} THB</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    function clearHotelDbSearch(star) {
+        const inp = document.getElementById(`hotel${star}DbSearch`);
+        if (inp) inp.value = '';
+        filterHotelDbOptions(star);
+    }
+
+    function filterCityNameOptions(resetSearch = false) {
+        const searchInput = document.getElementById('cityDbSearch');
+        if (resetSearch && searchInput) searchInput.value = '';
+        const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const cityNameSelect = document.getElementById('cityNameDbSelect');
+        if (!cityNameSelect) return;
+
+        const hotelLocations = (masterDb.hotels || []).map(h => (h.location || '').trim()).filter(Boolean);
+        const tourLocations = (masterDb.tours || []).map(t => (t.location || '').trim()).filter(Boolean);
+        const transferLocations = (masterDb.transfers || []).map(t => (t.location || '').trim()).filter(Boolean);
+        let allCities = [...new Set([...hotelLocations, ...tourLocations, ...transferLocations])].sort();
+
+        if (searchVal) {
+            allCities = allCities.filter(c => c.toLowerCase().includes(searchVal));
+        }
+
+        const placeholder = searchVal ? `-- Found ${allCities.length} Cities --` : '-- Select City from Database --';
+        let html = `<option value="">${placeholder}</option>`;
+        allCities.forEach(c => html += `<option value="${c}">${c}</option>`);
+        cityNameSelect.innerHTML = html;
+    }
+
+    function clearCityDbSearch() {
+        const inp = document.getElementById('cityDbSearch');
+        if (inp) inp.value = '';
+        filterCityNameOptions();
+    }
+
+    function populateDbDropdowns() {
+        populateCityFilters();
+        filterTourDbOptions();
+        filterTransferDbOptions();
+        [3, 4, 5].forEach(star => filterHotelDbOptions(star));
+        filterCityNameOptions();
 
         // Extras
         const populateExtra = (id, type) => {
@@ -908,6 +1780,9 @@
             }
         });
     }
+    let currentSelectedModalTourDbId = null;
+    let currentSelectedModalTransferDbId = null;
+
     function fillTourFromDb() {
         const select = document.getElementById('tourDbSelect');
         if (!select.value) return;
@@ -916,6 +1791,17 @@
             document.getElementById('newTourName').value = data.name;
             document.getElementById('newTourPrice').value = data.price;
             document.getElementById('newTourTransferPrice').value = data.transfer;
+
+            currentSelectedModalTourDbId = data.id || null;
+            const cityInp = document.getElementById('modalTourMasterCity');
+            if (cityInp) cityInp.value = data.location || document.getElementById('tourCityFilter')?.value || '';
+            const badge = document.getElementById('modalTourMasterStatusBadge');
+            if (badge) {
+                badge.innerText = data.baseName ? `Linked: ${data.baseName.substring(0, 20)}` : 'Linked to Master DB';
+                badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800';
+            }
+            const chk = document.getElementById('modalSyncTourToDbCheckbox');
+            if (chk) chk.checked = true;
         } catch(e) {}
     }
 
@@ -926,7 +1812,158 @@
             const data = JSON.parse(select.value);
             document.getElementById('newTransferName').value = data.name;
             document.getElementById('newTransferPrice').value = data.price;
+
+            currentSelectedModalTransferDbId = data.id || null;
+            const cityInp = document.getElementById('modalTransferMasterCity');
+            if (cityInp) cityInp.value = data.location || document.getElementById('transferCityFilter')?.value || '';
+            const badge = document.getElementById('modalTransferMasterStatusBadge');
+            if (badge) {
+                badge.innerText = data.baseName ? `Linked: ${data.baseName.substring(0, 20)}` : 'Linked to Master DB';
+                badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800';
+            }
+            const chk = document.getElementById('modalSyncTransferToDbCheckbox');
+            if (chk) chk.checked = true;
         } catch(e) {}
+    }
+
+    async function quickSaveModalTourToMasterDb(silent = false) {
+        const name = document.getElementById('newTourName')?.value.trim();
+        const price = parseFloat(document.getElementById('newTourPrice')?.value) || 0;
+        const transferPrice = parseFloat(document.getElementById('newTourTransferPrice')?.value) || 0;
+        const location = document.getElementById('modalTourMasterCity')?.value.trim() || document.getElementById('tourCityFilter')?.value.trim() || '';
+        
+        if (!name) {
+            if (!silent) showNotification("Please enter a Tour Name.", true);
+            return false;
+        }
+        
+        let existingTour = null;
+        if (currentSelectedModalTourDbId) {
+            existingTour = (masterDb.tours || []).find(t => t.id === currentSelectedModalTourDbId);
+        }
+        if (!existingTour) {
+            const cleanBase = name.replace(/\s*\((Join Tour|Private.*)\)/i, '').trim().toLowerCase();
+            existingTour = (masterDb.tours || []).find(t => (t.name || '').toLowerCase() === cleanBase);
+        }
+        
+        if (existingTour) {
+            if (transferPrice > 0) {
+                existingTour.ticketOnlyPrice = price;
+                existingTour.privateCarPrice = transferPrice;
+            } else {
+                existingTour.joinPrice = price;
+            }
+            if (location) existingTour.location = location;
+        } else {
+            const newTourObj = {
+                id: 't_' + Date.now(),
+                name: name.replace(/\s*\((Join Tour|Private.*)\)/i, '').trim(),
+                location: location,
+                joinPrice: transferPrice === 0 ? price : null,
+                ticketOnlyPrice: transferPrice > 0 ? price : null,
+                privateCarPrice: transferPrice > 0 ? transferPrice : null,
+                privateVanPrice: null,
+                privateBusPrice: null
+            };
+            (masterDb.tours = masterDb.tours || []).push(newTourObj);
+            currentSelectedModalTourDbId = newTourObj.id;
+        }
+        
+        await saveMasterDatabaseToFirebase(silent);
+        const badge = document.getElementById('modalTourMasterStatusBadge');
+        if (badge) {
+            badge.innerText = 'Linked & Synced';
+            badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800';
+        }
+        if (!silent) showNotification(`✅ Tour "${name}" synced to Master DB & Cloud!`, false);
+        return true;
+    }
+
+    async function quickSaveModalTransferToMasterDb(silent = false) {
+        const name = document.getElementById('newTransferName')?.value.trim();
+        const price = parseFloat(document.getElementById('newTransferPrice')?.value) || 0;
+        const location = document.getElementById('modalTransferMasterCity')?.value.trim() || document.getElementById('transferCityFilter')?.value.trim() || '';
+        
+        if (!name) {
+            if (!silent) showNotification("Please enter a Transfer Name.", true);
+            return false;
+        }
+        
+        let existingTr = null;
+        if (currentSelectedModalTransferDbId) {
+            existingTr = (masterDb.transfers || []).find(t => t.id === currentSelectedModalTransferDbId);
+        }
+        if (!existingTr) {
+            const cleanBase = name.replace(/\s*\((Car|Van|Bus)\)/i, '').trim().toLowerCase();
+            existingTr = (masterDb.transfers || []).find(t => (t.name || '').toLowerCase() === cleanBase);
+        }
+        
+        if (existingTr) {
+            existingTr.carPrice = price;
+            if (location) existingTr.location = location;
+        } else {
+            const newTrObj = {
+                id: 'tr_' + Date.now(),
+                name: name.replace(/\s*\((Car|Van|Bus)\)/i, '').trim(),
+                location: location,
+                carPrice: price,
+                vanPrice: null,
+                busPrice: null
+            };
+            (masterDb.transfers = masterDb.transfers || []).push(newTrObj);
+            currentSelectedModalTransferDbId = newTrObj.id;
+        }
+        
+        await saveMasterDatabaseToFirebase(silent);
+        const badge = document.getElementById('modalTransferMasterStatusBadge');
+        if (badge) {
+            badge.innerText = 'Linked & Synced';
+            badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800';
+        }
+        if (!silent) showNotification(`✅ Transfer "${name}" synced to Master DB & Cloud!`, false);
+        return true;
+    }
+
+    async function quickSaveModalHotelsToMasterDb(silent = false) {
+        const cityName = document.getElementById('newCityName')?.value.trim() || '';
+        let updatedCount = 0;
+        
+        const checkAndSaveHotel = (star, nameId, priceId, mealId) => {
+            const name = document.getElementById(nameId)?.value.trim();
+            const price = parseFloat(document.getElementById(priceId)?.value) || 0;
+            const meal = parseFloat(document.getElementById(mealId)?.value) || 0;
+            if (!name || price <= 0) return;
+            
+            let existingH = (masterDb.hotels || []).find(h => (h.name || '').toLowerCase() === name.toLowerCase());
+            if (existingH) {
+                existingH.price = price;
+                existingH.mealPrice = meal;
+                if (cityName) existingH.location = cityName;
+                existingH.star = String(star);
+            } else {
+                const newH = {
+                    id: 'h_' + Date.now() + '_' + star,
+                    name: name,
+                    location: cityName,
+                    star: String(star),
+                    price: price,
+                    mealPrice: meal
+                };
+                (masterDb.hotels = masterDb.hotels || []).push(newH);
+            }
+            updatedCount++;
+        };
+        
+        checkAndSaveHotel(3, 'newCity3StarName', 'newCity3StarPrice', 'newCity3StarMeal');
+        checkAndSaveHotel(4, 'newCity4StarName', 'newCity4StarPrice', 'newCity4StarMeal');
+        checkAndSaveHotel(5, 'newCity5StarName', 'newCity5StarPrice', 'newCity5StarMeal');
+        
+        if (updatedCount > 0) {
+            await saveMasterDatabaseToFirebase(silent);
+            if (!silent) showNotification(`✅ Synced ${updatedCount} Hotel(s) to Master DB & Cloud!`, false);
+        } else {
+            if (!silent) showNotification("Please enter at least one hotel name and price.", true);
+        }
     }
 
     function fillHotelFromDb(star) {
@@ -1073,12 +2110,24 @@
             populateDbDropdowns();
         }
         document.getElementById(modalId).style.display = 'flex'; 
+        // Auto-focus search input for instant typing
+        setTimeout(() => {
+            if (modalId === 'tourModal' && document.getElementById('tourDbSearch')) {
+                document.getElementById('tourDbSearch').focus();
+            } else if (modalId === 'transferModal' && document.getElementById('transferDbSearch')) {
+                document.getElementById('transferDbSearch').focus();
+            } else if (modalId === 'cityModal' && document.getElementById('cityDbSearch')) {
+                document.getElementById('cityDbSearch').focus();
+            }
+        }, 60);
     }
     
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
         // Reset modal to "Add" mode
         if (modalId === 'tourModal') {
+            clearTourDbSearch();
+            currentSelectedModalTourDbId = null;
             document.getElementById('tourModalTitle').innerText = 'Add New Tour';
             const saveButton = document.getElementById('saveTourButton');
             saveButton.innerText = 'Add Tour';
@@ -1086,14 +2135,32 @@
             document.getElementById('newTourName').value = '';
             document.getElementById('newTourPrice').value = '';
             document.getElementById('newTourTransferPrice').value = '';
+            const tourBadge = document.getElementById('modalTourMasterStatusBadge');
+            if (tourBadge) { tourBadge.innerText = 'Custom / New'; tourBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700'; }
+            const tourCity = document.getElementById('modalTourMasterCity');
+            if (tourCity) tourCity.value = '';
+            const syncChk = document.getElementById('modalSyncTourToDbCheckbox');
+            if (syncChk) syncChk.checked = false;
         } else if (modalId === 'transferModal') {
+            clearTransferDbSearch();
+            currentSelectedModalTransferDbId = null;
             document.getElementById('transferModalTitle').innerText = 'Add New Transfer';
             const saveButton = document.getElementById('saveTransferButton');
             saveButton.innerText = 'Add Transfer';
             saveButton.onclick = () => saveTransfer();
             document.getElementById('newTransferName').value = '';
             document.getElementById('newTransferPrice').value = '';
+            const trBadge = document.getElementById('modalTransferMasterStatusBadge');
+            if (trBadge) { trBadge.innerText = 'Custom / New'; trBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700'; }
+            const trCity = document.getElementById('modalTransferMasterCity');
+            if (trCity) trCity.value = '';
+            const syncTrChk = document.getElementById('modalSyncTransferToDbCheckbox');
+            if (syncTrChk) syncTrChk.checked = false;
         } else if (modalId === 'cityModal') {
+            clearCityDbSearch();
+            clearHotelDbSearch(3);
+            clearHotelDbSearch(4);
+            clearHotelDbSearch(5);
             document.getElementById('cityModalTitle').innerText = 'Add New City Stay';
             const saveButton = document.getElementById('saveCityButton');
             saveButton.innerText = 'Add City';
@@ -1116,6 +2183,8 @@
             document.getElementById('newCity5StarPrice').value = '';
             document.getElementById('newCity5StarMeal').value = '';
             document.getElementById('newCityMixPref').value = '3';
+            const syncHChk = document.getElementById('modalSyncHotelsToDbCheckbox');
+            if (syncHChk) syncHChk.checked = false;
         }
     }
 
@@ -1188,6 +2257,12 @@
             tourData.selected = true;
             availableTours.push(tourData);
         }
+
+        const syncCheckbox = document.getElementById('modalSyncTourToDbCheckbox');
+        if (syncCheckbox && syncCheckbox.checked) {
+            quickSaveModalTourToMasterDb(true);
+        }
+
         closeModal('tourModal');
         renderTours();
     }
@@ -1207,6 +2282,12 @@
             transferData.selected = true;
             availableTransfers.push(transferData);
         }
+
+        const syncCheckbox = document.getElementById('modalSyncTransferToDbCheckbox');
+        if (syncCheckbox && syncCheckbox.checked) {
+            quickSaveModalTransferToMasterDb(true);
+        }
+
         closeModal('transferModal');
         renderTransfers();
     }
@@ -1259,6 +2340,12 @@
             cityData.selected = true;
             availableCities.push(cityData);
         }
+
+        const syncHotelsCheckbox = document.getElementById('modalSyncHotelsToDbCheckbox');
+        if (syncHotelsCheckbox && syncHotelsCheckbox.checked) {
+            quickSaveModalHotelsToMasterDb(true);
+        }
+
         closeModal('cityModal');
         renderCities();
     }
@@ -1960,6 +3047,7 @@
     // Initial render on page load
     window.onload = async () => {
         await loadMasterDatabase();
+        updateMasterDbCounts();
         renderAll();
     };
 

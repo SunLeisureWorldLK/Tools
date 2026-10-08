@@ -317,27 +317,65 @@
     </div>
 
     <!-- ⚡ 1-Click Itinerary Package Presets (Popular Packages from Itinerary Builder) -->
-    <div id="itineraryPresetsSection" class="mb-8 p-5 bg-gradient-to-br from-teal-50/70 via-blue-50/50 to-indigo-50/60 rounded-xl border-2 border-teal-300 shadow-md transition-all">
+        <div id="itineraryPresetsSection" class="mb-8 p-5 bg-gradient-to-br from-teal-50/70 via-blue-50/50 to-indigo-50/60 rounded-xl border-2 border-teal-300 shadow-md transition-all">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-3 mb-4 border-b border-teal-200/80 gap-3">
             <div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-2xl animate-pulse">⚡</span>
                     <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         1-Click Itinerary Package Presets
                     </h3>
                     <span class="bg-teal-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">Fast Costing</span>
+                    <span id="presetCloudSyncBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-emerald-300">
+                        <i class="fas fa-cloud text-emerald-600"></i> <span id="presetCloudSyncText">Presets Ready</span>
+                    </span>
                 </div>
                 <p class="text-xs text-gray-600 mt-1">
-                    Select a popular Thailand package below to instantly populate Tours, Transfers, Hotels, and Nights with live Master DB rates!
+                    Click any package to auto-cost all hotels, tours & transfers. Modify prices or items anytime and save them back to the package!
                 </p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 <button onclick="document.getElementById('importItineraryJsonFile').click()" class="py-2 px-3 bg-white hover:bg-teal-50 text-teal-800 border border-teal-300 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5" title="Import JSON exported from Itinerary Builder">
-                    <i class="fas fa-file-code text-teal-600"></i> <span>Import Itinerary JSON</span>
+                    <i class="fas fa-file-code text-teal-600"></i> <span>Import JSON</span>
                 </button>
                 <input type="file" id="importItineraryJsonFile" style="display: none;" accept=".json" onchange="handleItineraryJsonUpload(event)">
-                <button onclick="saveCurrentCostingAsPreset()" class="py-2 px-3 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-300 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5" title="Save current costing setup as a reusable custom preset">
-                    <i class="fas fa-bookmark text-indigo-600"></i> <span>Save as Custom Preset</span>
+                <button onclick="openPresetModal(null, true)" class="py-2 px-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5" title="Save current costing setup as a new package preset">
+                    <i class="fas fa-plus-circle"></i> <span>Add New Package</span>
+                </button>
+                <button onclick="resetDefaultCostingPresets()" class="py-2 px-2.5 bg-white hover:bg-gray-100 text-gray-600 border border-gray-300 rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1" title="Restore factory standard Thailand packages">
+                    <i class="fas fa-undo text-gray-400"></i> <span>Reset Defaults</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Active Package Action Bar (Shows when a package is selected) -->
+        <div id="activePresetStatusBar" class="hidden mb-4 p-3.5 bg-white rounded-xl border-2 border-emerald-400 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 transition-all">
+            <div class="flex items-center gap-3">
+                <span class="flex h-3.5 w-3.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+                </span>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Active Package:</span>
+                        <span id="activePresetTitle" class="text-sm font-bold text-gray-900">03N 04D Bangkok</span>
+                        <span id="activePresetBadge" class="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded border border-emerald-300 uppercase">BEST SELLER</span>
+                    </div>
+                    <p id="activePresetDesc" class="text-[11px] text-gray-500 mt-0.5">Modify any price or service below. Click "Save Changes to This Package" to update it permanently.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 w-full md:w-auto flex-wrap">
+                <button onclick="saveChangesToActivePreset()" class="flex-1 md:flex-none py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center justify-center gap-1.5" title="Save current prices and services back into this package preset">
+                    <i class="fas fa-save"></i> <span>Save Changes to This Package</span>
+                </button>
+                <button onclick="openPresetModal(activeLoadedPresetKey, false)" class="py-2 px-3 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Edit Package Title, Badge, or Category">
+                    <i class="fas fa-pen"></i> <span>Edit Info</span>
+                </button>
+                <button onclick="openPresetModal(null, true)" class="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Save as a brand new package">
+                    <i class="fas fa-copy"></i> <span>Save as New</span>
+                </button>
+                <button onclick="unlinkActivePreset()" class="py-2 px-2.5 text-gray-400 hover:text-gray-700 rounded-lg text-xs font-semibold transition" title="Unlink / Deselect active package">
+                    ✕
                 </button>
             </div>
         </div>
@@ -975,6 +1013,88 @@
         </button>
     </div>
 </div><div class="flex gap-4 mt-6"><button id="saveCityButton" onclick="saveCity()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add City</button><button onclick="closeModal('cityModal')" class="flex-1 py-2 px-4 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button></div></div></div>
+
+<!-- Package Preset Manager Modal -->
+<div id="costingPresetModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content max-w-xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 mb-4 border-b">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl text-teal-600">⚡</span>
+                <h3 id="costingPresetModalTitle" class="text-xl font-bold text-gray-800">Package Preset Manager</h3>
+            </div>
+            <button onclick="closeModal('costingPresetModal')" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+        </div>
+
+        <input type="hidden" id="presetEditKey" value="">
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Package Title <span class="text-red-500">*</span></label>
+                <input type="text" id="presetModalTitleInput" placeholder="e.g. 03N 04D Bangkok Safari Tour" class="w-full p-2.5 border rounded-lg text-sm font-semibold focus:ring-2 focus:ring-teal-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Category</label>
+                    <select id="presetModalCatSelect" class="w-full p-2.5 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 font-medium">
+                        <option value="bangkok">Bangkok</option>
+                        <option value="pattaya">Pattaya + BKK</option>
+                        <option value="phuket">Phuket & Krabi</option>
+                        <option value="combo">Multi-City Combos</option>
+                        <option value="custom">My Custom</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Badge / Tag</label>
+                    <input type="text" id="presetModalBadgeInput" placeholder="e.g. Popular, Best Seller, VIP" class="w-full p-2.5 border rounded-lg text-sm font-semibold focus:ring-2 focus:ring-teal-500">
+                    <div class="flex gap-1.5 mt-1.5 flex-wrap">
+                        <button type="button" onclick="setPresetBadge('Best Seller')" class="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-bold hover:bg-teal-200">Best Seller</button>
+                        <button type="button" onclick="setPresetBadge('Popular')" class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold hover:bg-blue-200">Popular</button>
+                        <button type="button" onclick="setPresetBadge('Top Pick')" class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold hover:bg-emerald-200">Top Pick</button>
+                        <button type="button" onclick="setPresetBadge('Combo')" class="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold hover:bg-indigo-200">Combo</button>
+                        <button type="button" onclick="setPresetBadge('Special')" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold hover:bg-amber-200">Special</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Package Summary (Description)</label>
+                <textarea id="presetModalSummaryInput" rows="2" placeholder="e.g. 3N Bangkok • Chao Phraya Cruise • Dream World • Airport Transfers" class="w-full p-2.5 border rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-teal-500"></textarea>
+            </div>
+
+            <!-- Current Costing Sheet Items Preview / Inclusions -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                        <i class="fas fa-list-check text-teal-600"></i> Package Inclusions & Rates (from Costing Sheet)
+                    </span>
+                    <button type="button" onclick="populatePresetModalItemsPreview()" class="text-[11px] text-teal-700 font-bold hover:underline flex items-center gap-1">
+                        <i class="fas fa-sync-alt"></i> <span>Refresh Items</span>
+                    </button>
+                </div>
+                <div id="presetModalItemsPreview" class="text-xs text-gray-600 space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    <!-- Dynamic preview rendered here -->
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+                <label class="flex items-center text-xs text-teal-900 font-semibold cursor-pointer">
+                    <input type="checkbox" id="presetModalSyncCloud" checked class="mr-1.5 h-4 w-4 text-teal-600 rounded">
+                    <span>Sync to Firebase Cloud (Accessible across all PCs)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mt-5 pt-3 border-t">
+            <button onclick="saveCostingPresetFromModal()" class="flex-1 py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-save"></i> <span>Save Package Preset</span>
+            </button>
+            <button onclick="closeModal('costingPresetModal')" class="py-2.5 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition text-sm">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Notification element -->
 <div id="notification" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0 z-50"></div>
@@ -3092,8 +3212,9 @@
     // ══════════════════════════════════════════════════════════════════
     // ⚡ 1-CLICK ITINERARY PACKAGE PRESETS ENGINE (ITINERARY BUILDER)
     // ══════════════════════════════════════════════════════════════════
-    const ITINERARY_PRESETS = {
+    const DEFAULT_ITINERARY_PRESETS = {
         'bkk_3n': {
+            id: 'bkk_3n',
             title: '03N 04D Bangkok',
             cat: 'bangkok',
             badge: 'Best Seller',
@@ -3109,6 +3230,7 @@
             ]
         },
         'bkk_4n': {
+            id: 'bkk_4n',
             title: '04N 05D Bangkok',
             cat: 'bangkok',
             badge: 'Popular',
@@ -3125,6 +3247,7 @@
             ]
         },
         'pat_2n_bkk_3n': {
+            id: 'pat_2n_bkk_3n',
             title: '02N Pattaya 03N Bangkok',
             cat: 'pattaya',
             badge: 'Top Pick',
@@ -3146,6 +3269,7 @@
             ]
         },
         'pat_1n_bkk_3n': {
+            id: 'pat_1n_bkk_3n',
             title: '01N Pattaya 03N Bangkok',
             cat: 'pattaya',
             badge: 'Popular',
@@ -3166,6 +3290,7 @@
             ]
         },
         'pkt_3n': {
+            id: 'pkt_3n',
             title: '03N 04D Phuket',
             cat: 'phuket',
             badge: 'Island Tour',
@@ -3182,6 +3307,7 @@
             ]
         },
         'pkt_3n_new': {
+            id: 'pkt_3n_new',
             title: '03N Phuket New',
             cat: 'phuket',
             badge: 'Speedboat',
@@ -3197,6 +3323,7 @@
             ]
         },
         'pkt_2n_bkk_3n': {
+            id: 'pkt_2n_bkk_3n',
             title: '02N Phuket 03N Bangkok',
             cat: 'combo',
             badge: 'Best Combo',
@@ -3218,6 +3345,7 @@
             ]
         },
         'pkt_3n_kb_2n': {
+            id: 'pkt_3n_kb_2n',
             title: '03N Phuket 02N Krabi',
             cat: 'phuket',
             badge: 'Tropical',
@@ -3236,6 +3364,7 @@
             ]
         },
         'combo_6n': {
+            id: 'combo_6n',
             title: '2N Phuket 2N Pattaya 2N Bangkok',
             cat: 'combo',
             badge: 'Grand 6N',
@@ -3261,6 +3390,7 @@
             ]
         },
         'combo_4n': {
+            id: 'combo_4n',
             title: '2N Phuket 2N Pattaya',
             cat: 'combo',
             badge: 'Dual City',
@@ -3283,7 +3413,101 @@
         }
     };
 
+    let costingPresets = {};
+    let activeLoadedPresetKey = null;
     let activePresetCategory = 'all';
+
+    // ── FIREBASE CLOUD & LOCAL STORAGE SYNC ──
+    async function loadCostingPresetsFromCloud() {
+        let loaded = null;
+        try {
+            if (typeof db !== 'undefined' && db) {
+                const doc = await db.collection('slw_settings').doc('costing_presets').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data && data.presets && Object.keys(data.presets).length > 0) {
+                        loaded = data.presets;
+                        localStorage.setItem('SLW_Costing_Presets', JSON.stringify(loaded));
+                        updatePresetSyncBadge('cloud');
+                    }
+                }
+            }
+        } catch(e) {
+            console.error("Firebase Costing Presets load error:", e);
+        }
+
+        if (!loaded) {
+            const cached = localStorage.getItem('SLW_Costing_Presets');
+            if (cached) {
+                try {
+                    loaded = JSON.parse(cached);
+                    updatePresetSyncBadge('local');
+                } catch(e){}
+            }
+        }
+
+        if (!loaded || Object.keys(loaded).length === 0) {
+            // First time initialize with DEFAULT presets + any legacy custom presets
+            loaded = JSON.parse(JSON.stringify(DEFAULT_ITINERARY_PRESETS));
+            try {
+                const legacyCustom = JSON.parse(localStorage.getItem('SLW_Custom_Costing_Presets') || '{}');
+                Object.assign(loaded, legacyCustom);
+            } catch(e){}
+            localStorage.setItem('SLW_Costing_Presets', JSON.stringify(loaded));
+            updatePresetSyncBadge('local');
+            // Silent save to cloud if db available
+            saveCostingPresetsToCloud(true);
+        }
+
+        costingPresets = loaded;
+        renderPresetCardsGrid();
+    }
+
+    async function saveCostingPresetsToCloud(silent = false) {
+        try {
+            localStorage.setItem('SLW_Costing_Presets', JSON.stringify(costingPresets));
+            if (typeof db !== 'undefined' && db) {
+                updatePresetSyncBadge('syncing');
+                await db.collection('slw_settings').doc('costing_presets').set({
+                    presets: costingPresets,
+                    updatedAt: new Date().toISOString()
+                });
+                updatePresetSyncBadge('cloud');
+                if (!silent) {
+                    showNotification("☁️ Packages successfully saved & synced to Firebase Cloud!", false);
+                }
+            } else {
+                updatePresetSyncBadge('local');
+                if (!silent) {
+                    showNotification("💾 Packages saved locally (Firebase offline)", false);
+                }
+            }
+        } catch(err) {
+            console.error("Preset Cloud sync error:", err);
+            updatePresetSyncBadge('local');
+            if (!silent) {
+                showNotification("⚠️ Saved locally (Firebase Sync Error: " + err.message + ")", true);
+            }
+        }
+    }
+
+    function updatePresetSyncBadge(status) {
+        const badge = document.getElementById('presetCloudSyncBadge');
+        const text = document.getElementById('presetCloudSyncText');
+        if (!badge || !text) return;
+
+        const count = Object.keys(costingPresets).length;
+        if (status === 'cloud') {
+            badge.className = "bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-emerald-300";
+            badge.innerHTML = `<i class="fas fa-cloud text-emerald-600"></i> <span>Cloud Synced (${count})</span>`;
+        } else if (status === 'syncing') {
+            badge.className = "bg-blue-100 text-blue-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-blue-300";
+            badge.innerHTML = `<i class="fas fa-spinner fa-spin text-blue-600"></i> <span>Syncing...</span>`;
+        } else {
+            badge.className = "bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-amber-300";
+            badge.innerHTML = `<i class="fas fa-database text-amber-600"></i> <span>Local Ready (${count})</span>`;
+        }
+    }
 
     function filterPresetCategory(cat) {
         activePresetCategory = cat;
@@ -3302,227 +3526,517 @@
         if (!container) return;
         container.innerHTML = '';
 
-        // Built-in presets
-        const customPresets = getCustomCostingPresets();
-        const allKeys = Object.keys(ITINERARY_PRESETS);
+        const allKeys = Object.keys(costingPresets);
+
+        // Update category counts
+        let counts = { all: allKeys.length, bangkok: 0, pattaya: 0, phuket: 0, combo: 0, custom: 0 };
+        allKeys.forEach(k => {
+            const cat = costingPresets[k].cat || 'custom';
+            if (counts[cat] !== undefined) counts[cat]++;
+            else counts.custom++;
+        });
+
+        const btnAll = document.getElementById('btnPresetCat-all');
+        const btnBkk = document.getElementById('btnPresetCat-bangkok');
+        const btnPat = document.getElementById('btnPresetCat-pattaya');
+        const btnPkt = document.getElementById('btnPresetCat-phuket');
+        const btnCmb = document.getElementById('btnPresetCat-combo');
+        const btnCst = document.getElementById('btnPresetCat-custom');
+
+        if (btnAll) btnAll.innerText = `All (${counts.all})`;
+        if (btnBkk) btnBkk.innerText = `Bangkok (${counts.bangkok})`;
+        if (btnPat) btnPat.innerText = `Pattaya + BKK (${counts.pattaya})`;
+        if (btnPkt) btnPkt.innerText = `Phuket & Krabi (${counts.phuket})`;
+        if (btnCmb) btnCmb.innerText = `Multi-City Combos (${counts.combo})`;
+        if (btnCst) btnCst.innerText = `My Custom (${counts.custom})`;
 
         allKeys.forEach(key => {
-            const p = ITINERARY_PRESETS[key];
-            if (activePresetCategory !== 'all' && activePresetCategory !== 'custom' && p.cat !== activePresetCategory) {
-                return;
+            const p = costingPresets[key];
+            const pCat = p.cat || 'custom';
+
+            if (activePresetCategory !== 'all') {
+                if (activePresetCategory === 'custom') {
+                    if (pCat !== 'custom' && !key.startsWith('custom_') && !key.startsWith('pkg_')) return;
+                } else if (pCat !== activePresetCategory) {
+                    return;
+                }
             }
-            if (activePresetCategory === 'custom') return;
+
+            const isActive = (key === activeLoadedPresetKey);
+            const tourCount = (p.tours || []).length;
+            const transferCount = (p.transfers || []).length;
+            const summaryText = p.summary || ((p.cities || []).map(c => (c.numberOfNights || c.nights || 1) + 'N ' + c.name).join(' + ') + ` • ${tourCount} Tours • ${transferCount} Transfers`);
 
             const card = document.createElement('div');
-            card.onclick = () => loadItineraryPreset(key);
-            card.className = "cursor-pointer group relative bg-white hover:bg-teal-50/70 p-3.5 rounded-xl border-2 border-teal-200/80 hover:border-teal-500 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between";
+            card.className = `group relative rounded-xl border-2 p-3.5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
+                isActive 
+                    ? 'border-emerald-500 ring-2 ring-emerald-400/80 bg-gradient-to-br from-emerald-50/80 to-teal-50/60' 
+                    : 'border-teal-200/80 hover:border-teal-500 bg-white hover:bg-teal-50/40'
+            }`;
+
             card.innerHTML = `
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-teal-900 group-hover:text-teal-700 truncate pr-1">${p.title}</span>
-                        <span class="text-[9px] bg-teal-100 text-teal-800 font-extrabold px-1.5 py-0.5 rounded uppercase flex-shrink-0">${p.badge}</span>
+                    <div class="flex items-start justify-between gap-1 mb-1.5">
+                        <span class="text-xs font-bold ${isActive ? 'text-emerald-950 font-extrabold' : 'text-gray-800'} truncate pr-1" title="${p.title}">
+                            ${p.title}
+                        </span>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            ${isActive ? '<span class="text-[9px] bg-emerald-600 text-white font-black px-1.5 py-0.5 rounded shadow-xs tracking-wider animate-pulse">ACTIVE ✓</span>' : ''}
+                            <span class="text-[9px] ${isActive ? 'bg-emerald-200 text-emerald-900' : 'bg-teal-100 text-teal-800'} font-extrabold px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                                ${p.badge || 'PKG'}
+                            </span>
+                        </div>
                     </div>
                     <p class="text-[11px] text-gray-600 line-clamp-2 leading-snug">
-                        ${p.summary}
+                        ${summaryText}
                     </p>
                 </div>
-                <div class="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-                    <span class="text-gray-400 font-medium">${p.tours.length} Tours • ${p.transfers.length} Transfers</span>
-                    <span class="text-teal-600 font-bold group-hover:translate-x-0.5 transition-transform">Cost ⚡</span>
+                <div class="mt-2.5 pt-2 border-t ${isActive ? 'border-emerald-200' : 'border-gray-100'} flex items-center justify-between text-[11px]">
+                    <span class="text-gray-400 font-medium">${tourCount} Tours • ${transferCount} Trf</span>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openPresetModal('${key}', false); event.stopPropagation();" class="text-gray-400 hover:text-teal-700 text-xs px-1 py-0.5 rounded hover:bg-teal-100/50" title="Edit Package Info">
+                            ✎
+                        </button>
+                        ${(pCat === 'custom' || key.startsWith('custom_') || key.startsWith('pkg_')) ? `
+                        <button onclick="deleteCostingPreset('${key}', event)" class="text-gray-400 hover:text-red-600 text-xs px-1 py-0.5 rounded hover:bg-red-50" title="Delete Package">
+                            🗑
+                        </button>` : ''}
+                        <button onclick="loadItineraryPreset('${key}')" class="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-700 text-white font-bold text-[10px] shadow-xs flex items-center gap-0.5 group-hover:scale-105 transition-transform">
+                            <span>Cost</span> ⚡
+                        </button>
+                    </div>
                 </div>
             `;
+
             container.appendChild(card);
         });
 
-        // Custom Presets
-        if (activePresetCategory === 'all' || activePresetCategory === 'custom') {
-            Object.keys(customPresets).forEach(cKey => {
-                const cp = customPresets[cKey];
-                const card = document.createElement('div');
-                card.className = "cursor-pointer group relative bg-white hover:bg-purple-50/70 p-3.5 rounded-xl border-2 border-purple-200 hover:border-purple-500 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between";
-                card.innerHTML = `
-                    <div onclick="loadCustomCostingPreset('${cKey}')">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-xs font-bold text-purple-900 truncate pr-1">${cp.title}</span>
-                            <span class="text-[9px] bg-purple-100 text-purple-800 font-extrabold px-1.5 py-0.5 rounded uppercase">Custom</span>
-                        </div>
-                        <p class="text-[11px] text-gray-600 line-clamp-2 leading-snug">
-                            ${(cp.cities || []).map(c => c.nights + 'N ' + c.name).join(' + ')} • ${cp.tours.length} Tours • ${cp.transfers.length} Transfers
-                        </p>
-                    </div>
-                    <div class="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-                        <button onclick="deleteCustomCostingPreset('${cKey}', event)" class="text-red-400 hover:text-red-600 text-[10px]" title="Delete Preset">✕ Delete</button>
-                        <span onclick="loadCustomCostingPreset('${cKey}')" class="text-purple-600 font-bold group-hover:translate-x-0.5 transition-transform">Cost ⚡</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+        updateActivePresetStatusBar();
+    }
+
+    function updateActivePresetStatusBar() {
+        const bar = document.getElementById('activePresetStatusBar');
+        if (!bar) return;
+
+        if (activeLoadedPresetKey && costingPresets[activeLoadedPresetKey]) {
+            const p = costingPresets[activeLoadedPresetKey];
+            bar.classList.remove('hidden');
+            const titleEl = document.getElementById('activePresetTitle');
+            const badgeEl = document.getElementById('activePresetBadge');
+            const descEl = document.getElementById('activePresetDesc');
+
+            if (titleEl) titleEl.innerText = p.title;
+            if (badgeEl) badgeEl.innerText = p.badge || 'ACTIVE';
+            if (descEl) {
+                const tourCount = availableTours.length;
+                const trfCount = availableTransfers.length;
+                const cityStr = availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ');
+                descEl.innerText = `${cityStr} • ${tourCount} Tours • ${trfCount} Transfers. Modify prices below, then click "Save Changes to This Package" to update permanently.`;
+            }
+        } else {
+            bar.classList.add('hidden');
         }
     }
 
+    function unlinkActivePreset() {
+        activeLoadedPresetKey = null;
+        updateActivePresetStatusBar();
+        renderPresetCardsGrid();
+        showNotification("Active package unlinked. Current costing sheet is unchanged.", false);
+    }
+
     function loadItineraryPreset(presetKey) {
-        const preset = ITINERARY_PRESETS[presetKey];
+        const preset = costingPresets[presetKey];
         if (!preset) return;
 
         if (availableTours.length > 0 || availableCities.length > 0) {
-            if (!confirm(`Load package "${preset.title}"?\n\nThis will replace currently entered services with the standard package setup.`)) {
+            if (!confirm(`Load package "${preset.title}"?\n\nThis will load this package's hotels, tours, and transfers into the costing calculator.`)) {
                 return;
             }
         }
 
-        // 1. Setup Cities with matching Master DB hotels
+        activeLoadedPresetKey = presetKey;
+
+        // 1. Setup Cities
         availableCities = [];
         (preset.cities || []).forEach(pc => {
             const cityName = pc.name;
-            const nights = pc.nights;
-            
-            // Find best matching hotels from Master DB
-            const h3 = (masterDb.hotels || []).find(h => parseInt(h.star) === 3 && (h.location || '').toLowerCase() === cityName.toLowerCase());
-            const h4 = (masterDb.hotels || []).find(h => parseInt(h.star) === 4 && (h.location || '').toLowerCase() === cityName.toLowerCase());
-            const h5 = (masterDb.hotels || []).find(h => parseInt(h.star) === 5 && (h.location || '').toLowerCase() === cityName.toLowerCase());
+            const nights = Number(pc.numberOfNights || pc.nights || 1);
 
-            const cityObj = {
-                name: cityName,
-                numberOfNights: nights,
-                isSplit: false,
-                hotel3Nights: nights,
-                hotel4Nights: nights,
-                hotel5Nights: nights,
-                hotel3Name: h3 ? h3.name : `Standard 3* Hotel in ${cityName}`,
-                hotel3Price: h3 ? h3.price : 1400,
-                hotel3Meal: h3 ? (h3.mealPrice || 0) : 250,
-                hotel4Name: h4 ? h4.name : `Standard 4* Hotel in ${cityName}`,
-                hotel4Price: h4 ? h4.price : 2600,
-                hotel4Meal: h4 ? (h4.mealPrice || 0) : 400,
-                hotel5Name: h5 ? h5.name : '',
-                hotel5Price: h5 ? h5.price : 0,
-                hotel5Meal: h5 ? (h5.mealPrice || 0) : 0,
-                mixPref: '3',
-                selected: true
-            };
-            availableCities.push(cityObj);
+            // If preset has saved hotel details and prices, load them directly!
+            if (pc.hotel3Price !== undefined || pc.hotel3Name !== undefined) {
+                availableCities.push({
+                    name: cityName,
+                    numberOfNights: nights,
+                    isSplit: !!pc.isSplit,
+                    hotel3Nights: pc.hotel3Nights !== undefined ? Number(pc.hotel3Nights) : nights,
+                    hotel4Nights: pc.hotel4Nights !== undefined ? Number(pc.hotel4Nights) : nights,
+                    hotel5Nights: pc.hotel5Nights !== undefined ? Number(pc.hotel5Nights) : nights,
+                    hotel3Name: pc.hotel3Name || `Standard 3* Hotel in ${cityName}`,
+                    hotel3Price: Number(pc.hotel3Price) || 0,
+                    hotel3Meal: Number(pc.hotel3Meal) || 0,
+                    hotel4Name: pc.hotel4Name || `Standard 4* Hotel in ${cityName}`,
+                    hotel4Price: Number(pc.hotel4Price) || 0,
+                    hotel4Meal: Number(pc.hotel4Meal) || 0,
+                    hotel5Name: pc.hotel5Name || '',
+                    hotel5Price: Number(pc.hotel5Price) || 0,
+                    hotel5Meal: Number(pc.hotel5Meal) || 0,
+                    mixPref: pc.mixPref || '3',
+                    selected: pc.selected !== false
+                });
+            } else {
+                // Initial template fallback: lookup Master DB
+                const h3 = (masterDb.hotels || []).find(h => parseInt(h.star) === 3 && (h.location || '').toLowerCase() === cityName.toLowerCase());
+                const h4 = (masterDb.hotels || []).find(h => parseInt(h.star) === 4 && (h.location || '').toLowerCase() === cityName.toLowerCase());
+                const h5 = (masterDb.hotels || []).find(h => parseInt(h.star) === 5 && (h.location || '').toLowerCase() === cityName.toLowerCase());
+
+                availableCities.push({
+                    name: cityName,
+                    numberOfNights: nights,
+                    isSplit: false,
+                    hotel3Nights: nights,
+                    hotel4Nights: nights,
+                    hotel5Nights: nights,
+                    hotel3Name: h3 ? h3.name : `Standard 3* Hotel in ${cityName}`,
+                    hotel3Price: h3 ? Number(h3.price) : 1400,
+                    hotel3Meal: h3 ? Number(h3.mealPrice || 0) : 250,
+                    hotel4Name: h4 ? h4.name : `Standard 4* Hotel in ${cityName}`,
+                    hotel4Price: h4 ? Number(h4.price) : 2600,
+                    hotel4Meal: h4 ? Number(h4.mealPrice || 0) : 400,
+                    hotel5Name: h5 ? h5.name : '',
+                    hotel5Price: h5 ? Number(h5.price) : 0,
+                    hotel5Meal: h5 ? Number(h5.mealPrice || 0) : 0,
+                    mixPref: '3',
+                    selected: true
+                });
+            }
         });
 
-        // 2. Setup Transfers with Master DB prices
+        // 2. Setup Transfers
         availableTransfers = [];
         (preset.transfers || []).forEach(pt => {
-            const matchedTr = (masterDb.transfers || []).find(tr => 
-                (tr.name || '').toLowerCase().includes(pt.query.toLowerCase())
-            );
-            const trName = matchedTr ? matchedTr.name : pt.fallbackName;
-            const trPrice = matchedTr ? (matchedTr.carPrice || matchedTr.price || pt.defaultPrice) : pt.defaultPrice;
-            
-            availableTransfers.push({
-                name: trName,
-                price: Number(trPrice),
-                selected: true
-            });
+            if (pt.price !== undefined && pt.name) {
+                // Saved direct transfer
+                availableTransfers.push({
+                    name: pt.name,
+                    price: Number(pt.price),
+                    selected: pt.selected !== false
+                });
+            } else {
+                // Query lookup from Master DB
+                const matchedTr = (masterDb.transfers || []).find(tr => 
+                    (tr.name || '').toLowerCase().includes((pt.query || '').toLowerCase())
+                );
+                const trName = matchedTr ? matchedTr.name : (pt.fallbackName || pt.name);
+                const trPrice = matchedTr ? (matchedTr.carPrice || matchedTr.price || pt.defaultPrice) : (pt.defaultPrice || 1000);
+
+                availableTransfers.push({
+                    name: trName,
+                    price: Number(trPrice),
+                    selected: true
+                });
+            }
         });
 
-        // 3. Setup Tours with Master DB prices
+        // 3. Setup Tours
         availableTours = [];
         (preset.tours || []).forEach(pt => {
-            const matchedTour = (masterDb.tours || []).find(t => 
-                (t.name || '').toLowerCase().includes(pt.query.toLowerCase())
-            );
-
-            let tourName, tourPrice, tourTransfer = 0;
-            if (matchedTour) {
-                if (pt.type === 'join' && matchedTour.joinPrice) {
-                    tourName = matchedTour.name + ' (Join Tour)';
-                    tourPrice = matchedTour.joinPrice;
-                } else if (matchedTour.ticketOnlyPrice || matchedTour.privateCarPrice) {
-                    tourName = matchedTour.name + ' (Private)';
-                    tourPrice = matchedTour.ticketOnlyPrice || 0;
-                    tourTransfer = matchedTour.privateCarPrice || matchedTour.privateTransferPrice || 0;
-                } else {
-                    tourName = matchedTour.name;
-                    tourPrice = matchedTour.joinPrice || pt.defaultPrice;
-                }
+            if (pt.price !== undefined && pt.name) {
+                // Saved direct tour
+                availableTours.push({
+                    name: pt.name,
+                    price: Number(pt.price),
+                    transferPrice: Number(pt.transferPrice || 0),
+                    selected: pt.selected !== false
+                });
             } else {
-                tourName = pt.fallbackName;
-                tourPrice = pt.defaultPrice;
-            }
+                // Query lookup from Master DB
+                const matchedTour = (masterDb.tours || []).find(t => 
+                    (t.name || '').toLowerCase().includes((pt.query || '').toLowerCase())
+                );
 
-            availableTours.push({
-                name: tourName,
-                price: Number(tourPrice),
-                transferPrice: Number(tourTransfer),
-                selected: true
-            });
+                let tourName, tourPrice, tourTransfer = 0;
+                if (matchedTour) {
+                    if (pt.type === 'join' && matchedTour.joinPrice) {
+                        tourName = matchedTour.name + ' (Join Tour)';
+                        tourPrice = matchedTour.joinPrice;
+                    } else if (matchedTour.ticketOnlyPrice || matchedTour.privateCarPrice) {
+                        tourName = matchedTour.name + ' (Private)';
+                        tourPrice = matchedTour.ticketOnlyPrice || 0;
+                        tourTransfer = matchedTour.privateCarPrice || matchedTour.privateTransferPrice || 0;
+                    } else {
+                        tourName = matchedTour.name;
+                        tourPrice = matchedTour.joinPrice || pt.defaultPrice;
+                    }
+                } else {
+                    tourName = pt.fallbackName || pt.name;
+                    tourPrice = pt.defaultPrice || 0;
+                }
+
+                availableTours.push({
+                    name: tourName,
+                    price: Number(tourPrice),
+                    transferPrice: Number(tourTransfer),
+                    selected: true
+                });
+            }
         });
 
-        // 4. Default Pax
-        const paxTrInp = document.getElementById('num_people_transfer');
-        const paxHtlInp = document.getElementById('num_people_hotel');
-        if (paxTrInp && (!paxTrInp.value || paxTrInp.value <= 0)) paxTrInp.value = 2;
-        if (paxHtlInp && (!paxHtlInp.value || paxHtlInp.value <= 0)) paxHtlInp.value = 2;
+        // 4. Setup Pax & Settings
+        if (preset.settings) {
+            if (preset.settings.numPeopleTransfer) document.getElementById('num_people_transfer').value = preset.settings.numPeopleTransfer;
+            if (preset.settings.numPeopleHotel) document.getElementById('num_people_hotel').value = preset.settings.numPeopleHotel;
+            if (preset.settings.markup) document.getElementById('markup').value = preset.settings.markup;
+            if (preset.settings.lkrRate) document.getElementById('lkr_rate').value = preset.settings.lkrRate;
+            if (preset.settings.usdDivisor) document.getElementById('usd_divisor').value = preset.settings.usdDivisor;
+        } else {
+            const paxTrInp = document.getElementById('num_people_transfer');
+            const paxHtlInp = document.getElementById('num_people_hotel');
+            if (paxTrInp && (!paxTrInp.value || paxTrInp.value <= 0)) paxTrInp.value = 2;
+            if (paxHtlInp && (!paxHtlInp.value || paxHtlInp.value <= 0)) paxHtlInp.value = 2;
+        }
 
         renderAll();
         calculate();
+
+        updateActivePresetStatusBar();
+        renderPresetCardsGrid();
 
         showNotification(`⚡ Loaded Package "${preset.title}"! All services & prices calculated.`, false);
         document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Custom Costing Presets Manager
-    function getCustomCostingPresets() {
-        try {
-            return JSON.parse(localStorage.getItem('SLW_Custom_Costing_Presets') || '{}');
-        } catch(e) {
-            return {};
-        }
-    }
-
-    function saveCurrentCostingAsPreset() {
-        if (availableCities.length === 0 && availableTours.length === 0) {
-            showNotification("Please add at least one city or tour before saving as a preset.", true);
+    // ── SAVE CHANGES BACK TO ACTIVE PACKAGE ──
+    async function saveChangesToActivePreset() {
+        if (!activeLoadedPresetKey || !costingPresets[activeLoadedPresetKey]) {
+            // No package active, prompt to create new
+            openPresetModal(null, true);
             return;
         }
 
-        const presetName = prompt("Enter a name for this Custom Itinerary Preset (e.g. Bangkok 5N Safari Luxury):");
-        if (!presetName || !presetName.trim()) return;
-
-        const customPresets = getCustomCostingPresets();
-        const key = 'custom_' + Date.now();
-        customPresets[key] = {
-            title: presetName.trim(),
-            cities: JSON.parse(JSON.stringify(availableCities)),
-            tours: JSON.parse(JSON.stringify(availableTours)),
-            transfers: JSON.parse(JSON.stringify(availableTransfers))
-        };
-
-        localStorage.setItem('SLW_Custom_Costing_Presets', JSON.stringify(customPresets));
-        renderPresetCardsGrid();
-        showNotification(`✅ Saved preset "${presetName}" successfully!`, false);
-    }
-
-    function loadCustomCostingPreset(key) {
-        const customPresets = getCustomCostingPresets();
-        const cp = customPresets[key];
-        if (!cp) return;
-
-        if (availableTours.length > 0 || availableCities.length > 0) {
-            if (!confirm(`Load custom preset "${cp.title}"?\n\nCurrent costing will be replaced.`)) return;
+        const preset = costingPresets[activeLoadedPresetKey];
+        if (!confirm(`Save all updated prices, hotels, tours, and transfers back into package "${preset.title}"?\n\nThis will permanently update this package for future cost calculations across all devices.`)) {
+            return;
         }
 
-        availableCities = JSON.parse(JSON.stringify(cp.cities || []));
-        availableTours = JSON.parse(JSON.stringify(cp.tours || []));
-        availableTransfers = JSON.parse(JSON.stringify(cp.transfers || []));
+        // 1. Capture exact current setup
+        preset.cities = JSON.parse(JSON.stringify(availableCities));
+        preset.transfers = JSON.parse(JSON.stringify(availableTransfers));
+        preset.tours = JSON.parse(JSON.stringify(availableTours));
 
-        renderAll();
-        calculate();
-        showNotification(`⚡ Loaded Custom Preset "${cp.title}"!`, false);
+        // 2. Capture settings
+        preset.settings = {
+            numPeopleTransfer: Number(document.getElementById('num_people_transfer')?.value) || 2,
+            numPeopleHotel: Number(document.getElementById('num_people_hotel')?.value) || 2,
+            markup: Number(document.getElementById('markup')?.value) || 25,
+            lkrRate: Number(document.getElementById('lkr_rate')?.value) || 10.0,
+            usdDivisor: Number(document.getElementById('usd_divisor')?.value) || 31
+        };
+
+        // 3. Update summary string
+        const cityStr = preset.cities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ');
+        preset.summary = `${cityStr} • ${preset.tours.length} Tours • ${preset.transfers.length} Transfers`;
+        preset.updatedAt = new Date().toISOString();
+
+        // 4. Save to Cloud and LocalStorage
+        await saveCostingPresetsToCloud(false);
+
+        updateActivePresetStatusBar();
+        renderPresetCardsGrid();
+
+        showNotification(`✅ Successfully updated package "${preset.title}" with new prices and items!`, false);
     }
 
-    function deleteCustomCostingPreset(key, event) {
-        if (event) event.stopPropagation();
-        if (!confirm("Are you sure you want to delete this custom preset?")) return;
-        const customPresets = getCustomCostingPresets();
-        delete customPresets[key];
-        localStorage.setItem('SLW_Custom_Costing_Presets', JSON.stringify(customPresets));
+    // ── PACKAGE PRESET MODAL & CREATION ENGINE ──
+    function openPresetModal(presetKey = null, fromCurrentSheet = false) {
+        const modal = document.getElementById('costingPresetModal');
+        if (!modal) return;
+
+        const editKeyInput = document.getElementById('presetEditKey');
+        const titleInput = document.getElementById('presetModalTitleInput');
+        const catSelect = document.getElementById('presetModalCatSelect');
+        const badgeInput = document.getElementById('presetModalBadgeInput');
+        const summaryInput = document.getElementById('presetModalSummaryInput');
+
+        if (presetKey && costingPresets[presetKey]) {
+            // Edit existing package info
+            const p = costingPresets[presetKey];
+            editKeyInput.value = presetKey;
+            document.getElementById('costingPresetModalTitle').innerText = 'Edit Package: ' + p.title;
+            titleInput.value = p.title || '';
+            catSelect.value = p.cat || 'custom';
+            badgeInput.value = p.badge || 'Popular';
+            summaryInput.value = p.summary || '';
+        } else {
+            // Create New Package
+            editKeyInput.value = '';
+            document.getElementById('costingPresetModalTitle').innerText = 'Add New Package Preset';
+
+            if (availableCities.length > 0) {
+                const cityStr = availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' ');
+                titleInput.value = cityStr + ' Package';
+                summaryInput.value = availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ') +
+                    ` • ${availableTours.length} Tours • ${availableTransfers.length} Transfers`;
+
+                const firstCity = (availableCities[0]?.name || '').toLowerCase();
+                if (availableCities.length > 1) catSelect.value = 'combo';
+                else if (firstCity.includes('bangkok')) catSelect.value = 'bangkok';
+                else if (firstCity.includes('pattaya')) catSelect.value = 'pattaya';
+                else if (firstCity.includes('phuket') || firstCity.includes('krabi')) catSelect.value = 'phuket';
+                else catSelect.value = 'custom';
+            } else {
+                titleInput.value = '';
+                summaryInput.value = '';
+                catSelect.value = 'custom';
+            }
+            badgeInput.value = 'Popular';
+        }
+
+        populatePresetModalItemsPreview(presetKey);
+        openModal('costingPresetModal');
+    }
+
+    function setPresetBadge(badgeText) {
+        const inp = document.getElementById('presetModalBadgeInput');
+        if (inp) inp.value = badgeText;
+    }
+
+    function populatePresetModalItemsPreview(presetKey = null) {
+        const preview = document.getElementById('presetModalItemsPreview');
+        if (!preview) return;
+
+        let cities = availableCities;
+        let tours = availableTours;
+        let transfers = availableTransfers;
+
+        // If editing a preset without active sheet, look at preset's data
+        if (presetKey && costingPresets[presetKey] && availableCities.length === 0) {
+            cities = costingPresets[presetKey].cities || [];
+            tours = costingPresets[presetKey].tours || [];
+            transfers = costingPresets[presetKey].transfers || [];
+        }
+
+        if (cities.length === 0 && tours.length === 0 && transfers.length === 0) {
+            preview.innerHTML = '<div class="text-gray-400 italic py-2">No services currently added. You can add cities, tours, and transfers in the calculator first, or save now and configure later.</div>';
+            return;
+        }
+
+        let html = '<div class="space-y-2">';
+        
+        // Cities
+        if (cities.length > 0) {
+            html += '<div><span class="font-bold text-gray-700 text-[11px]">🏨 Cities & Hotels:</span><ul class="list-disc list-inside pl-1 text-[11px] text-gray-600">';
+            cities.forEach(c => {
+                const n = c.numberOfNights || c.nights || 1;
+                html += `<li><strong>${n}N ${c.name}</strong> - 3* ${c.hotel3Name || 'Std'} (฿${c.hotel3Price || 0}), 4* ${c.hotel4Name || 'Std'} (฿${c.hotel4Price || 0})</li>`;
+            });
+            html += '</ul></div>';
+        }
+
+        // Tours
+        if (tours.length > 0) {
+            html += `<div><span class="font-bold text-gray-700 text-[11px]">🎯 Tours (${tours.length}):</span><ul class="list-disc list-inside pl-1 text-[11px] text-gray-600">`;
+            tours.forEach(t => {
+                html += `<li>${t.name} - <strong>฿${t.price}</strong> ${t.transferPrice ? '(+฿' + t.transferPrice + ' Trf)' : ''}</li>`;
+            });
+            html += '</ul></div>';
+        }
+
+        // Transfers
+        if (transfers.length > 0) {
+            html += `<div><span class="font-bold text-gray-700 text-[11px]">🚗 Transfers (${transfers.length}):</span><ul class="list-disc list-inside pl-1 text-[11px] text-gray-600">`;
+            transfers.forEach(tr => {
+                html += `<li>${tr.name} - <strong>฿${tr.price}</strong></li>`;
+            });
+            html += '</ul></div>';
+        }
+
+        html += '</div>';
+        preview.innerHTML = html;
+    }
+
+    async function saveCostingPresetFromModal() {
+        const title = (document.getElementById('presetModalTitleInput')?.value || '').trim();
+        if (!title) {
+            alert("Please enter a Package Title.");
+            return;
+        }
+
+        const editKey = document.getElementById('presetEditKey')?.value;
+        const cat = document.getElementById('presetModalCatSelect')?.value || 'custom';
+        const badge = (document.getElementById('presetModalBadgeInput')?.value || '').trim() || 'Custom';
+        const summary = (document.getElementById('presetModalSummaryInput')?.value || '').trim() || 
+            (availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ') + ` • ${availableTours.length} Tours • ${availableTransfers.length} Transfers`);
+
+        const key = editKey || ('pkg_' + Date.now());
+        const existing = costingPresets[key] || {};
+
+        costingPresets[key] = {
+            id: key,
+            title: title,
+            cat: cat,
+            badge: badge,
+            summary: summary,
+            cities: JSON.parse(JSON.stringify(availableCities.length > 0 ? availableCities : (existing.cities || []))),
+            transfers: JSON.parse(JSON.stringify(availableTransfers.length > 0 ? availableTransfers : (existing.transfers || []))),
+            tours: JSON.parse(JSON.stringify(availableTours.length > 0 ? availableTours : (existing.tours || []))),
+            settings: {
+                numPeopleTransfer: Number(document.getElementById('num_people_transfer')?.value) || 2,
+                numPeopleHotel: Number(document.getElementById('num_people_hotel')?.value) || 2,
+                markup: Number(document.getElementById('markup')?.value) || 25,
+                lkrRate: Number(document.getElementById('lkr_rate')?.value) || 10.0,
+                usdDivisor: Number(document.getElementById('usd_divisor')?.value) || 31
+            },
+            updatedAt: new Date().toISOString()
+        };
+
+        activeLoadedPresetKey = key;
+
+        await saveCostingPresetsToCloud(false);
+
+        closeModal('costingPresetModal');
+        updateActivePresetStatusBar();
         renderPresetCardsGrid();
-        showNotification("Preset deleted.", false);
+
+        showNotification(`✅ Package "${title}" saved successfully!`, false);
+    }
+
+    async function deleteCostingPreset(key, event) {
+        if (event) event.stopPropagation();
+        const p = costingPresets[key];
+        if (!p) return;
+
+        if (!confirm(`Are you sure you want to delete package "${p.title}"?\n\nThis will remove it from presets across all devices.`)) {
+            return;
+        }
+
+        if (activeLoadedPresetKey === key) {
+            unlinkActivePreset();
+        }
+
+        delete costingPresets[key];
+        await saveCostingPresetsToCloud(false);
+        renderPresetCardsGrid();
+        showNotification(`Package "${p.title}" deleted.`, false);
+    }
+
+    async function resetDefaultCostingPresets() {
+        if (!confirm("Reset to factory default Thailand packages?\n\nThis will restore the original standard Thailand packages.")) {
+            return;
+        }
+
+        // Keep custom packages if any
+        const customPkgs = {};
+        Object.keys(costingPresets).forEach(k => {
+            if (costingPresets[k].cat === 'custom' || k.startsWith('custom_') || k.startsWith('pkg_')) {
+                customPkgs[k] = costingPresets[k];
+            }
+        });
+
+        costingPresets = Object.assign(JSON.parse(JSON.stringify(DEFAULT_ITINERARY_PRESETS)), customPkgs);
+        await saveCostingPresetsToCloud(false);
+        renderPresetCardsGrid();
+        showNotification("Restored default Thailand package presets!", false);
     }
 
     // ── DIRECT ITINERARY BUILDER JSON IMPORTER ──
@@ -3685,7 +4199,7 @@
     window.onload = async () => {
         await loadMasterDatabase();
         updateMasterDbCounts();
-        renderPresetCardsGrid();
+        await loadCostingPresetsFromCloud();
         renderAll();
     };
 

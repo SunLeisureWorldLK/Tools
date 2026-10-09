@@ -1248,6 +1248,108 @@ function slwGoHome() {
         }
     }
 
+    // ── FIRESTORE REST API CONVERTERS & HANDLERS (ULTRA-FAST, ZERO WEBCHANNEL HANGS) ──
+    function toFirestoreValue(val) {
+        if (val === null || val === undefined) return { nullValue: null };
+        if (typeof val === 'boolean') return { booleanValue: val };
+        if (typeof val === 'number') return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+        if (typeof val === 'string') return { stringValue: val };
+        if (Array.isArray(val)) return { arrayValue: { values: val.map(toFirestoreValue) } };
+        if (typeof val === 'object') {
+            const fields = {};
+            for (const [k, v] of Object.entries(val)) {
+                if (v !== undefined) fields[k] = toFirestoreValue(v);
+            }
+            return { mapValue: { fields: fields } };
+        }
+        return { stringValue: String(val) };
+    }
+
+    function fromFirestoreValue(fieldObj) {
+        if (!fieldObj) return null;
+        if ('nullValue' in fieldObj) return null;
+        if ('booleanValue' in fieldObj) return fieldObj.booleanValue;
+        if ('integerValue' in fieldObj) return parseInt(fieldObj.integerValue, 10);
+        if ('doubleValue' in fieldObj) return fieldObj.doubleValue;
+        if ('stringValue' in fieldObj) return fieldObj.stringValue;
+        if ('timestampValue' in fieldObj) return fieldObj.timestampValue;
+        if ('arrayValue' in fieldObj) {
+            const vals = fieldObj.arrayValue.values || [];
+            return vals.map(fromFirestoreValue);
+        }
+        if ('mapValue' in fieldObj) {
+            const res = {};
+            const fields = fieldObj.mapValue.fields || {};
+            for (const [k, v] of Object.entries(fields)) {
+                res[k] = fromFirestoreValue(v);
+            }
+            return res;
+        }
+        return null;
+    }
+
+    async function slwSaveQuotationDocREST(inqKey, docData, inqIndex) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        const fields = {};
+        for (const [k, v] of Object.entries(docData)) {
+            if (v !== undefined) {
+                fields[k] = toFirestoreValue(v);
+            }
+        }
+
+        const docUrl = `${FIRESTORE_BASE}/slw_quotations/${encodeURIComponent(inqKey)}`;
+        const docRes = await fetch(docUrl, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({ fields })
+        });
+
+        if (!docRes.ok) {
+            clearTimeout(timeoutId);
+            throw new Error('Firestore Quotation REST Error: ' + docRes.status);
+        }
+
+        if (inqIndex && Array.isArray(inqIndex)) {
+            const indexFields = {
+                items: toFirestoreValue(inqIndex),
+                updatedAt: { timestampValue: new Date().toISOString() }
+            };
+            const indexUrl = `${FIRESTORE_BASE}/slw_settings/quotation_index`;
+            await fetch(indexUrl, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({ fields: indexFields })
+            });
+        }
+
+        clearTimeout(timeoutId);
+        return true;
+    }
+
+    async function slwGetQuotationDocREST(inqKey) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const url = `${FIRESTORE_BASE}/slw_quotations/${encodeURIComponent(inqKey)}`;
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const doc = {};
+            for (const [k, v] of Object.entries(data.fields || {})) {
+                doc[k] = fromFirestoreValue(v);
+            }
+            return doc;
+        } catch(e) {
+            console.warn('[SLW] REST fetch quotation error:', e);
+            return null;
+        }
+    }
+
     // ── VERSION HISTORY & ROLLBACK FUNCTIONS ──
     window.slwOpenHistoryModal = async function(presetName) {
         if (!presetName) return;
@@ -1732,19 +1834,17 @@ function slwGoHome() {
             if (raw) docData = JSON.parse(raw);
         } catch(e) {}
 
-        if (!docData && typeof db !== 'undefined' && db) {
+        if (!docData) {
             try {
                 slwOpenModal({ title: "Cloud වෙතින් බාගත කරමින්...", preset: inqKey, stage: "Quotation ලබාගනිමින්...", percent: 40 });
-                const snap = await db.collection('slw_quotations').doc(inqKey).get();
-                if (snap.exists) {
-                    docData = snap.data();
+                docData = await slwGetQuotationDocREST(inqKey);
+                if (docData) {
                     localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(docData));
                 }
                 document.getElementById('slw-global-modal').style.display = 'none';
             } catch(e) {
                 document.getElementById('slw-global-modal').style.display = 'none';
-                alert("Cloud fetch failed: " + e.message);
-                return;
+                console.warn("[SLW] Cloud fetch error:", e);
             }
         }
 
@@ -1981,14 +2081,14 @@ function slwGoHome() {
                         if (raw) docData = JSON.parse(raw);
                     } catch(e) {}
 
-                    if (!docData && typeof db !== 'undefined' && db) {
+                    if (!docData) {
                         try {
-                            const snap = await db.collection('slw_quotations').doc(inqKey).get();
-                            if (snap.exists) {
-                                docData = snap.data();
+                            docData = await slwGetQuotationDocREST(inqKey);
+                            if (docData) {
+                                localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(docData));
                             }
                         } catch(e) {
-                            console.warn("Cloud read failed:", e);
+                            console.warn("[SLW] Cloud read failed:", e);
                         }
                     }
 
@@ -2063,24 +2163,45 @@ function slwGoHome() {
                     }
                     localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqIndex));
 
-                    // 6. Push to Firebase Cloud (Single doc write!)
+                    // 6. Push to Firebase Cloud (Ultra-Fast REST API - Never Hangs!)
                     slwUpdateModalProgress(75, `☁️ ${sizeKB} KB Cloud වෙත යවමින්...`, "Firebase Cloud Quotation යාවත්කාලීන කරමින්...");
 
-                    if (typeof db !== 'undefined' && db) {
-                        await db.collection('slw_quotations').doc(inqKey).set(docData);
-                        await db.collection('slw_settings').doc('quotation_index').set({
-                            items: inqIndex,
-                            updatedAt: nowIso
-                        });
+                    let cloudSaved = false;
+                    try {
+                        await slwSaveQuotationDocREST(inqKey, docData, inqIndex);
+                        cloudSaved = true;
+                        console.log('[SLW] Successfully saved quotation via REST API:', inqKey);
+                    } catch(restErr) {
+                        console.warn('[SLW] REST save failed, attempting SDK fallback:', restErr);
+                        if (typeof db !== 'undefined' && db) {
+                            try {
+                                const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Cloud timeout')), 4000));
+                                const sdkWrite = Promise.all([
+                                    db.collection('slw_quotations').doc(inqKey).set(docData),
+                                    db.collection('slw_settings').doc('quotation_index').set({ items: inqIndex, updatedAt: nowIso })
+                                ]);
+                                await Promise.race([sdkWrite, timeoutPromise]);
+                                cloudSaved = true;
+                            } catch(sdkErr) {
+                                console.warn('[SLW] SDK save fallback error:', sdkErr);
+                            }
+                        }
                     }
 
                     slwUpdateModalProgress(100, "සාර්ථකයි!", "සුරැකීම සම්පූර්ණයි.");
                     slwUpdateInqBadges();
 
-                    slwShowSuccess(
-                        "✅ Itinerary Saved to Cloud!",
-                        `Quotation [${inqKey}] (${docData.clientName || 'Client'}) සඳහා Itinerary එක Firebase Cloud සහ Local Storage හි සාර්ථකව සුරකින ලදී!\nදැන් ඕනෑම තැනක සිට Tour Costing Quotation Hub හරහා මෙය බැලිය හැක.`
-                    );
+                    if (cloudSaved) {
+                        slwShowSuccess(
+                            "✅ Itinerary Saved to Cloud!",
+                            `Quotation [${inqKey}] (${docData.clientName || 'Client'}) සඳහා Itinerary එක Firebase Cloud සහ Local Storage හි සාර්ථකව සුරකින ලදී!\nදැන් ඕනෑම තැනක සිට Tour Costing Quotation Hub හරහා මෙය බැලිය හැක.`
+                        );
+                    } else {
+                        slwShowSuccess(
+                            "✅ Saved to Local Storage (Offline)",
+                            `Quotation [${inqKey}] ඔබගේ පරිගණකයේ Local Storage හි සාර්ථකව සුරකින ලදී.\n(Cloud සම්බන්ධතාවය නැවත ඇතිවූ පසු ස්වයංක්‍රීයව Cloud වෙත සමමුහුර්ත වේ.)`
+                        );
+                    }
 
                 } catch(err) {
                     console.error('[SLW] Save to INQ error:', err);

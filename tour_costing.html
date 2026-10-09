@@ -837,6 +837,18 @@
                 </div>
             </div>
         </div>
+        <!-- Create Itinerary CTA from Results -->
+        <div class="mt-8 pt-5 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-teal-50 via-emerald-50 to-blue-50 p-4 rounded-xl border border-teal-200">
+            <div>
+                <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-magic text-teal-600"></i> Ready to Create &amp; Send Tour Proposal?
+                </h4>
+                <p class="text-xs text-gray-500 mt-0.5">Generate the complete client itinerary with day-by-day activities, photos, and exact LKR rates.</p>
+            </div>
+            <button onclick="generateItinerary()" class="w-full sm:w-auto py-2.5 px-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5">
+                <i class="fas fa-route text-base"></i> <span>Create Itinerary</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1095,6 +1107,173 @@
             <button onclick="closeModal('costingPresetModal')" class="py-2.5 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition text-sm">
                 Cancel
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ITINERARY BUILDER EXPORT & LIVE LAUNCH MODAL
+     ══════════════════════════════════════════════════════════════ -->
+<div id="itineraryExportModal" class="modal-backdrop">
+    <div class="modal-content overflow-y-auto max-h-[95vh] w-full max-w-2xl p-6 bg-white rounded-2xl shadow-2xl border border-teal-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-teal-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center text-lg shadow-md">
+                    <i class="fas fa-route"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        Create & Export Itinerary
+                    </h3>
+                    <p class="text-xs text-gray-500">Auto-generated from your current Tour Costing with 1-Click Launch to Builder</p>
+                </div>
+            </div>
+            <button onclick="closeModal('itineraryExportModal')" class="text-gray-400 hover:text-gray-600 text-xl font-bold px-2 py-1">✕</button>
+        </div>
+
+        <!-- Form fields: Title, Pax, Date, Client Name, INQ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Itinerary Title</label>
+                <input type="text" id="exportItineraryTitle" class="w-full p-2.5 border rounded-lg text-sm font-bold text-gray-800 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-teal-500" placeholder="e.g. 03N 04D Bangkok">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Pax Count</label>
+                <input type="text" id="exportItineraryPax" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-teal-500" placeholder="e.g. 02Pax">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Travel Period / Month</label>
+                <input type="text" id="exportItineraryDate" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-teal-500" placeholder="e.g. Oct-Nov/2026">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Client Name (Optional)</label>
+                <input type="text" id="exportItineraryClient" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-teal-500" placeholder="e.g. Mr. Perera">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Inquiry Reference</label>
+                <input type="text" id="exportItineraryInq" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-teal-500" placeholder="e.g. INQ-51613">
+            </div>
+        </div>
+
+        <!-- Pricing Rates Badge Cards -->
+        <div class="mb-4 p-3.5 bg-gradient-to-r from-teal-50 via-blue-50 to-indigo-50 border border-teal-200 rounded-xl space-y-3">
+            <div class="text-[11px] font-bold text-teal-900 uppercase tracking-wider flex items-center justify-between border-b border-teal-100 pb-1.5">
+                <span class="flex items-center gap-1.5"><i class="fas fa-calculator text-teal-600"></i> Calculated Pricing (Option 01 Hotel Rates)</span>
+                <span class="text-[10px] text-teal-700 font-semibold">Adult &amp; Child Rates Included</span>
+            </div>
+            
+            <!-- 3-Star Table / Badges -->
+            <div class="bg-white p-3 rounded-lg border border-blue-200 shadow-2xs">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-blue-900 uppercase flex items-center gap-1">
+                        <i class="fas fa-star text-amber-400 text-[10px]"></i> 3-Star Hotel Package Rates
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div class="p-2 bg-blue-50/60 rounded border border-blue-100">
+                        <span class="block text-[10px] font-bold text-blue-700 uppercase">Adult (Per Person)</span>
+                        <span id="exportPrice3Star" class="text-sm font-extrabold text-blue-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-emerald-50/60 rounded border border-emerald-100">
+                        <span class="block text-[10px] font-bold text-emerald-700 uppercase">Child Extra Bed</span>
+                        <span id="exportPrice3StarChildExtra" class="text-sm font-extrabold text-emerald-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-purple-50/60 rounded border border-purple-100">
+                        <span class="block text-[10px] font-bold text-purple-700 uppercase">Child Sharing Bed</span>
+                        <span id="exportPrice3StarChildShare" class="text-sm font-extrabold text-purple-900">LKR 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4-Star Table / Badges -->
+            <div class="bg-white p-3 rounded-lg border border-amber-200 shadow-2xs">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-amber-900 uppercase flex items-center gap-1">
+                        <i class="fas fa-star text-amber-500 text-[10px]"></i> 4-Star Hotel Package Rates
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div class="p-2 bg-blue-50/60 rounded border border-blue-100">
+                        <span class="block text-[10px] font-bold text-blue-700 uppercase">Adult (Per Person)</span>
+                        <span id="exportPrice4Star" class="text-sm font-extrabold text-blue-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-emerald-50/60 rounded border border-emerald-100">
+                        <span class="block text-[10px] font-bold text-emerald-700 uppercase">Child Extra Bed</span>
+                        <span id="exportPrice4StarChildExtra" class="text-sm font-extrabold text-emerald-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-purple-50/60 rounded border border-purple-100">
+                        <span class="block text-[10px] font-bold text-purple-700 uppercase">Child Sharing Bed</span>
+                        <span id="exportPrice4StarChildShare" class="text-sm font-extrabold text-purple-900">LKR 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Mix Card (if present) -->
+            <div id="exportPriceMixContainer" class="bg-white p-3 rounded-lg border border-purple-200 shadow-2xs hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="exportPriceMixLabel" class="text-xs font-bold text-purple-900 uppercase flex items-center gap-1">
+                        Custom Mix Package Rates
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div class="p-2 bg-blue-50/60 rounded border border-blue-100">
+                        <span class="block text-[10px] font-bold text-blue-700 uppercase">Adult</span>
+                        <span id="exportPriceMix" class="text-sm font-extrabold text-blue-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-emerald-50/60 rounded border border-emerald-100">
+                        <span class="block text-[10px] font-bold text-emerald-700 uppercase">Child Extra Bed</span>
+                        <span id="exportPriceMixChildExtra" class="text-sm font-extrabold text-emerald-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-purple-50/60 rounded border border-purple-100">
+                        <span class="block text-[10px] font-bold text-purple-700 uppercase">Child Sharing Bed</span>
+                        <span id="exportPriceMixChildShare" class="text-sm font-extrabold text-purple-900">LKR 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Child Price Labels Customization (Editable) -->
+            <div class="bg-white/80 p-2.5 rounded-lg border border-gray-200 text-xs space-y-2">
+                <span class="font-bold text-gray-700 text-[11px] block">Child Price Card Labels (Displayed in Itinerary Builder):</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Child With Extra Bed Label</label>
+                        <input type="text" id="exportChildExtraBedLabel" class="w-full p-1.5 text-xs border rounded font-semibold text-gray-800 bg-gray-50 focus:bg-white" value="PER CHILD (WITH EXTRA BED)">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Child Sharing Bed Label</label>
+                        <input type="text" id="exportChildSharingBedLabel" class="w-full p-1.5 text-xs border rounded font-semibold text-gray-800 bg-gray-50 focus:bg-white" value="PER CHILD (SHARING BED)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inclusions & Schedule Preview -->
+        <div class="mb-5 bg-gray-50 border border-gray-200 rounded-xl p-3.5">
+            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-gray-200">
+                <span class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                    <i class="fas fa-clipboard-check text-teal-600"></i> Included Tours, Transfers & Hotel Summary
+                </span>
+                <span id="exportItineraryCounts" class="text-[11px] font-semibold text-gray-500">0 Days • 0 Tours</span>
+            </div>
+            <div id="exportItineraryPreviewList" class="space-y-1.5 text-xs text-gray-600 max-h-40 overflow-y-auto pr-1">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Action CTAs -->
+        <div class="space-y-2 pt-2 border-t">
+            <button onclick="launchInItineraryBuilder()" class="w-full py-3 px-5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2.5 text-sm transform hover:-translate-y-0.5">
+                <i class="fas fa-paper-plane text-base"></i> <span>🚀 Open in Tour Itinerary Builder (1-Click Auto-Load)</span>
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="downloadItineraryBuilderJson()" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                    <i class="fas fa-download text-teal-600"></i> <span>Download JSON File</span>
+                </button>
+                <button onclick="copyItineraryBuilderJson()" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                    <i class="fas fa-copy text-indigo-600"></i> <span>Copy JSON Code</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -2635,416 +2814,648 @@
         event.target.value = '';
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // SMART TOUR ITINERARY BUILDER INTEGRATION ENGINE
+    // ══════════════════════════════════════════════════════════════
+    const TOUR_IMAGE_DATABASE = {
+        'chao phraya': [
+            { url: "https://www.bangkokchaophrayacruise.com/userfiles2/directUpload/skin/thingstodo_36822/etc/cruise/cruise11.jpg", zoom: 0.3, x: -25, y: 0 },
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/11/8e/ed/33.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'cruise': [
+            { url: "https://www.bangkokchaophrayacruise.com/userfiles2/directUpload/skin/thingstodo_36822/etc/cruise/cruise11.jpg", zoom: 0.3, x: -25, y: 0 },
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/11/8e/ed/33.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'dream world': [
+            { url: "https://media.tacdn.com/media/attractions-splice-spp-674x446/12/26/0a/85.jpg", zoom: 0.4, x: 0, y: 0 },
+            { url: "https://phuketdreamcompany.asia/wp-content/uploads/2018/12/Bangkok-Dream-World-Ticket-Entry.jpg", zoom: 0.2, x: 0, y: 10 },
+            { url: "https://staybook.in/_next/image?url=https%3A%2F%2Fcdn-imgix.headout.com%2Fmedia%2Fimages%2Fe69ac663f6c85e207eb169ccd79d1e22-19227-bangkok-dream-world-bangkok-with-round-trip-shared-transfer008.jpg%3Fw%3D1120%26h%3D630%26crop%3Dfaces%26auto%3Dcompress%252Cformat%26fit%3Dmin&w=1080&q=75", zoom: 0.4, x: 0, y: 0 }
+        ],
+        'safari world': [
+            { url: "https://media.tacdn.com/media/attractions-splice-spp-674x446/09/b8/91/9f.jpg", zoom: 0.4, x: 0, y: 0 },
+            { url: "https://res.klook.com/images/fl_lossy.progressive,q_65/c_fill,w_1200,h_630/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/tz5c9049x12y6z0bup38/SafariWorldBangkokTickets.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'coral island': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/14/00/78/df.jpg", zoom: 0.6, x: 0, y: 0 },
+            { url: "https://res.klook.com/image/upload/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/otrsefnmc66mjtp9xczv.jpg", zoom: 0.5, x: 0, y: 0 },
+            { url: "https://media.tacdn.com/media/attractions-splice-spp-674x446/16/79/85/2d.jpg", zoom: 0.4, x: -10, y: 0 }
+        ],
+        'phi phi': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/06/6f/52/68.jpg", zoom: 0.5, x: 0, y: 0 },
+            { url: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1619602486/activities/f3qfwhb7p83o0l5nfxo0.webp", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'james bond': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/0a/85/1e/9e.jpg", zoom: 0.5, x: 0, y: 0 },
+            { url: "https://res.klook.com/image/upload/fl_lossy.progressive,q_85/c_fill,w_1000/v1620297672/activities/jkyb0z9b0z9b0z9b0z9b.webp", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'big buddha': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/0b/27/7b/72.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'floating market': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/0b/27/7a/7f.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'city tour': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/07/04/b7/fe.jpg", zoom: 0.5, x: 0, y: 0 },
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/0b/27/75/a3.jpg", zoom: 0.5, x: 0, y: 0 }
+        ],
+        'wat chalong': [
+            { url: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/07/04/b8/07.jpg", zoom: 0.5, x: 0, y: 0 }
+        ]
+    };
+
+    const CITY_COVER_IMAGES = {
+        'bangkok': "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/32/5b/9a/25/caption.jpg?w=1200&h=-1&s=1",
+        'pattaya': "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fb/5c/pattaya.jpg?w=1200&h=700&s=1",
+        'phuket': "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fb/3f/phuket.jpg?w=1200&h=700&s=1",
+        'krabi': "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fb/1e/krabi.jpg?w=1200&h=700&s=1",
+        'chiang mai': "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fb/4a/chiang-mai.jpg?w=1200&h=700&s=1"
+    };
+
+    const PRESET_TO_JSON_NAME_MAP = {
+        'bkk_3n': '03N 04D Bangkok.json',
+        'bkk_4n': '04N 05D Bangkok.json',
+        'pat_1n_bkk_3n': '01N Pattaya 03N Bangkok.json',
+        'pat_2n_bkk_3n': '2N Pattaya 3N Bangkok.json',
+        'pkt_3n': '03N 04D Phuket.json',
+        'pkt_3n_new': '03N Phuket New.json',
+        'pkt_2n_bkk_3n': '02N Phuket 03N Bangkok.json',
+        'pkt_3n_kb_2n': '3N Phuket  2N Krabi.json',
+        'combo_6n': '2N Phuket  2N Pattaya 2N Bangkok.json',
+        'combo_4n': '2N Phuket  2N Pattaya.json'
+    };
+
+    function cleanLkrNumber(text) {
+        if (!text) return '0';
+        let str = String(text).trim();
+        // Remove .00 cents or any decimal portion
+        if (str.includes('.')) {
+            str = str.split('.')[0];
+        }
+        // Extract digits only
+        const digits = str.replace(/[^0-9]/g, '');
+        if (!digits) return '0';
+        return Number(digits).toLocaleString('en-US');
+    }
+
     function generateItinerary() {
-        const selectedTours = availableTours.filter(item => item.selected);
-        const selectedTransfers = availableTransfers.filter(item => item.selected);
-        const selectedCities = availableCities.filter(item => item.selected);
+        // 1. Refresh calculations first
+        calculate();
 
-        let totalNights = selectedCities.reduce((sum, city) => sum + city.numberOfNights, 0);
-        const totalDays = totalNights > 0 ? totalNights + 1 : selectedTours.length > 0 ? selectedTours.length + 1 : 1;
-        const packageTitle = `${String(totalNights).padStart(2, '0')}N ${String(totalDays).padStart(2, '0')}D Package`;
+        const selectedCities = availableCities.filter(c => c.selected);
+        const selectedTours = availableTours.filter(t => t.selected);
+        const selectedTransfers = availableTransfers.filter(t => t.selected);
 
-        let inclusionsHtml = '<h3>Inclusions:</h3><ul>';
-        selectedCities.forEach(c => {
-            inclusionsHtml += `<li>${c.numberOfNights} nights accommodation in ${c.name} with breakfast (3-Star: ${c.hotel3Name} | 4-Star: ${c.hotel4Name}).</li>`;
-        });
-        selectedTransfers.forEach(t => {
-            inclusionsHtml += `<li>${t.name}.</li>`;
-        });
+        if (selectedCities.length === 0 && selectedTours.length === 0) {
+            showNotification("Please select at least one City or Tour to generate an Itinerary.", true);
+            return;
+        }
+
+        const totalNights = selectedCities.reduce((sum, c) => sum + (Number(c.numberOfNights) || 1), 0);
+        const totalDays = totalNights > 0 ? totalNights + 1 : Math.max(1, selectedTours.length + 1);
+
+        // Auto Title
+        let defaultTitle = '';
+        if (activeLoadedPresetKey && costingPresets[activeLoadedPresetKey] && costingPresets[activeLoadedPresetKey].title) {
+            defaultTitle = costingPresets[activeLoadedPresetKey].title.trim();
+        } else if (selectedCities.length > 0) {
+            const parts = selectedCities.map(c => `${String(c.numberOfNights || 1).padStart(2, '0')}N ${c.name}`);
+            defaultTitle = parts.join(' ');
+        } else {
+            defaultTitle = `${String(totalNights).padStart(2, '0')}N ${String(totalDays).padStart(2, '0')}D Thailand Tour`;
+        }
+
+        // Auto Pax
+        const paxNum = parseInt(document.getElementById('num_people_hotel')?.value) || parseInt(document.getElementById('num_people_transfer')?.value) || 2;
+        const defaultPax = `${String(paxNum).padStart(2, '0')}Pax`;
+
+        // Auto Date
+        const now = new Date();
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentMonth = monthNames[now.getMonth()];
+        const nextMonth = monthNames[(now.getMonth() + 1) % 12];
+        const defaultDate = `${currentMonth}-${nextMonth}/${now.getFullYear()}`;
+
+        // Auto INQ
+        const defaultInq = 'INQ -' + Math.floor(10000 + Math.random() * 90000);
+
+        // Populate Modal Inputs
+        const titleInput = document.getElementById('exportItineraryTitle');
+        const paxInput = document.getElementById('exportItineraryPax');
+        const dateInput = document.getElementById('exportItineraryDate');
+        const inqInput = document.getElementById('exportItineraryInq');
+        const clientInput = document.getElementById('exportItineraryClient');
+
+        if (titleInput) titleInput.value = defaultTitle;
+        if (paxInput) paxInput.value = defaultPax;
+        if (dateInput) dateInput.value = defaultDate;
+        if (inqInput) inqInput.value = defaultInq;
+        if (clientInput) clientInput.value = '';
+
+        // Populate Modal Prices (Adult & Children)
+        const p3El = document.getElementById('adult_final_lkr_3star');
+        const p4El = document.getElementById('adult_final_lkr_4star');
+        const pMixEl = document.getElementById('adult_final_lkr_mix');
+
+        const p3ChildExtraEl = document.getElementById('child_final_lkr_3star');
+        const p3ChildShareEl = document.getElementById('child_sharing_final_lkr_3star');
+        const p4ChildExtraEl = document.getElementById('child_final_lkr_4star');
+        const p4ChildShareEl = document.getElementById('child_sharing_final_lkr_4star');
+        const pMixChildExtraEl = document.getElementById('child_final_lkr_mix');
+        const pMixChildShareEl = document.getElementById('child_sharing_final_lkr_mix');
+
+        const cleanPrice = (el) => {
+            if (!el || !el.innerText) return 'LKR 0';
+            return 'LKR ' + cleanLkrNumber(el.innerText);
+        };
+
+        // 3-Star
+        if (document.getElementById('exportPrice3Star')) document.getElementById('exportPrice3Star').innerText = cleanPrice(p3El);
+        if (document.getElementById('exportPrice3StarChildExtra')) document.getElementById('exportPrice3StarChildExtra').innerText = cleanPrice(p3ChildExtraEl);
+        if (document.getElementById('exportPrice3StarChildShare')) document.getElementById('exportPrice3StarChildShare').innerText = cleanPrice(p3ChildShareEl);
+
+        // 4-Star
+        if (document.getElementById('exportPrice4Star')) document.getElementById('exportPrice4Star').innerText = cleanPrice(p4El);
+        if (document.getElementById('exportPrice4StarChildExtra')) document.getElementById('exportPrice4StarChildExtra').innerText = cleanPrice(p4ChildExtraEl);
+        if (document.getElementById('exportPrice4StarChildShare')) document.getElementById('exportPrice4StarChildShare').innerText = cleanPrice(p4ChildShareEl);
+
+        // Mix
+        const mixContainer = document.getElementById('exportPriceMixContainer');
+        const mixCard = document.getElementById('result_card_mix');
+        if (mixContainer && mixCard && mixCard.style.display !== 'none' && pMixEl && pMixEl.innerText) {
+            mixContainer.classList.remove('hidden');
+            if (document.getElementById('exportPriceMix')) document.getElementById('exportPriceMix').innerText = cleanPrice(pMixEl);
+            if (document.getElementById('exportPriceMixChildExtra')) document.getElementById('exportPriceMixChildExtra').innerText = cleanPrice(pMixChildExtraEl);
+            if (document.getElementById('exportPriceMixChildShare')) document.getElementById('exportPriceMixChildShare').innerText = cleanPrice(pMixChildShareEl);
+            const mixTitleEl = document.getElementById('mix_package_title');
+            const expMixLbl = document.getElementById('exportPriceMixLabel');
+            if (mixTitleEl && expMixLbl) expMixLbl.innerText = mixTitleEl.innerText;
+        } else if (mixContainer) {
+            mixContainer.classList.add('hidden');
+        }
+
+        // Child Labels Detection & Autofill
+        let defaultChildExtraLabel = "PER CHILD (WITH EXTRA BED)";
+        let defaultChildShareLabel = "PER CHILD (SHARING BED)";
+
+        if (window.__slwImportedItineraryBase && window.__slwImportedItineraryBase.options) {
+            const existingPrices = window.__slwImportedItineraryBase.options[0]?.hotels[0]?.prices || [];
+            const existingExtra = existingPrices.find(p => p.label && p.label.toUpperCase().includes('EXTRA BED'));
+            const existingShare = existingPrices.find(p => p.label && (p.label.toUpperCase().includes('SHARING') || p.label.toUpperCase().includes('NO BED')));
+            if (existingExtra && existingExtra.label) defaultChildExtraLabel = existingExtra.label.trim();
+            if (existingShare && existingShare.label) defaultChildShareLabel = existingShare.label.trim();
+        } else {
+            const paxVal = defaultPax || '';
+            const ageMatches = paxVal.match(/\b\d{1,2}Y\b/gi);
+            if (ageMatches && ageMatches.length >= 2) {
+                defaultChildExtraLabel = `PER CHILD (WITH EXTRA BED ${ageMatches[0].toUpperCase()})`;
+                defaultChildShareLabel = `PER CHILD (SHARING BED ${ageMatches[1].toUpperCase()})`;
+            } else if (ageMatches && ageMatches.length === 1) {
+                defaultChildExtraLabel = `PER CHILD (WITH EXTRA BED ${ageMatches[0].toUpperCase()})`;
+                defaultChildShareLabel = `PER CHILD (SHARING BED ${ageMatches[0].toUpperCase()})`;
+            }
+        }
+
+        const childExtraLabelInput = document.getElementById('exportChildExtraBedLabel');
+        const childShareLabelInput = document.getElementById('exportChildSharingBedLabel');
+        if (childExtraLabelInput) childExtraLabelInput.value = defaultChildExtraLabel;
+        if (childShareLabelInput) childShareLabelInput.value = defaultChildShareLabel;
+
+        // Counts & Preview List
+        const countsEl = document.getElementById('exportItineraryCounts');
+        if (countsEl) {
+            countsEl.innerText = `${totalDays} Days (${totalNights}N) • ${selectedTours.length} Tours • ${selectedTransfers.length} Transfers`;
+        }
+
+        const previewList = document.getElementById('exportItineraryPreviewList');
+        if (previewList) {
+            let html = '';
+            selectedCities.forEach(c => {
+                html += `<div class="flex items-center gap-1.5"><i class="fas fa-hotel text-blue-500 text-[11px]"></i> <span><strong>${c.numberOfNights}N ${c.name}</strong> (3*: ${c.hotel3Name} / 4*: ${c.hotel4Name})</span></div>`;
+            });
+            selectedTransfers.forEach(tr => {
+                html += `<div class="flex items-center gap-1.5"><i class="fas fa-car text-orange-500 text-[11px]"></i> <span>${tr.name}</span></div>`;
+            });
+            selectedTours.forEach(t => {
+                const trTag = t.transferPrice > 0 ? '(Private Transfer)' : '(Join Transfer)';
+                html += `<div class="flex items-center gap-1.5"><i class="fas fa-map-pin text-purple-500 text-[11px]"></i> <span>${t.name} <strong class="text-teal-700">${trTag}</strong></span></div>`;
+            });
+            previewList.innerHTML = html || '<div class="text-gray-400">No items selected</div>';
+        }
+
+        openModal('itineraryExportModal');
+    }
+
+    function buildItineraryJsonPayload() {
+        const rawTitle = document.getElementById('exportItineraryTitle')?.value.trim() || 'Tour Itinerary';
+        const pax = document.getElementById('exportItineraryPax')?.value.trim() || '02Pax';
+        const date = document.getElementById('exportItineraryDate')?.value.trim() || 'Oct-Nov/2026';
+        const clientName = document.getElementById('exportItineraryClient')?.value.trim() || '\n';
+        const inq = document.getElementById('exportItineraryInq')?.value.trim() || ('INQ -' + Math.floor(10000 + Math.random() * 90000));
+
+        const selectedCities = availableCities.filter(c => c.selected);
+        const selectedTours = availableTours.filter(t => t.selected);
+        const selectedTransfers = availableTransfers.filter(t => t.selected);
+
+        const totalNights = selectedCities.reduce((sum, c) => sum + (Number(c.numberOfNights) || 1), 0);
+        const totalDays = totalNights > 0 ? totalNights + 1 : Math.max(1, selectedTours.length + 1);
+
+        let primaryCity = 'Bangkok';
+        if (selectedCities.length > 0) primaryCity = selectedCities[0].name;
+        const coverImage = CITY_COVER_IMAGES[primaryCity.toLowerCase()] || CITY_COVER_IMAGES['bangkok'];
+
+        const p3Text = document.getElementById('adult_final_lkr_3star')?.innerText || '';
+        const p4Text = document.getElementById('adult_final_lkr_4star')?.innerText || '';
+        const p3Amount = 'LKR ' + cleanLkrNumber(p3Text);
+        const p4Amount = 'LKR ' + cleanLkrNumber(p4Text);
+
+        // Inclusions List
+        const inclusions = [];
+        if (selectedCities.length > 0) {
+            const cityStayText = selectedCities.map(c => `${c.numberOfNights}N ${c.name}`).join(' ') + ' 3* Hotel Accommdation with Breakfast ';
+            inclusions.push(cityStayText);
+        }
+        inclusions.push("Private Transfer from Airport - Hotel - Airport");
+        inclusions.push("Tour by air-conditioned vehicles");
+
+        let breakfastCount = Math.max(0, totalDays - 1);
+        let lunchCount = 0;
+        let dinnerCount = 0;
+
         selectedTours.forEach(t => {
-            inclusionsHtml += `<li>${t.name}.</li>`;
-        });
-        inclusionsHtml += '</ul>';
+            const lower = t.name.toLowerCase();
+            let nameWithTag = t.name.trim();
 
-        let dayByDayHtml = '<h2>Itinerary</h2>';
-        let tourIndex = 0;
-        for (let i = 1; i <= totalDays; i++) {
-            dayByDayHtml += `
-                <div class="day-block" data-day="${i}">
-                    <div class="day-header">
-                        <h4>Day ${i}:</h4>
-                        <button class="remove-day-btn" onclick="removeDay(this)">Remove Day</button>
-                    </div>
-                    <ul class="activity-list">`;
-            
-            if (i === totalDays) {
-                dayByDayHtml += `<li>Breakfast at Hotel. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                dayByDayHtml += `<li>12.00pm Checkout from Hotel <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                const departureTransfer = selectedTransfers.find(t => t.name.toLowerCase().includes('departure') || t.name.toLowerCase().includes('hotel to airport'));
-                if (departureTransfer) {
-                    dayByDayHtml += `<li>Private Transfer Bangkok Hotel to Bangkok Airport <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                }
-            } else if (i === 1) {
-                const arrivalTransfer = selectedTransfers.find(t => t.name.toLowerCase().includes('arrival') || t.name.toLowerCase().includes('airport to hotel'));
-                if (arrivalTransfer) dayByDayHtml += `<li>${arrivalTransfer.name} <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                if(selectedHotels.length > 0) dayByDayHtml += `<li>Check in at ${selectedHotels.map(h => h.name).join(' or ')}. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                if (tourIndex < selectedTours.length) {
-                    dayByDayHtml += `<li>${selectedTours[tourIndex].name}. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                    tourIndex++;
-                }
-                dayByDayHtml += `<li>Overnight at Hotel. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-            } else {
-                dayByDayHtml += `<li>Breakfast at Hotel. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                if (tourIndex < selectedTours.length) {
-                    dayByDayHtml += `<li>${selectedTours[tourIndex].name}. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                    tourIndex++;
-                } else {
-                     dayByDayHtml += `<li>Free for leisure. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
-                }
-                dayByDayHtml += `<li>Overnight at Hotel. <button class="remove-item-btn" onclick="removeItem(this)">×</button></li>`;
+            if (!nameWithTag.toLowerCase().includes('transfer') && !nameWithTag.toLowerCase().includes('ticket only')) {
+                nameWithTag += t.transferPrice > 0 ? ' (Private Transfer)' : ' (Join Transfer)';
             }
 
-            dayByDayHtml += `</ul><div class="image-gallery"></div><button class="add-activity-btn" onclick="addActivity(this)">+ Add Activity</button><button class="add-image-btn" onclick="triggerImageUpload(this)">+ Add Image</button></div>`;
+            inclusions.push(nameWithTag);
+
+            if (lower.includes('lunch')) lunchCount++;
+            if (lower.includes('dinner') || lower.includes('cruise')) dinnerCount++;
+        });
+
+        const bStr = String(breakfastCount).padStart(2, '0') + ' Breakfast';
+        const lStr = String(lunchCount).padStart(2, '0') + ' Lunch';
+        const dStr = String(dinnerCount).padStart(2, '0') + ' Dinner';
+        inclusions.push(`Meals (${bStr} / ${lStr} / ${dStr})`);
+
+        // Day by Day Activities & Curated Images
+        const days = [];
+        let tourCursor = 0;
+        let currentCityIdx = 0;
+        let nightsSpentInCurrentCity = 0;
+
+        const getTourImages = (tourName) => {
+            const lower = tourName.toLowerCase();
+            for (const [key, imgs] of Object.entries(TOUR_IMAGE_DATABASE)) {
+                if (lower.includes(key)) return JSON.parse(JSON.stringify(imgs));
+            }
+            return [];
+        };
+
+        const remainingTours = [...selectedTours];
+
+        for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
+            const isFirstDay = (dayNum === 1);
+            const isLastDay = (dayNum === totalDays);
+            const dayTitle = `Day-${String(dayNum).padStart(2, '0')}`;
+            const activities = [];
+            let dayImages = [];
+            let mealStr = '(B/--/--)';
+
+            const curCity = selectedCities[currentCityIdx] || { name: 'Bangkok', hotel3Name: 'Hotel 3*', hotel4Name: 'Hotel 4*' };
+
+            if (isFirstDay) {
+                mealStr = '(--/--/--)';
+                const arrTr = selectedTransfers.find(tr => tr.name.toLowerCase().includes('arrival') || tr.name.toLowerCase().includes('airport to'));
+                if (arrTr) {
+                    activities.push(arrTr.name);
+                } else {
+                    activities.push(`Private Arrival at ${curCity.name} Airport and Transfer to Hotel`);
+                }
+
+                activities.push(`14.00 Check in at ${curCity.hotel3Name} or Similar 3*`);
+
+                const eveningTourIdx = remainingTours.findIndex(t => t.name.toLowerCase().includes('dinner') || t.name.toLowerCase().includes('cruise'));
+                if (eveningTourIdx !== -1) {
+                    const eveningTour = remainingTours.splice(eveningTourIdx, 1)[0];
+                    const trTag = eveningTour.transferPrice > 0 ? '(Private Transfer)' : '(Join Transfer)';
+                    activities.push(`${eveningTour.name} ${eveningTour.name.toLowerCase().includes('transfer') ? '' : trTag}`);
+                    dayImages = getTourImages(eveningTour.name);
+                    mealStr = '(--/--/D)';
+                }
+
+                activities.push("Overnight at Hotel");
+                nightsSpentInCurrentCity++;
+
+            } else if (isLastDay) {
+                mealStr = '(B/--/--)';
+                activities.push("Breakfast at Hotel");
+                activities.push("12.00pm Checkout from Hotel");
+
+                const depTr = selectedTransfers.find(tr => tr.name.toLowerCase().includes('departure') || tr.name.toLowerCase().includes('hotel to') || tr.name.toLowerCase().includes('to airport'));
+                if (depTr) {
+                    activities.push(depTr.name);
+                } else {
+                    activities.push(`Private Transfer Bangkok Hotel to Bangkok Airport`);
+                }
+
+                activities.push("Tour End!");
+
+            } else {
+                activities.push("Breakfast at Hotel");
+
+                if (currentCityIdx < selectedCities.length - 1 && nightsSpentInCurrentCity >= (selectedCities[currentCityIdx].numberOfNights || 1)) {
+                    const prevCity = selectedCities[currentCityIdx];
+                    currentCityIdx++;
+                    nightsSpentInCurrentCity = 0;
+                    const nextCity = selectedCities[currentCityIdx];
+
+                    activities.push(`12.00 Check out from Hotel`);
+                    const interTr = selectedTransfers.find(tr => tr.name.toLowerCase().includes(prevCity.name.toLowerCase()) && tr.name.toLowerCase().includes(nextCity.name.toLowerCase()));
+                    if (interTr) {
+                        activities.push(interTr.name);
+                    } else {
+                        activities.push(`Private Transfer ${prevCity.name} Hotel to ${nextCity.name} Hotel`);
+                    }
+                    activities.push(`14.00 Check in at ${nextCity.hotel3Name} or Similar 3*`);
+                }
+
+                if (remainingTours.length > 0) {
+                    const tour = remainingTours.shift();
+                    const trTag = tour.transferPrice > 0 ? '(Private Transfer)' : '(Join Transfer)';
+                    activities.push(`${tour.name} ${tour.name.toLowerCase().includes('transfer') ? '' : trTag}`);
+                    dayImages = getTourImages(tour.name);
+
+                    if (tour.name.toLowerCase().includes('lunch')) {
+                        mealStr = '(B/L/--)';
+                    } else if (tour.name.toLowerCase().includes('dinner')) {
+                        mealStr = '(B/--/D)';
+                    } else {
+                        mealStr = '(B/--/--)';
+                    }
+                } else {
+                    activities.push("Free For Leisure");
+                    mealStr = '(B/--/--)';
+                }
+
+                activities.push("Overnight at Hotel");
+                nightsSpentInCurrentCity++;
+            }
+
+            days.push({
+                id: dayNum,
+                title: dayTitle,
+                meal: mealStr,
+                activities: activities,
+                note: "",
+                images: dayImages
+            });
         }
-        
-        const lkrAdult3 = document.getElementById('adult_final_lkr_3star') ? document.getElementById('adult_final_lkr_3star').innerText : document.getElementById('adult_lkr_3star').innerText || "N/A";
-        const lkrChildExtra3 = document.getElementById('child_final_lkr_3star') ? document.getElementById('child_final_lkr_3star').innerText : document.getElementById('child_extra_lkr_3star').innerText || "N/A";
-        const lkrChildSharing3 = document.getElementById('child_sharing_final_lkr_3star') ? document.getElementById('child_sharing_final_lkr_3star').innerText : document.getElementById('child_sharing_lkr_3star').innerText || "N/A";
 
-        const lkrAdult4 = document.getElementById('adult_final_lkr_4star') ? document.getElementById('adult_final_lkr_4star').innerText : document.getElementById('adult_lkr_4star').innerText || "N/A";
-        const lkrChildExtra4 = document.getElementById('child_final_lkr_4star') ? document.getElementById('child_final_lkr_4star').innerText : document.getElementById('child_extra_lkr_4star').innerText || "N/A";
-        const lkrChildSharing4 = document.getElementById('child_sharing_final_lkr_4star') ? document.getElementById('child_sharing_final_lkr_4star').innerText : document.getElementById('child_sharing_lkr_4star').innerText || "N/A";
+        // Child labels & prices
+        const childExtraLabel = document.getElementById('exportChildExtraBedLabel')?.value.trim() || 'PER CHILD (WITH EXTRA BED)';
+        const childShareLabel = document.getElementById('exportChildSharingBedLabel')?.value.trim() || 'PER CHILD (SHARING BED)';
 
-        const lkrAdultMix = document.getElementById('adult_final_lkr_mix') ? document.getElementById('adult_final_lkr_mix').innerText : document.getElementById('adult_lkr_mix').innerText || "N/A";
-        const lkrChildExtraMix = document.getElementById('child_final_lkr_mix') ? document.getElementById('child_final_lkr_mix').innerText : document.getElementById('child_extra_lkr_mix').innerText || "N/A";
-        const lkrChildSharingMix = document.getElementById('child_sharing_final_lkr_mix') ? document.getElementById('child_sharing_final_lkr_mix').innerText : document.getElementById('child_sharing_lkr_mix').innerText || "N/A";
+        const p3ChildExtraEl = document.getElementById('child_final_lkr_3star');
+        const p3ChildShareEl = document.getElementById('child_sharing_final_lkr_3star');
+        const p4ChildExtraEl = document.getElementById('child_final_lkr_4star');
+        const p4ChildShareEl = document.getElementById('child_sharing_final_lkr_4star');
+        const pMixChildExtraEl = document.getElementById('child_final_lkr_mix');
+        const pMixChildShareEl = document.getElementById('child_sharing_final_lkr_mix');
 
-        const showMix = document.getElementById('result_card_mix') && document.getElementById('result_card_mix').style.display !== 'none';
-        const mixTitleHtml = document.getElementById('mix_package_title') ? document.getElementById('mix_package_title').innerText : 'Mixed / Custom Option';
-        
-        const mixRowHtml = showMix ? `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">${mixTitleHtml}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrAdultMix}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildExtraMix}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildSharingMix}</td>
-                        </tr>` : '';
+        const p3ChildExtraAmount = 'LKR ' + cleanLkrNumber(p3ChildExtraEl?.innerText);
+        const p3ChildShareAmount = 'LKR ' + cleanLkrNumber(p3ChildShareEl?.innerText);
+        const p4ChildExtraAmount = 'LKR ' + cleanLkrNumber(p4ChildExtraEl?.innerText);
+        const p4ChildShareAmount = 'LKR ' + cleanLkrNumber(p4ChildShareEl?.innerText);
 
-        const priceHtml = `
-            <div id="price-section" style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                <h3>Price Details (LKR per person):</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <thead>
-                        <tr style="background-color: #f8f9fa;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Category</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Adult</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Child (Extra Bed)</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Child (Sharing Bed)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">3-Star Package Option</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrAdult3}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildExtra3}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildSharing3}</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">4-Star Package Option</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrAdult4}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildExtra4}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${lkrChildSharing4}</td>
-                        </tr>${mixRowHtml}
-                    </tbody>
-                </table>
-            </div>
-        `;
-        
-        const specialNotesHtml = `
-            <div id="special-notes-section" style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
-                <h3>Special Notes:</h3>
-                <ul>
-                    <li>Should you have any questions, please feel free to contact us. We do hope the above proposal has thoroughly covered your requirements.</li>
-                    <li>Please note that we are not holding any accommodation or services for you at this point. If you wish to proceed kindly confirm to us.</li>
-                    <li>Children below 3 years old and shorter than 90 cm will not be charged for our package (free of charge).</li>
-                    <li>Please note that above rates are valid for the mentioned time period only.</li>
-                    <li>Please note that above rates are subject to availability & change.</li>
-                    <li>We look forward to creating a memorable experience for you.</li>
-                </ul>
-                <h3 style="margin-top: 1.5rem;">This Package Can Be Customized!</h3>
-                <p>Let us know if there is anything you'd like to add or modify to suit your preferences. We are here to create the perfect tour for you!</p>
-            </div>
-        `;
-        
-        const exclusionsHtml = `
-            <div id="exclusions-section" style="margin-top: 1rem;">
-                <h3>Exclusions:</h3>
-                <ul>
-                    <li>Air fare</li>
-                    <li>Everything which is not mentioned in the program</li>
-                    <li>Thailand Visa</li>
-                </ul>
-            </div>
-        `;
+        // Hotel Options with Exact Calculated LKR Rates
+        const hotelOptions = [];
+        const hotel3Names = selectedCities.map(c => `${c.name}-${c.hotel3Name}`).filter(Boolean);
+        const hotel4Names = selectedCities.map(c => `${c.name} - ${c.hotel4Name}`).filter(Boolean);
 
+        // 3-Star Prices Array (Adult + Child Extra Bed + Child Sharing Bed)
+        const p3Prices = [
+            {
+                label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`,
+                amount: p3Amount
+            }
+        ];
+        if (p3ChildExtraAmount && p3ChildExtraAmount !== 'LKR 0') {
+            p3Prices.push({
+                label: childExtraLabel,
+                amount: p3ChildExtraAmount
+            });
+        }
+        if (p3ChildShareAmount && p3ChildShareAmount !== 'LKR 0') {
+            p3Prices.push({
+                label: childShareLabel,
+                amount: p3ChildShareAmount
+            });
+        }
 
-        const itineraryHtml = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Generated Itinerary</title>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
-                <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
-                    .toolbar-container { position: sticky; top: 0; z-index: 100; background-color: #f4f4f4; padding: 1rem; border-bottom: 1px solid #ccc; }
-                    #itinerary-container { max-width: 800px; margin: 2rem auto; border: 1px solid #ddd; padding: 2rem; background-color: white; }
-                    .controls { text-align: center; margin-bottom: 1rem; padding: 1rem; background-color: #e9e9e9; border-radius: 5px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem; }
-                    .controls button, .text-format-btn { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
-                    .controls button:hover, .text-format-btn:hover { background-color: #0056b3; }
-                    .controls input[type="color"], .controls input[type="text"], .controls select { border: 1px solid #ccc; padding: 5px; border-radius: 5px; height: 38px; }
-                    .controls label { margin-left: 10px; margin-right: 5px; }
-                    #logo-container { text-align: center; margin-bottom: 2rem; }
-                    #logo { max-height: 100px; max-width: 250px; }
-                    h1, h2, h3, h4 { color: #333; }
-                    h1 { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 1rem; margin-bottom: 2rem;}
-                    ul { list-style-type: '✔ '; padding-left: 1.5rem; }
-                    li { margin-bottom: 0.5rem; position: relative; padding-right: 20px; }
-                    .day-block { border-top: 1px dashed #ccc; margin-top: 1.5rem; padding-top: 1.5rem; }
-                    .day-header { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0.5rem; border-radius: 5px; }
-                    .remove-day-btn, .add-activity-btn, .remove-item-btn, .add-image-btn { background: none; border: none; cursor: pointer; font-size: 1rem; }
-                    .remove-day-btn { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; }
-                    .add-activity-btn, .add-image-btn { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 5px; margin-top: 10px; margin-right: 5px;}
-                    .remove-item-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: #dc3545; font-weight: bold; }
-                    .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-                    .image-gallery img { max-width: 150px; max-height: 150px; border-radius: 5px; border: 1px solid #ddd; }
-                    @media print { .toolbar-container, .remove-day-btn, .add-activity-btn, .remove-item-btn, .add-image-btn { display: none; } }
-                </style>
-                <!-- PWA Settings -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1d4ed8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="Image/LOGO.png">
-</head>
-            <body>
-                <div class="toolbar-container">
-                    <div class="controls">
-                        <button onclick="window.print()">Print</button>
-                        <button onclick="downloadPDF()">Download as PDF</button>
-                        <button onclick="addDay()">+ Add Day</button>
-                        <button id="undo-btn" onclick="undo()">Undo</button>
-                        <button id="redo-btn" onclick="redo()">Redo</button>
-                    </div>
-                    <div class="controls">
-                        <div style="display:flex; align-items:center; gap: 5px; border-left: 2px solid #ccc; padding-left: 1rem;">
-                            <button class="text-format-btn" onclick="formatDoc('bold')"><b>B</b></button>
-                            <button class="text-format-btn" onclick="formatDoc('italic')"><i>I</i></button>
-                            <button class="text-format-btn" onclick="formatDoc('underline')"><u>U</u></button>
-                            <select onchange="formatDoc('fontName', this.value)"><option>Font</option><option>Arial</option><option>Verdana</option><option>Times New Roman</option><option>Courier New</option></select>
-                            <label>Color:</label><input type="color" id="textColor" onchange="formatDoc('foreColor', this.value)">
-                            <label>Highlight:</label><input type="color" id="highlightColor" onchange="formatDoc('hiliteColor', this.value)">
-                            <button class="text-format-btn" onclick="formatDoc('insertImage', prompt('Enter image URL:'))">Image</button>
-                        </div>
-                        <div style="display:flex; align-items:center; gap: 5px; border-left: 2px solid #ccc; padding-left: 1rem;">
-                            <label>Header BG:</label><input type="color" id="headerBgColor" value="#d4edda">
-                            <label>Text Color:</label><input type="color" id="headerTextColor" value="#155724">
-                            <label>BG Image:</label><input type="file" id="headerBgImage" accept="image/*" onchange="applyHeaderBgImage(event)">
-                            <button onclick="applyStyles()">Apply Styles</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="itinerary-container" contenteditable="true">
-                    <div id="logo-container">${logoDataUrl ? `<img id="logo" src="${logoDataUrl}">` : ''}</div>
-                    <h1>${packageTitle}</h1>
-                    <div id="inclusions-section">${inclusionsHtml}</div>
-                    ${exclusionsHtml}
-                    <hr style="margin: 2rem 0;">
-                    <div id="day-by-day-section">${dayByDayHtml}</div>
-                    ${priceHtml}
-                    ${specialNotesHtml}
-                </div>
-                <script>
-                    const editor = document.getElementById('itinerary-container');
-                    const undoBtn = document.getElementById('undo-btn');
-                    const redoBtn = document.getElementById('redo-btn');
-                    let historyStack = [];
-                    let historyIndex = -1;
+        hotelOptions.push({
+            rating: "3* Hotel Options",
+            names: hotel3Names.length > 0 ? hotel3Names : ["Standard 3* Hotel Accommodation"],
+            price: `${p3Amount} Per Person (Minimum ${pax})`,
+            prices: p3Prices
+        });
 
-                    function saveState() {
-                        if (historyIndex < historyStack.length - 1) {
-                            historyStack = historyStack.slice(0, historyIndex + 1);
-                        }
-                        historyStack.push(editor.innerHTML);
-                        historyIndex = historyStack.length - 1;
-                        updateUndoRedoButtons();
-                    }
+        // 4-Star Prices Array (Adult + Child Extra Bed + Child Sharing Bed)
+        const p4Prices = [
+            {
+                label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`,
+                amount: p4Amount
+            }
+        ];
+        if (p4ChildExtraAmount && p4ChildExtraAmount !== 'LKR 0') {
+            p4Prices.push({
+                label: childExtraLabel,
+                amount: p4ChildExtraAmount
+            });
+        }
+        if (p4ChildShareAmount && p4ChildShareAmount !== 'LKR 0') {
+            p4Prices.push({
+                label: childShareLabel,
+                amount: p4ChildShareAmount
+            });
+        }
 
-                    function undo() {
-                        if (historyIndex > 0) {
-                            historyIndex--;
-                            editor.innerHTML = historyStack[historyIndex];
-                            updateUndoRedoButtons();
-                        }
-                    }
+        hotelOptions.push({
+            rating: "4* Hotel Options",
+            names: hotel4Names.length > 0 ? hotel4Names : ["Standard 4* Hotel Accommodation"],
+            price: `${p4Amount} Per Person (Minimum ${pax})`,
+            prices: p4Prices
+        });
 
-                    function redo() {
-                        if (historyIndex < historyStack.length - 1) {
-                            historyIndex++;
-                            editor.innerHTML = historyStack[historyIndex];
-                            updateUndoRedoButtons();
-                        }
-                    }
+        // Mix Package Prices (if active)
+        const mixCard = document.getElementById('result_card_mix');
+        const pMixEl = document.getElementById('adult_final_lkr_mix');
+        if (mixCard && mixCard.style.display !== 'none' && pMixEl && pMixEl.innerText) {
+            const pMixAmount = 'LKR ' + cleanLkrNumber(pMixEl.innerText);
+            const pMixChildExtraAmount = 'LKR ' + cleanLkrNumber(pMixChildExtraEl?.innerText);
+            const pMixChildShareAmount = 'LKR ' + cleanLkrNumber(pMixChildShareEl?.innerText);
+            const mixTitle = document.getElementById('mix_package_title')?.innerText || 'Custom Mix Option';
+            const mixHotelNames = selectedCities.map(c => {
+                const hName = c.mixPref === '4' ? c.hotel4Name : (c.mixPref === '5' ? (c.hotel5Name || c.hotel4Name) : c.hotel3Name);
+                return `${c.name} - ${hName}`;
+            });
 
-                    function updateUndoRedoButtons() {
-                        undoBtn.disabled = historyIndex <= 0;
-                        redoBtn.disabled = historyIndex >= historyStack.length - 1;
-                    }
+            const pMixPrices = [
+                {
+                    label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`,
+                    amount: pMixAmount
+                }
+            ];
+            if (pMixChildExtraAmount && pMixChildExtraAmount !== 'LKR 0') {
+                pMixPrices.push({
+                    label: childExtraLabel,
+                    amount: pMixChildExtraAmount
+                });
+            }
+            if (pMixChildShareAmount && pMixChildShareAmount !== 'LKR 0') {
+                pMixPrices.push({
+                    label: childShareLabel,
+                    amount: pMixChildShareAmount
+                });
+            }
 
-                    editor.addEventListener('input', saveState, false);
+            hotelOptions.push({
+                rating: mixTitle,
+                names: mixHotelNames,
+                price: `${pMixAmount} Per Person (Minimum ${pax})`,
+                prices: pMixPrices
+            });
+        }
 
-                    function downloadPDF() {
-                        const { jsPDF } = window.jspdf;
-                        const itineraryContainer = document.getElementById('itinerary-container');
-                        const buttonsToHide = itineraryContainer.querySelectorAll('.remove-day-btn, .add-activity-btn, .remove-item-btn, .add-image-btn');
-                        buttonsToHide.forEach(btn => btn.style.visibility = 'hidden');
-                        
-                        html2canvas(itineraryContainer, { scale: 2 }).then(canvas => {
-                            buttonsToHide.forEach(btn => btn.style.visibility = 'visible');
-                            const imgData = canvas.toDataURL('image/png');
-                            const pdf = new jsPDF('p', 'mm', 'a4');
-                            const pdfWidth = pdf.internal.pageSize.getWidth();
-                            const pdfHeight = pdf.internal.pageSize.getHeight();
-                            const canvasWidth = canvas.width;
-                            const canvasHeight = canvas.height;
-                            const ratio = canvasWidth / canvasHeight;
-                            const width = pdfWidth;
-                            const height = width / ratio;
-                            
-                            let position = 0;
-                            let heightLeft = height;
+        const finalPayload = {
+            title: rawTitle,
+            pax: pax,
+            date: date,
+            inq: inq,
+            clientName: clientName,
+            logo: "https://raw.githubusercontent.com/SunLeisureWorldLK/Tools/main/Image/LOGO.png",
+            coverImage: coverImage,
+            days: days,
+            lastDayNote: "If you’re planning to go shopping on this day, please ensure you check out of the hotel in the morning or by 12:00 PM. You may safely store your luggage at the hotel reception. Your airport transfer is scheduled based on your flight time, so kindly be in the hotel lobby on time for pickup.",
+            rateValidity: "This rate is valid for 7 days",
+            inclusions: inclusions,
+            exclusions: [
+                "Air fare",
+                "Everything which is not Mentioned in the itinerary",
+                "Thailand Visa"
+            ],
+            options: [
+                {
+                    id: 1,
+                    name: "Option 01 - Standard",
+                    description: "",
+                    hotels: hotelOptions
+                }
+            ],
+            specialNotes: [
+                "Should you have any questions, please feel free to contact us. We do hope the above proposal has thoroughly covered your requirements.",
+                "Please note that we are not holding any accommodation or services for you at this point. If you wish to proceed kindly confirm to us.",
+                "Children below 3 years old and shorter than 90 cm will not be charged for our package (free of charge).",
+                "Please note that above rates are valid for mentioned time period only.",
+                "Please note that above rates are subject to availability & change.",
+                "We look forward to creating a memorable experience for you."
+            ],
+            customizationText: "Let us know if there is anything you'd like to add or modify to suit your preferences. We are here to create the perfect tour for you!",
+            bookingProcess: [
+                {
+                    id: 1,
+                    step: "Step 01: Air Ticket Booking Process",
+                    items: [
+                        "Passport Details: Please provide the passport bio page of all passengers traveling.",
+                        "Booking Air Tickets: Once we receive the passport details, we will proceed to book the air tickets based on your preferred travel dates. Please note that the airfare can only be held for 3 hours.",
+                        "Invoice and Payment: Within this time frame, we will send you an invoice, and full payment for the air tickets will be required. Upon receiving the payment, we will issue your air tickets. If you prefer to book the air tickets on your own, that’s absolutely fine too — just let us know."
+                    ]
+                },
+                {
+                    id: 2,
+                    step: "Step 02: Tour Package Payment Process",
+                    items: [
+                        "Advance Payment: To check hotel availability, an advance payment of LKR 25,000 per person for the tour package is required. We will send an invoice for this amount once you confirm your package.",
+                        "Hotel Confirmation and Final Payment: After confirming hotel availability, the remaining balance will be due. Once the full payment is received, your tour package details will be finalized."
+                    ]
+                }
+            ],
+            footerImage: "https://raw.githubusercontent.com/SunLeisureWorldLK/Tools/main/Image/Contact%20Bakcground%20(1).png",
+            contact: {
+                address: "No.70/16 Lucky Plaza,\nSt Anthony’s Mawatha,\nColombo - 03, Sri Lanka.",
+                tel: "077 887 7054\n077 775 3191",
+                hotline: "0117-911700",
+                email: "info@sunleisureworld.lk",
+                facebook: "https://web.facebook.com/sunleisureworldsrilanak",
+                instagram: "https://www.instagram.com/sun_leisure_world_sri_lanka",
+                map: "https://maps.app.goo.gl/Egag7Mgey5JSwju69"
+            },
+            titleStyles: {
+                fontSize: 44,
+                textAlign: "left",
+                color: "#ffffff"
+            },
+            spacers: {
+                "options-section-before": 200
+            }
+        };
 
-                            if (height < pdfHeight) {
-                                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-                            } else {
-                                while(heightLeft > 0) {
-                                    pdf.addImage(imgData, 'PNG', 0, position, width, height);
-                                    heightLeft -= pdfHeight;
-                                    position -= pdfHeight;
-                                    if(heightLeft > 0) {
-                                        pdf.addPage();
-                                    }
-                                }
-                            }
-                            pdf.save('itinerary.pdf');
-                        }).catch(err => {
-                            buttonsToHide.forEach(btn => btn.style.visibility = 'visible');
-                            console.error("PDF generation failed:", err);
-                        });
-                    }
+        if (window.__slwImportedItineraryBase) {
+            const merged = JSON.parse(JSON.stringify(window.__slwImportedItineraryBase));
+            merged.title = rawTitle;
+            merged.pax = pax;
+            merged.date = date;
+            merged.inq = inq;
+            if (clientName && clientName.trim()) merged.clientName = clientName;
+            merged.inclusions = finalPayload.inclusions;
+            merged.options = finalPayload.options;
+            if (!merged.days || merged.days.length !== finalPayload.days.length) {
+                merged.days = finalPayload.days;
+            }
+            return merged;
+        }
 
-                    function formatDoc(command, value = null) {
-                        document.execCommand(command, false, value);
-                        saveState();
-                    }
+        return finalPayload;
+    }
 
-                    function applyHeaderBgImage(event) {
-                        const file = event.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const imageUrl = e.target.result;
-                            const headers = document.querySelectorAll('.day-header');
-                            headers.forEach(header => {
-                                header.style.backgroundImage = 'url(' + imageUrl + ')';
-                                header.style.backgroundSize = 'cover';
-                                header.style.backgroundPosition = 'center';
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    
-                    function applyStyles() {
-                        const bgColor = document.getElementById('headerBgColor').value;
-                        const textColor = document.getElementById('headerTextColor').value;
-                        const headers = document.querySelectorAll('.day-header');
-                        headers.forEach(header => {
-                            header.style.backgroundColor = bgColor;
-                            header.querySelector('h4').style.color = textColor;
-                        });
-                    }
+    function launchInItineraryBuilder() {
+        const payload = buildItineraryJsonPayload();
+        try {
+            localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(payload));
+        } catch(e) {
+            console.warn("localStorage write error:", e);
+        }
 
-                    function addDay() {
-                        const dayContainer = document.getElementById('day-by-day-section');
-                        const dayCount = dayContainer.querySelectorAll('.day-block').length + 1;
-                        const newDay = document.createElement('div');
-                        newDay.className = 'day-block';
-                        newDay.dataset.day = dayCount;
-                        newDay.innerHTML = ' \
-                            <div class="day-header"> \
-                                <h4>Day ' + dayCount + ':</h4> \
-                                <button class="remove-day-btn" onclick="removeDay(this)">Remove Day</button> \
-                            </div> \
-                            <ul class="activity-list"> \
-                                <li>New Activity <button class="remove-item-btn" onclick="removeItem(this)">×</button></li> \
-                            </ul> \
-                            <div class="image-gallery"></div> \
-                            <button class="add-activity-btn" onclick="addActivity(this)">+ Add Activity</button> \
-                            <button class="add-image-btn" onclick="triggerImageUpload(this)">+ Add Image</button> \
-                        ';
-                        dayContainer.appendChild(newDay);
-                        applyStyles(); // Apply styles to new day
-                        saveState();
-                    }
+        closeModal('itineraryExportModal');
+        showNotification("🚀 Launching Tour Itinerary Builder! Auto-loading your itinerary...", false);
 
-                    function removeDay(button) {
-                        button.closest('.day-block').remove();
-                        const dayBlocks = document.querySelectorAll('.day-block');
-                        dayBlocks.forEach((block, index) => {
-                            block.dataset.day = index + 1;
-                            block.querySelector('h4').innerText = 'Day ' + (index + 1) + ':';
-                        });
-                        saveState();
-                    }
+        window.open('archives/Itinerary_Builder_App New.html', '_blank');
+    }
 
-                    function addActivity(button) {
-                        const list = button.parentElement.querySelector('.activity-list');
-                        const newItem = document.createElement('li');
-                        newItem.innerHTML = 'New Activity <button class="remove-item-btn" onclick="removeItem(this)">×</button>';
-                        list.appendChild(newItem);
-                        saveState();
-                    }
-                    
-                    function removeItem(button) {
-                        button.parentElement.remove();
-                        saveState();
-                    }
+    function downloadItineraryBuilderJson() {
+        const payload = buildItineraryJsonPayload();
+        const cleanName = (payload.title || 'Tour_Itinerary').replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Tour_Itinerary';
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = cleanName + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showNotification(`💾 Downloaded "${cleanName}.json"!`, false);
+    }
 
-                    function triggerImageUpload(button) {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.multiple = true;
-                        input.onchange = (event) => {
-                            const gallery = button.parentElement.querySelector('.image-gallery');
-                            for (const file of event.target.files) {
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                    const img = document.createElement('img');
-                                    img.src = e.target.result;
-                                    gallery.appendChild(img);
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                            setTimeout(saveState, 500); // Save state after images load
-                        };
-                        input.click();
-                    }
-                    
-                    document.addEventListener("DOMContentLoaded", () => {
-                        applyStyles();
-                        saveState();
-                        loadMasterDatabase();
-                    });
-                <\/script>
-            </body>
-            </html>
-        `;
-
-        const newWindow = window.open();
-        newWindow.document.write(itineraryHtml);
-        newWindow.document.close();
+    function copyItineraryBuilderJson() {
+        const payload = buildItineraryJsonPayload();
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
+            showNotification("📋 Copied Itinerary JSON to clipboard!", false);
+        }).catch(err => {
+            showNotification("Failed to copy: " + err.message, true);
+        });
     }
 
 
@@ -3642,12 +4053,14 @@
 
     function unlinkActivePreset() {
         activeLoadedPresetKey = null;
+        window.__slwImportedItineraryBase = null;
         updateActivePresetStatusBar();
         renderPresetCardsGrid();
         showNotification("Active package unlinked. Current costing sheet is unchanged.", false);
     }
 
     function loadItineraryPreset(presetKey) {
+        window.__slwImportedItineraryBase = null;
         const preset = costingPresets[presetKey];
         if (!preset) return;
 
@@ -4199,6 +4612,10 @@
             if (defTr1) availableTransfers.push({ name: defTr1.name, price: defTr1.carPrice || 1000, selected: true });
             if (defTr2) availableTransfers.push({ name: defTr2.name, price: defTr2.carPrice || 1000, selected: true });
         }
+
+        window.__slwImportedItineraryBase = data;
+        activeLoadedPresetKey = title;
+        updateActivePresetStatusBar();
 
         renderAll();
         calculate();

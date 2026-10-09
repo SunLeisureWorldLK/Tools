@@ -1718,6 +1718,64 @@ function slwGoHome() {
         }
     }, true);
 
+    // ── AUTO-LOAD HANDOFF FROM TOUR COSTING CALCULATOR ──
+    function slwCheckCostingHandoff() {
+        try {
+            const pendingJson = localStorage.getItem('SLW_PENDING_COSTING_ITINERARY');
+            if (!pendingJson) return;
+
+            // Clear immediately so subsequent refreshes won't re-trigger unexpectedly
+            localStorage.removeItem('SLW_PENDING_COSTING_ITINERARY');
+
+            const dataObj = JSON.parse(pendingJson);
+            const rawTitle = (dataObj.title || 'Tour_Itinerary').trim();
+            const cleanName = rawTitle.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Tour_Itinerary';
+            const fileName = cleanName + '.json';
+
+            console.log('[SLW] Detected incoming itinerary from Tour Costing:', rawTitle);
+
+            let attempts = 0;
+            const maxAttempts = 35; // wait up to 7 seconds for React to mount file input
+            const checkTimer = setInterval(() => {
+                attempts++;
+                let fileInput = document.querySelector('input[type="file"][accept=".json"]') || document.querySelector('input[type="file"]');
+                if (fileInput) {
+                    clearInterval(checkTimer);
+                    try {
+                        const finalJsonStr = JSON.stringify(dataObj);
+                        const file = new File([finalJsonStr], fileName, { type: 'application/json' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
+                        setter.call(fileInput, dt.files);
+                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                        window.__slwBaseData = JSON.parse(JSON.stringify(dataObj));
+                        window.__slwActivePreset = cleanName;
+                        if (typeof slwUpdateActiveBadge === 'function') {
+                            slwUpdateActiveBadge(cleanName);
+                        }
+
+                        if (typeof slwShowSuccess === 'function') {
+                            slwShowSuccess(
+                                "⚡ Tour Costing එකෙන් සාර්ථකව Load විය!",
+                                `'${rawTitle}' Itinerary එක Costing Builder වෙතින් සාර්ථකව Import කරන ලදී.`
+                            );
+                        }
+                    } catch(injectErr) {
+                        console.error('[SLW] Failed to inject file to input:', injectErr);
+                    }
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkTimer);
+                    console.warn('[SLW] Could not find file input for costing handoff within time limit.');
+                }
+            }, 200);
+        } catch(e) {
+            console.error('[SLW] Error in slwCheckCostingHandoff:', e);
+        }
+    }
+
+    slwCheckCostingHandoff();
     setInterval(injectUIControls, 1000);
     fetchPresets();
 })();

@@ -3442,6 +3442,12 @@
             const p4Amount = 'LKR ' + cleanLkrNumber(p4El?.innerText);
             const p4ChildExtra = 'LKR ' + cleanLkrNumber(p4ChildExtraEl?.innerText);
             const p4ChildShare = 'LKR ' + cleanLkrNumber(p4ChildShareEl?.innerText);
+            const p5El = document.getElementById('adult_final_lkr_5star');
+            const p5ChildExtraEl = document.getElementById('child_final_lkr_5star');
+            const p5ChildShareEl = document.getElementById('child_sharing_final_lkr_5star');
+            const p5Amount = 'LKR ' + cleanLkrNumber(p5El?.innerText);
+            const p5ChildExtra = 'LKR ' + cleanLkrNumber(p5ChildExtraEl?.innerText);
+            const p5ChildShare = 'LKR ' + cleanLkrNumber(p5ChildShareEl?.innerText);
 
             const mixCard = document.getElementById('result_card_mix');
             let mixObj = null;
@@ -3454,7 +3460,8 @@
                 };
             }
 
-            const pax = document.getElementById('exportItineraryPax')?.value.trim() || ((document.getElementById('num_people_hotel')?.value || '2') + 'Pax');
+            const rawPaxNum = Number(document.getElementById('num_people_hotel')?.value) || 2;
+            const pax = document.getElementById('exportItineraryPax')?.value.trim() || (String(rawPaxNum).padStart(2, '0') + 'Pax');
             const childExtraLabel = document.getElementById('exportChildExtraBedLabel')?.value.trim() || 'PER CHILD (WITH EXTRA BED)';
             const childShareLabel = document.getElementById('exportChildSharingBedLabel')?.value.trim() || 'PER CHILD (SHARING BED)';
 
@@ -3472,6 +3479,11 @@
                     childShare: p4ChildShare
                 },
                 pricesMix: mixObj,
+                prices5Star: (p5El && p5El.innerText && cleanLkrNumber(p5El.innerText) !== '0') ? {
+                    adult: p5Amount,
+                    childExtra: p5ChildExtra,
+                    childShare: p5ChildShare
+                } : null,
                 childExtraLabel: childExtraLabel,
                 childShareLabel: childShareLabel,
                 timestamp: Date.now()

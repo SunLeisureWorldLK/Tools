@@ -1579,74 +1579,111 @@ function slwGoHome() {
                     const childExtraLabel = costingData.childExtraLabel || 'PER CHILD (WITH EXTRA BED)';
                     const childShareLabel = costingData.childShareLabel || 'PER CHILD (SHARING BED)';
 
-                    // 3-Star Hotel Option update
-                    let h3 = opt.hotels.find(h => h.rating && h.rating.includes('3*'));
-                    if (!h3 && opt.hotels.length > 0) h3 = opt.hotels[0];
-                    if (!h3 && costingData.prices3Star) {
-                        h3 = {
-                            rating: "3* Hotel Options",
-                            names: ["Standard 3* Hotel Accommodation"],
-                            price: "",
-                            prices: []
-                        };
-                        opt.hotels.push(h3);
-                    }
-                    if (h3 && costingData.prices3Star) {
-                        h3.price = `${costingData.prices3Star.adult} Per Person (Minimum ${pax})`;
-                        const p3List = [
-                            { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.prices3Star.adult }
+                    // Intelligent Classification & Multi-Star / Mix Hotel Option update
+                    const getRatingText = (h) => {
+                        if (!h || !h.rating) return '';
+                        if (Array.isArray(h.rating)) return h.rating.join(' ').toLowerCase();
+                        return String(h.rating).toLowerCase();
+                    };
+
+                    const classifyHotel = (h) => {
+                        const rTxt = getRatingText(h);
+                        const nTxt = Array.isArray(h.names) ? h.names.join(' ').toLowerCase() : String(h.names || '').toLowerCase();
+                        const has3 = rTxt.includes('3*') || rTxt.includes('3 star');
+                        const has4 = rTxt.includes('4*') || rTxt.includes('4 star');
+                        const has5 = rTxt.includes('5*') || rTxt.includes('5 star');
+                        const hasMixKeyword = rTxt.includes('mix') || rTxt.includes('custom') || nTxt.includes('mix') || nTxt.includes('combination');
+
+                        if (hasMixKeyword || (has3 && has4) || (has3 && has5) || (has4 && has5)) {
+                            return 'mix';
+                        }
+                        if (has3) return '3star';
+                        if (has4) return '4star';
+                        if (has5) return '5star';
+                        return 'unknown';
+                    };
+
+                    const applyPricesToHotel = (h, priceObj) => {
+                        if (!h || !priceObj || !priceObj.adult) return;
+
+                        const paxLabel = `PER PERSON (MINIMUM ${pax.toUpperCase()})`;
+                        h.price = `${priceObj.adult} Per Person (Minimum ${pax})`;
+
+                        const childExtraLabel = costingData.childExtraLabel || 'PER CHILD (WITH EXTRA BED)';
+                        const childShareLabel = costingData.childShareLabel || 'PER CHILD (SHARING BED)';
+
+                        const updatedPrices = [
+                            { label: paxLabel, amount: priceObj.adult }
                         ];
-                        if (costingData.prices3Star.childExtra && costingData.prices3Star.childExtra !== 'LKR 0') {
-                            p3List.push({ label: childExtraLabel, amount: costingData.prices3Star.childExtra });
+
+                        if (priceObj.childExtra && priceObj.childExtra !== 'LKR 0') {
+                            updatedPrices.push({
+                                label: childExtraLabel,
+                                amount: priceObj.childExtra
+                            });
                         }
-                        if (costingData.prices3Star.childShare && costingData.prices3Star.childShare !== 'LKR 0') {
-                            p3List.push({ label: childShareLabel, amount: costingData.prices3Star.childShare });
+
+                        if (priceObj.childShare && priceObj.childShare !== 'LKR 0') {
+                            updatedPrices.push({
+                                label: childShareLabel,
+                                amount: priceObj.childShare
+                            });
                         }
-                        h3.prices = p3List;
+
+                        h.prices = updatedPrices;
+                    };
+
+                    let h3 = null;
+                    let hMix = null;
+                    let h4 = null;
+                    let h5 = null;
+                    const otherHotels = [];
+
+                    opt.hotels.forEach(h => {
+                        const cat = classifyHotel(h);
+                        if (cat === '3star' && !h3) h3 = h;
+                        else if (cat === 'mix' && !hMix) hMix = h;
+                        else if (cat === '4star' && !h4) h4 = h;
+                        else if (cat === '5star' && !h5) h5 = h;
+                        else otherHotels.push(h);
+                    });
+
+                    // Fallbacks for unknown categories
+                    if (!h3 && otherHotels.length > 0) h3 = otherHotels.shift();
+                    if (!h4 && otherHotels.length > 0) h4 = otherHotels.shift();
+
+                    if (costingData.prices3Star) {
+                        if (!h3) {
+                            h3 = { rating: "3* Hotel Options", names: ["Standard 3* Hotel Accommodation"], price: "", prices: [] };
+                            opt.hotels.unshift(h3);
+                        }
+                        applyPricesToHotel(h3, costingData.prices3Star);
                     }
 
-                    // 4-Star Hotel Option update
-                    let h4 = opt.hotels.find(h => h.rating && h.rating.includes('4*'));
-                    if (!h4 && opt.hotels.length > 1 && opt.hotels[1] !== h3) h4 = opt.hotels[1];
-                    if (!h4 && costingData.prices4Star) {
-                        h4 = {
-                            rating: "4* Hotel Options",
-                            names: ["Standard 4* Hotel Accommodation"],
-                            price: "",
-                            prices: []
-                        };
-                        opt.hotels.push(h4);
-                    }
-                    if (h4 && costingData.prices4Star) {
-                        h4.price = `${costingData.prices4Star.adult} Per Person (Minimum ${pax})`;
-                        const p4List = [
-                            { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.prices4Star.adult }
-                        ];
-                        if (costingData.prices4Star.childExtra && costingData.prices4Star.childExtra !== 'LKR 0') {
-                            p4List.push({ label: childExtraLabel, amount: costingData.prices4Star.childExtra });
-                        }
-                        if (costingData.prices4Star.childShare && costingData.prices4Star.childShare !== 'LKR 0') {
-                            p4List.push({ label: childShareLabel, amount: costingData.prices4Star.childShare });
-                        }
-                        h4.prices = p4List;
-                    }
-
-                    // Mix Option update (if present)
                     if (costingData.pricesMix) {
-                        let hMix = opt.hotels.find(h => h.rating && (h.rating.toLowerCase().includes('mix') || h.rating.toLowerCase().includes('custom')));
-                        if (hMix) {
-                            hMix.price = `${costingData.pricesMix.adult} Per Person (Minimum ${pax})`;
-                            const pMixList = [
-                                { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.pricesMix.adult }
-                            ];
-                            if (costingData.pricesMix.childExtra && costingData.pricesMix.childExtra !== 'LKR 0') {
-                                pMixList.push({ label: childExtraLabel, amount: costingData.pricesMix.childExtra });
+                        if (!hMix) {
+                            const mixTitle = costingData.pricesMix.title || "Mix Hotel Option";
+                            hMix = { rating: mixTitle, names: ["Mix Hotel Accommodation"], price: "", prices: [] };
+                            const idx3 = opt.hotels.indexOf(h3);
+                            if (idx3 !== -1) {
+                                opt.hotels.splice(idx3 + 1, 0, hMix);
+                            } else {
+                                opt.hotels.push(hMix);
                             }
-                            if (costingData.pricesMix.childShare && costingData.pricesMix.childShare !== 'LKR 0') {
-                                pMixList.push({ label: childShareLabel, amount: costingData.pricesMix.childShare });
-                            }
-                            hMix.prices = pMixList;
                         }
+                        applyPricesToHotel(hMix, costingData.pricesMix);
+                    }
+
+                    if (costingData.prices4Star) {
+                        if (!h4) {
+                            h4 = { rating: "4* Hotel Options", names: ["Standard 4* Hotel Accommodation"], price: "", prices: [] };
+                            opt.hotels.push(h4);
+                        }
+                        applyPricesToHotel(h4, costingData.prices4Star);
+                    }
+
+                    if (costingData.prices5Star && h5) {
+                        applyPricesToHotel(h5, costingData.prices5Star);
                     }
 
                     if (costingData.pax) {
@@ -1679,9 +1716,14 @@ function slwGoHome() {
 
                         window.__slwBaseData = JSON.parse(JSON.stringify(currentData));
 
+                        const summaryParts = [];
+                        if (costingData.prices3Star?.adult) summaryParts.push(`3*: ${costingData.prices3Star.adult}`);
+                        if (costingData.pricesMix?.adult) summaryParts.push(`Mix: ${costingData.pricesMix.adult}`);
+                        if (costingData.prices4Star?.adult) summaryParts.push(`4*: ${costingData.prices4Star.adult}`);
+
                         slwShowSuccess(
                             "⚡ Costing Prices සාර්ථකව Update විය!",
-                            `${opt.name || 'Option 01'} වෙත 3* (${costingData.prices3Star?.adult || '-'}) සහ 4* (${costingData.prices4Star?.adult || '-'}) මිල ගණන් යොදන ලදී.`
+                            `${opt.name || 'Option 01'} වෙත (${summaryParts.join(' | ')}) මිල ගණන් සාර්ථකව යොදන ලදී.`
                         );
                     }
                 } catch(err) {
@@ -1929,11 +1971,16 @@ function slwGoHome() {
                     try {
                         const cd = JSON.parse(raw);
                         const p3 = cd.prices3Star?.adult;
+                        const pMix = cd.pricesMix?.adult;
                         const p4 = cd.prices4Star?.adult;
-                        if (p3 || p4) {
-                            badgeEl.innerText = `(3*: ${p3 || '-'} | 4*: ${p4 || '-'})`;
+                        const parts = [];
+                        if (p3) parts.push(`3*: ${p3}`);
+                        if (pMix) parts.push(`Mix: ${pMix}`);
+                        if (p4) parts.push(`4*: ${p4}`);
+                        if (parts.length > 0) {
+                            badgeEl.innerText = `(${parts.join(' | ')})`;
                             badgeEl.style.display = 'inline-block';
-                            optCostingBtn.title = `Click to apply 3* (${p3}) and 4* (${p4}) into this Option`;
+                            optCostingBtn.title = `Click to apply costing prices (${parts.join(', ')}) into this Option`;
                         } else {
                             badgeEl.innerText = '(Ready)';
                         }

@@ -626,7 +626,40 @@ function slwGoHome() {
     box-shadow: 0 8px 25px rgba(13, 148, 136, 0.55);
 }
 @media print {
-    #slw-global-modal, #slw-float-btn, #slw-float-history-btn, #slw-quick-load-panel, #slw-history-modal { display: none !important; }
+    #slw-global-modal,
+    #slw-float-btn,
+    #slw-float-history-btn,
+    #slw-float-costing-btn,
+    #slw-sidebar-costing-btn,
+    #slw-sidebar-history-btn,
+    #slw-update-cloud-btn,
+    #slw-quick-load-panel,
+    #slw-panel-toggle,
+    #slw-history-modal,
+    .slw-opt-apply-costing-btn,
+    .slw-opt-apply-costing-btn *,
+    .slw-home-btn-container,
+    .slw-costing-badge,
+    .print\:hidden,
+    .print\:hidden *,
+    [class*="print:hidden"],
+    [class*="print:hidden"] *,
+    div.print\:hidden,
+    div[class*="print:hidden"],
+    button.print\:hidden,
+    button[class*="print:hidden"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 }
 
 /* SLW Preset Row & History Styling */
@@ -1852,9 +1885,9 @@ function slwGoHome() {
             const costingSidebarBtn = document.createElement('button');
             costingSidebarBtn.id = 'slw-sidebar-costing-btn';
             costingSidebarBtn.innerHTML = '<span style="font-size:14px;margin-right:4px;">⚡</span> Apply Costing Prices';
-            costingSidebarBtn.className = exportBtn.className;
+            costingSidebarBtn.className = (exportBtn.className || '') + ' print:hidden';
             costingSidebarBtn.title = "Tour Costing එකෙන් ගණනය කළ මිල ගණන් Option 01 වෙත යොදන්න";
-            costingSidebarBtn.style.cssText = 'background:linear-gradient(135deg, #d97706, #b45309)!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:6px!important;cursor:pointer!important;font-weight:700!important;border:none!important;border-radius:6px!important;box-shadow:0 2px 6px rgba(217,119,6,0.35)!important;';
+            costingSidebarBtn.style.cssText = 'background:linear-gradient(135deg, #d97706, #b45309);color:white;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;cursor:pointer;font-weight:700;border:none;border-radius:6px;box-shadow:0 2px 6px rgba(217,119,6,0.35);';
             costingSidebarBtn.onclick = function() {
                 window.slwApplyCostingPrices(0);
             };
@@ -1871,27 +1904,36 @@ function slwGoHome() {
             const parentContainer = catBtn.parentElement;
             if (!parentContainer) return;
 
+            // Ensure parent container and buttons strictly stay print:hidden
+            parentContainer.classList.add('print:hidden');
+            catBtn.classList.add('print:hidden');
+
             let optCostingBtn = parentContainer.querySelector('.slw-opt-apply-costing-btn');
             if (!optCostingBtn) {
                 optCostingBtn = document.createElement('button');
-                optCostingBtn.className = 'slw-opt-apply-costing-btn';
+                optCostingBtn.className = 'slw-opt-apply-costing-btn print:hidden';
                 optCostingBtn.innerHTML = `
                     <span style="font-size:14px;">⚡</span>
                     <span>Apply Costing Prices</span>
                     <span class="slw-costing-badge" style="font-size:11px;font-weight:600;opacity:0.95;background:rgba(0,0,0,0.18);padding:2px 8px;border-radius:6px;margin-left:4px;"></span>
                 `;
-                optCostingBtn.style.cssText = 'background:linear-gradient(135deg, #d97706 0%, #b45309 100%)!important;color:#ffffff!important;font-size:13px!important;font-weight:700!important;padding:8px 16px!important;border-radius:8px!important;border:none!important;cursor:pointer!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-shadow:0 2px 8px rgba(217,119,6,0.35)!important;margin-right:8px!important;transition:all 0.2s!important;';
+                optCostingBtn.style.cssText = 'background:linear-gradient(135deg, #d97706 0%, #b45309 100%);color:#ffffff;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(217,119,6,0.35);margin:0 4px 6px 4px;vertical-align:middle;transition:all 0.2s;';
                 optCostingBtn.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     window.slwApplyCostingPrices(optIdx);
                 };
 
-                parentContainer.style.display = 'flex';
-                parentContainer.style.justifyContent = 'center';
-                parentContainer.style.alignItems = 'center';
-                parentContainer.style.gap = '8px';
-                parentContainer.style.flexWrap = 'wrap';
+                // Remove inline display on parent container to preserve print:hidden CSS!
+                parentContainer.style.removeProperty('display');
+                parentContainer.style.removeProperty('justify-content');
+                parentContainer.style.removeProperty('align-items');
+                parentContainer.style.removeProperty('gap');
+                parentContainer.style.removeProperty('flex-wrap');
+
+                catBtn.style.display = 'inline-flex';
+                catBtn.style.verticalAlign = 'middle';
+                catBtn.style.margin = '0 4px 6px 4px';
 
                 parentContainer.insertBefore(optCostingBtn, catBtn);
             }
@@ -1925,6 +1967,7 @@ function slwGoHome() {
         if (!document.getElementById('slw-float-btn')) {
             const floatBtn = document.createElement('button');
             floatBtn.id = 'slw-float-btn';
+            floatBtn.className = 'print:hidden';
             floatBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
@@ -1945,6 +1988,7 @@ function slwGoHome() {
         if (!document.getElementById('slw-float-history-btn')) {
             const floatHistBtn = document.createElement('button');
             floatHistBtn.id = 'slw-float-history-btn';
+            floatHistBtn.className = 'print:hidden';
             floatHistBtn.innerHTML = '🕒 <span>History</span>';
             floatHistBtn.title = "View Version History & Rollback";
             floatHistBtn.style.cssText = 'position:fixed;bottom:18px;right:255px;z-index:999998;background:#0f766e;color:#ffffff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(15,118,110,0.45);display:flex;align-items:center;gap:6px;font-family:inherit;transition:all 0.2s;';
@@ -1962,6 +2006,7 @@ function slwGoHome() {
         if (!document.getElementById('slw-float-costing-btn')) {
             const floatCostingBtn = document.createElement('button');
             floatCostingBtn.id = 'slw-float-costing-btn';
+            floatCostingBtn.className = 'print:hidden';
             floatCostingBtn.innerHTML = '⚡ <span>Apply Costing</span>';
             floatCostingBtn.title = "Tour Costing එකෙන් ගණනය කළ මිල ගණන් Option 01 වෙත යොදන්න";
             floatCostingBtn.style.cssText = 'position:fixed;bottom:18px;right:365px;z-index:999998;background:linear-gradient(135deg, #d97706, #b45309);color:#ffffff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(217,119,6,0.45);display:flex;align-items:center;gap:6px;font-family:inherit;transition:all 0.2s;';
@@ -2017,6 +2062,62 @@ function slwGoHome() {
             console.error('[SLW] Error in slwCheckCostingHandoff:', e);
         }
     }
+
+    // ── FOOLPROOF PRINT SUPPRESSION HOOKS ──
+    const slwHiddenDuringPrint = [];
+
+    window.addEventListener('beforeprint', function() {
+        const selectors = [
+            '#slw-global-modal',
+            '#slw-float-btn',
+            '#slw-float-history-btn',
+            '#slw-float-costing-btn',
+            '#slw-sidebar-costing-btn',
+            '#slw-sidebar-history-btn',
+            '#slw-update-cloud-btn',
+            '#slw-quick-load-panel',
+            '#slw-panel-toggle',
+            '#slw-history-modal',
+            '.slw-opt-apply-costing-btn',
+            '.slw-costing-badge',
+            '.slw-home-btn-container',
+            '.print\\:hidden',
+            '[class*="print:hidden"]'
+        ];
+
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                slwHiddenDuringPrint.push({ el, display: el.style.display });
+                el.style.setProperty('display', 'none', 'important');
+            });
+        });
+
+        // Also explicitly find and hide any button containing "Add Hotel Category" and its parent container
+        document.querySelectorAll('button').forEach(btn => {
+            const txt = (btn.textContent || btn.innerText || '').trim();
+            if (txt.includes('Add Hotel Category') || txt.includes('Apply Costing')) {
+                slwHiddenDuringPrint.push({ el: btn, display: btn.style.display });
+                btn.style.setProperty('display', 'none', 'important');
+                if (btn.parentElement) {
+                    slwHiddenDuringPrint.push({ el: btn.parentElement, display: btn.parentElement.style.display });
+                    btn.parentElement.style.setProperty('display', 'none', 'important');
+                }
+            }
+        });
+    });
+
+    window.addEventListener('afterprint', function() {
+        while (slwHiddenDuringPrint.length > 0) {
+            const item = slwHiddenDuringPrint.pop();
+            if (item && item.el) {
+                if (item.display) {
+                    item.el.style.display = item.display;
+                } else {
+                    item.el.style.removeProperty('display');
+                }
+            }
+        }
+    });
 
     slwCheckCostingHandoff();
     setInterval(injectUIControls, 1000);

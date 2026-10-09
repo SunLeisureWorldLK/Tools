@@ -1287,6 +1287,8 @@
     let availableTransfers = [];
     let availableCities = [];
     let logoDataUrl = null;
+    let customFinalPriceOverrides = {};
+    window.customFinalPriceOverrides = customFinalPriceOverrides;
     const allInputIds = [
         'num_people_transfer', 'num_people_hotel',
         'markup', 'lkr_rate', 'usd_divisor',
@@ -3523,6 +3525,169 @@
     }
 
 
+    // ── ADVANCED PRICING ADJUSTMENTS & OVERRIDES ENGINE ──
+    function editFinalPrice(suffix, category) {
+        const id = category === 'adult' ? `adult_final_lkr_${suffix}` :
+                   category === 'child_extra' ? `child_final_lkr_${suffix}` :
+                   `child_sharing_final_lkr_${suffix}`;
+        const el = document.getElementById(id);
+        const currentVal = customFinalPriceOverrides[suffix]?.[category] || (el ? parseFloat(cleanLkrNumber(el.innerText)) : 0);
+        
+        const label = category === 'adult' ? 'Adult' : (category === 'child_extra' ? 'Child (Extra Bed)' : 'Child (Sharing Bed)');
+        const star = suffix === '3star' ? '3*' : (suffix === '4star' ? '4*' : (suffix === '5star' ? '5*' : 'Mix'));
+
+        const input = prompt(`Enter custom Final LKR price for ${star} ${label}\n(Leave empty to reset back to auto-calculated formula):`, currentVal > 0 ? currentVal : '');
+        if (input === null) return; // cancelled
+
+        if (input.trim() === '') {
+            if (customFinalPriceOverrides[suffix]) {
+                delete customFinalPriceOverrides[suffix][category];
+            }
+            showNotification(`Reset ${star} ${label} price to auto formula.`, false);
+        } else {
+            const num = parseFloat(input.replace(/[^0-9.]/g, ''));
+            if (isNaN(num) || num <= 0) {
+                alert("Please enter a valid positive number.");
+                return;
+            }
+            if (!customFinalPriceOverrides[suffix]) customFinalPriceOverrides[suffix] = {};
+            customFinalPriceOverrides[suffix][category] = num;
+            showNotification(`Updated ${star} ${label} Final price to LKR ${num.toLocaleString('en-US')}.`, false);
+        }
+
+        calculate();
+        if (activeLoadedPresetKey) {
+            updateActivePresetStatusBar();
+        }
+    }
+
+    function captureAllPricingAdjustments() {
+        // 1. General & Markup settings
+        const settings = {
+            numPeopleTransfer: Number(document.getElementById('num_people_transfer')?.value) || 2,
+            numPeopleHotel: Number(document.getElementById('num_people_hotel')?.value) || 2,
+            markup: Number(document.getElementById('markup')?.value) || 25,
+            lkrRate: Number(document.getElementById('lkr_rate')?.value) || 10.0,
+            usdDivisor: Number(document.getElementById('usd_divisor')?.value) || 31,
+            adultManualMarkup: document.getElementById('adult_manual_markup')?.value || '',
+            childExtraBedManualMarkup: document.getElementById('child_extra_bed_manual_markup')?.value || '',
+            childSharingManualMarkup: document.getElementById('child_sharing_manual_markup')?.value || '',
+            guidePricePerDay: document.getElementById('guide_price_per_day')?.value || '',
+            guideDays: document.getElementById('guide_days')?.value || '',
+            waterPricePerDay: document.getElementById('water_price_per_day')?.value || '',
+            waterDays: document.getElementById('water_days')?.value || '',
+            mealPricePerDay: document.getElementById('meal_price_per_day')?.value || '',
+            mealDays: document.getElementById('meal_days')?.value || ''
+        };
+
+        // 2. Individual card markups (THB, %, and manual flag)
+        const cardMarkups = {};
+        const suffixes = ['3star', '4star', '5star', 'mix'];
+        const categories = ['adult', 'child_extra', 'child_sharing'];
+
+        suffixes.forEach(sfx => {
+            cardMarkups[sfx] = {};
+            categories.forEach(cat => {
+                const thbEl = document.getElementById(`markup_thb_${cat}_${sfx}`);
+                const pctEl = document.getElementById(`markup_pct_${cat}_${sfx}`);
+                if (thbEl || pctEl) {
+                    cardMarkups[sfx][cat] = {
+                        thb: thbEl?.value || '',
+                        pct: pctEl?.value || '',
+                        manual: thbEl?.dataset.manual === 'true' || pctEl?.dataset.manual === 'true'
+                    };
+                }
+            });
+        });
+
+        // 3. Current rendered final prices snapshot
+        const renderedFinalPrices = {
+            '3star': {
+                adult: document.getElementById('adult_final_lkr_3star')?.innerText || '',
+                child_extra: document.getElementById('child_final_lkr_3star')?.innerText || '',
+                child_sharing: document.getElementById('child_sharing_final_lkr_3star')?.innerText || ''
+            },
+            '4star': {
+                adult: document.getElementById('adult_final_lkr_4star')?.innerText || '',
+                child_extra: document.getElementById('child_final_lkr_4star')?.innerText || '',
+                child_sharing: document.getElementById('child_sharing_final_lkr_4star')?.innerText || ''
+            },
+            '5star': {
+                adult: document.getElementById('adult_final_lkr_5star')?.innerText || '',
+                child_extra: document.getElementById('child_final_lkr_5star')?.innerText || '',
+                child_sharing: document.getElementById('child_sharing_final_lkr_5star')?.innerText || ''
+            },
+            'mix': {
+                adult: document.getElementById('adult_final_lkr_mix')?.innerText || '',
+                child_extra: document.getElementById('child_final_lkr_mix')?.innerText || '',
+                child_sharing: document.getElementById('child_sharing_final_lkr_mix')?.innerText || ''
+            }
+        };
+
+        return {
+            settings,
+            cardMarkups,
+            customFinalPriceOverrides: JSON.parse(JSON.stringify(customFinalPriceOverrides || {})),
+            renderedFinalPrices
+        };
+    }
+
+    function restoreAllPricingAdjustments(preset) {
+        if (!preset) return;
+
+        // 1. Settings restoration
+        if (preset.settings) {
+            const s = preset.settings;
+            if (s.numPeopleTransfer !== undefined) document.getElementById('num_people_transfer').value = s.numPeopleTransfer;
+            if (s.numPeopleHotel !== undefined) document.getElementById('num_people_hotel').value = s.numPeopleHotel;
+            if (s.markup !== undefined) document.getElementById('markup').value = s.markup;
+            if (s.lkrRate !== undefined) document.getElementById('lkr_rate').value = s.lkrRate;
+            if (s.usdDivisor !== undefined) document.getElementById('usd_divisor').value = s.usdDivisor;
+            if (s.adultManualMarkup !== undefined) document.getElementById('adult_manual_markup').value = s.adultManualMarkup;
+            if (s.childExtraBedManualMarkup !== undefined) document.getElementById('child_extra_bed_manual_markup').value = s.childExtraBedManualMarkup;
+            if (s.childSharingManualMarkup !== undefined) document.getElementById('child_sharing_manual_markup').value = s.childSharingManualMarkup;
+            if (s.guidePricePerDay !== undefined) document.getElementById('guide_price_per_day').value = s.guidePricePerDay;
+            if (s.guideDays !== undefined) document.getElementById('guide_days').value = s.guideDays;
+            if (s.waterPricePerDay !== undefined) document.getElementById('water_price_per_day').value = s.waterPricePerDay;
+            if (s.waterDays !== undefined) document.getElementById('water_days').value = s.waterDays;
+            if (s.mealPricePerDay !== undefined) document.getElementById('meal_price_per_day').value = s.mealPricePerDay;
+            if (s.mealDays !== undefined) document.getElementById('meal_days').value = s.mealDays;
+        }
+
+        // 2. Custom final price overrides restoration
+        customFinalPriceOverrides = JSON.parse(JSON.stringify(preset.customFinalPriceOverrides || {}));
+        window.customFinalPriceOverrides = customFinalPriceOverrides;
+
+        // 3. Card markups restoration
+        if (preset.cardMarkups) {
+            const suffixes = ['3star', '4star', '5star', 'mix'];
+            const categories = ['adult', 'child_extra', 'child_sharing'];
+            suffixes.forEach(sfx => {
+                const sfxData = preset.cardMarkups[sfx];
+                if (!sfxData) return;
+                categories.forEach(cat => {
+                    const m = sfxData[cat];
+                    if (!m) return;
+                    const thbEl = document.getElementById(`markup_thb_${cat}_${sfx}`);
+                    const pctEl = document.getElementById(`markup_pct_${cat}_${sfx}`);
+                    if (thbEl && m.thb !== undefined && m.thb !== '') {
+                        thbEl.value = m.thb;
+                    }
+                    if (pctEl && m.pct !== undefined && m.pct !== '') {
+                        pctEl.value = m.pct;
+                    }
+                    if (m.manual) {
+                        if (thbEl) thbEl.dataset.manual = 'true';
+                        if (pctEl) pctEl.dataset.manual = 'true';
+                    } else {
+                        if (thbEl) thbEl.dataset.manual = 'false';
+                        if (pctEl) pctEl.dataset.manual = 'false';
+                    }
+                });
+            });
+        }
+    }
+
     // --- MAIN CALCULATION ---
     function calculate() {
         // Helpers
@@ -3607,16 +3772,46 @@
             const getMarkup = (category, subtotal) => {
                 let pctInput = document.getElementById(`markup_pct_${category}_${suffix}`);
                 let thbInput = document.getElementById(`markup_thb_${category}_${suffix}`);
+                if (!pctInput || !thbInput) return 0;
                 thbInput.dataset.subtotal = subtotal;
                 pctInput.dataset.subtotal = subtotal;
                 let markupAmount;
+
+                // 1. If card input has individual manual edit
                 if (pctInput.dataset.manual === 'true' || thbInput.dataset.manual === 'true') {
                     let mPct = parseFloat(pctInput.value) / 100 || 0;
                     markupAmount = subtotal * mPct;
                     if (document.activeElement !== thbInput) {
                         thbInput.value = markupAmount.toFixed(2);
                     }
-                } else {
+                }
+                // 2. Else check if global manual THB override is provided for this category
+                else if (category === 'adult' && manualMarkupAdult !== null && manualMarkupAdult > 0) {
+                    markupAmount = manualMarkupAdult;
+                    let mPct = subtotal > 0 ? (manualMarkupAdult / subtotal) * 100 : 0;
+                    if (document.activeElement !== pctInput && document.activeElement !== thbInput) {
+                        pctInput.value = mPct.toFixed(2);
+                        thbInput.value = manualMarkupAdult.toFixed(2);
+                    }
+                }
+                else if (category === 'child_extra' && manualMarkupChildExtraBed !== null && manualMarkupChildExtraBed > 0) {
+                    markupAmount = manualMarkupChildExtraBed;
+                    let mPct = subtotal > 0 ? (manualMarkupChildExtraBed / subtotal) * 100 : 0;
+                    if (document.activeElement !== pctInput && document.activeElement !== thbInput) {
+                        pctInput.value = mPct.toFixed(2);
+                        thbInput.value = manualMarkupChildExtraBed.toFixed(2);
+                    }
+                }
+                else if (category === 'child_sharing' && manualMarkupChildSharing !== null && manualMarkupChildSharing > 0) {
+                    markupAmount = manualMarkupChildSharing;
+                    let mPct = subtotal > 0 ? (manualMarkupChildSharing / subtotal) * 100 : 0;
+                    if (document.activeElement !== pctInput && document.activeElement !== thbInput) {
+                        pctInput.value = mPct.toFixed(2);
+                        thbInput.value = manualMarkupChildSharing.toFixed(2);
+                    }
+                }
+                // 3. Otherwise use default global percentage markup
+                else {
                     markupAmount = subtotal * markupPercent;
                     if (document.activeElement !== pctInput && document.activeElement !== thbInput) {
                         pctInput.value = (markupPercent * 100).toFixed(2);
@@ -3625,36 +3820,81 @@
                 }
                 return markupAmount;
             };
+
             const subtotalAdult = selectedTourCost + perPersonTransferCost + hotelCost + addonCostPerAdult;
             let markupAmountAdult = getMarkup('adult', subtotalAdult);
             const totalThbAdult = subtotalAdult + markupAmountAdult;
+
             const subtotalChildExtraBed = selectedTourCost + hotelCost;
             let markupAmountChildExtraBed = getMarkup('child_extra', subtotalChildExtraBed);
             const totalThbChildExtraBed = subtotalChildExtraBed + markupAmountChildExtraBed;
+
             const subtotalChildSharing = selectedTourCost + totalMealCost;
             let markupAmountChildSharing = getMarkup('child_sharing', subtotalChildSharing);
             const totalThbChildSharing = subtotalChildSharing + markupAmountChildSharing;
+
             document.getElementById(`adult_thb_${suffix}`).innerText = formatCurrency(totalThbAdult, 'THB');
             let usdAdult = totalThbAdult / usdDivisor;
             if (document.getElementById(`adult_usd_${suffix}`)) document.getElementById(`adult_usd_${suffix}`).innerText = formatCurrency(usdAdult, 'USD');
             let lkrAdult = totalThbAdult * lkrRate;
             document.getElementById(`adult_lkr_${suffix}`).innerText = formatCurrency(lkrAdult, 'LKR');
+
+            // Adult Final LKR (with custom override support)
             let finalLkrAdult = Math.ceil(lkrAdult / 100) * 100 + 1000;
-            if (document.getElementById(`adult_final_lkr_${suffix}`)) document.getElementById(`adult_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrAdult, 'LKR');
+            const adultOverride = customFinalPriceOverrides[suffix]?.adult;
+            if (adultOverride !== undefined && adultOverride > 0) {
+                finalLkrAdult = adultOverride;
+            }
+            const adultFinalEl = document.getElementById(`adult_final_lkr_${suffix}`);
+            if (adultFinalEl) {
+                adultFinalEl.innerHTML = formatCurrency(finalLkrAdult, 'LKR') + 
+                    (adultOverride ? ' <span style="font-size:11px;color:#d97706;" title="Custom adjusted price">✏️</span>' : '');
+                adultFinalEl.style.cursor = 'pointer';
+                adultFinalEl.title = 'Click to adjust / override Final LKR price';
+                adultFinalEl.onclick = () => editFinalPrice(suffix, 'adult');
+            }
+
             document.getElementById(`child_extra_thb_${suffix}`).innerText = formatCurrency(totalThbChildExtraBed, 'THB');
             let usdChildExtra = totalThbChildExtraBed / usdDivisor;
             if (document.getElementById(`child_extra_usd_${suffix}`)) document.getElementById(`child_extra_usd_${suffix}`).innerText = formatCurrency(usdChildExtra, 'USD');
             let lkrChildExtra = totalThbChildExtraBed * lkrRate;
             document.getElementById(`child_extra_lkr_${suffix}`).innerText = formatCurrency(lkrChildExtra, 'LKR');
+
+            // Child Extra Bed Final LKR (with custom override support)
             let finalLkrChildExtra = Math.ceil(lkrChildExtra / 100) * 100 + 1000;
-            if (document.getElementById(`child_final_lkr_${suffix}`)) document.getElementById(`child_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrChildExtra, 'LKR');
+            const childExtraOverride = customFinalPriceOverrides[suffix]?.child_extra;
+            if (childExtraOverride !== undefined && childExtraOverride > 0) {
+                finalLkrChildExtra = childExtraOverride;
+            }
+            const childExtraFinalEl = document.getElementById(`child_final_lkr_${suffix}`);
+            if (childExtraFinalEl) {
+                childExtraFinalEl.innerHTML = formatCurrency(finalLkrChildExtra, 'LKR') +
+                    (childExtraOverride ? ' <span style="font-size:11px;color:#d97706;" title="Custom adjusted price">✏️</span>' : '');
+                childExtraFinalEl.style.cursor = 'pointer';
+                childExtraFinalEl.title = 'Click to adjust / override Final LKR price';
+                childExtraFinalEl.onclick = () => editFinalPrice(suffix, 'child_extra');
+            }
+
             document.getElementById(`child_sharing_thb_${suffix}`).innerText = formatCurrency(totalThbChildSharing, 'THB');
             let usdChildSharing = totalThbChildSharing / usdDivisor;
             if (document.getElementById(`child_sharing_usd_${suffix}`)) document.getElementById(`child_sharing_usd_${suffix}`).innerText = formatCurrency(usdChildSharing, 'USD');
             let lkrChildSharing = totalThbChildSharing * lkrRate;
             document.getElementById(`child_sharing_lkr_${suffix}`).innerText = formatCurrency(lkrChildSharing, 'LKR');
+
+            // Child Sharing Final LKR (with custom override support)
             let finalLkrChildSharing = Math.ceil(lkrChildSharing / 100) * 100 + 1000;
-            if (document.getElementById(`child_sharing_final_lkr_${suffix}`)) document.getElementById(`child_sharing_final_lkr_${suffix}`).innerText = formatCurrency(finalLkrChildSharing, 'LKR');
+            const childSharingOverride = customFinalPriceOverrides[suffix]?.child_sharing;
+            if (childSharingOverride !== undefined && childSharingOverride > 0) {
+                finalLkrChildSharing = childSharingOverride;
+            }
+            const childSharingFinalEl = document.getElementById(`child_sharing_final_lkr_${suffix}`);
+            if (childSharingFinalEl) {
+                childSharingFinalEl.innerHTML = formatCurrency(finalLkrChildSharing, 'LKR') +
+                    (childSharingOverride ? ' <span style="font-size:11px;color:#d97706;" title="Custom adjusted price">✏️</span>' : '');
+                childSharingFinalEl.style.cursor = 'pointer';
+                childSharingFinalEl.title = 'Click to adjust / override Final LKR price';
+                childSharingFinalEl.onclick = () => editFinalPrice(suffix, 'child_sharing');
+            }
         };
 
         // 4. Calculate all four
@@ -4264,19 +4504,8 @@
             }
         });
 
-        // 4. Setup Pax & Settings
-        if (preset.settings) {
-            if (preset.settings.numPeopleTransfer) document.getElementById('num_people_transfer').value = preset.settings.numPeopleTransfer;
-            if (preset.settings.numPeopleHotel) document.getElementById('num_people_hotel').value = preset.settings.numPeopleHotel;
-            if (preset.settings.markup) document.getElementById('markup').value = preset.settings.markup;
-            if (preset.settings.lkrRate) document.getElementById('lkr_rate').value = preset.settings.lkrRate;
-            if (preset.settings.usdDivisor) document.getElementById('usd_divisor').value = preset.settings.usdDivisor;
-        } else {
-            const paxTrInp = document.getElementById('num_people_transfer');
-            const paxHtlInp = document.getElementById('num_people_hotel');
-            if (paxTrInp && (!paxTrInp.value || paxTrInp.value <= 0)) paxTrInp.value = 2;
-            if (paxHtlInp && (!paxHtlInp.value || paxHtlInp.value <= 0)) paxHtlInp.value = 2;
-        }
+        // 4. Setup Pax, Settings & Pricing Adjustments
+        restoreAllPricingAdjustments(preset);
 
         renderAll();
         calculate();
@@ -4284,7 +4513,7 @@
         updateActivePresetStatusBar();
         renderPresetCardsGrid();
 
-        showNotification(`⚡ Loaded Package "${preset.title}"! All services & prices calculated.`, false);
+        showNotification(`⚡ Loaded Package "${preset.title}"! All services & price adjustments restored.`, false);
         document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -4297,7 +4526,7 @@
         }
 
         const preset = costingPresets[activeLoadedPresetKey];
-        if (!confirm(`Save all updated prices, hotels, tours, and transfers back into package "${preset.title}"?\n\nThis will permanently update this package for future cost calculations across all devices.`)) {
+        if (!confirm(`Save all updated prices, hotels, tours, transfers, and price adjustments back into package "${preset.title}"?\n\nThis will permanently update this package for future cost calculations across all devices.`)) {
             return;
         }
 
@@ -4306,14 +4535,12 @@
         preset.transfers = JSON.parse(JSON.stringify(availableTransfers));
         preset.tours = JSON.parse(JSON.stringify(availableTours));
 
-        // 2. Capture settings
-        preset.settings = {
-            numPeopleTransfer: Number(document.getElementById('num_people_transfer')?.value) || 2,
-            numPeopleHotel: Number(document.getElementById('num_people_hotel')?.value) || 2,
-            markup: Number(document.getElementById('markup')?.value) || 25,
-            lkrRate: Number(document.getElementById('lkr_rate')?.value) || 10.0,
-            usdDivisor: Number(document.getElementById('usd_divisor')?.value) || 31
-        };
+        // 2. Capture all settings & pricing adjustments
+        const pricingAdj = captureAllPricingAdjustments();
+        preset.settings = pricingAdj.settings;
+        preset.cardMarkups = pricingAdj.cardMarkups;
+        preset.customFinalPriceOverrides = pricingAdj.customFinalPriceOverrides;
+        preset.renderedFinalPrices = pricingAdj.renderedFinalPrices;
 
         // 3. Update summary string
         const cityStr = preset.cities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ');
@@ -4326,7 +4553,7 @@
         updateActivePresetStatusBar();
         renderPresetCardsGrid();
 
-        showNotification(`✅ Successfully updated package "${preset.title}" with new prices and items!`, false);
+        showNotification(`✅ Successfully updated package "${preset.title}" with new prices and adjustments!`, false);
     }
 
     // ── PACKAGE PRESET MODAL & CREATION ENGINE ──
@@ -4462,6 +4689,8 @@
         const key = editKey || ('pkg_' + Date.now());
         const existing = costingPresets[key] || {};
 
+        const pricingAdj = captureAllPricingAdjustments();
+
         costingPresets[key] = {
             id: key,
             title: title,
@@ -4471,13 +4700,10 @@
             cities: JSON.parse(JSON.stringify(availableCities.length > 0 ? availableCities : (existing.cities || []))),
             transfers: JSON.parse(JSON.stringify(availableTransfers.length > 0 ? availableTransfers : (existing.transfers || []))),
             tours: JSON.parse(JSON.stringify(availableTours.length > 0 ? availableTours : (existing.tours || []))),
-            settings: {
-                numPeopleTransfer: Number(document.getElementById('num_people_transfer')?.value) || 2,
-                numPeopleHotel: Number(document.getElementById('num_people_hotel')?.value) || 2,
-                markup: Number(document.getElementById('markup')?.value) || 25,
-                lkrRate: Number(document.getElementById('lkr_rate')?.value) || 10.0,
-                usdDivisor: Number(document.getElementById('usd_divisor')?.value) || 31
-            },
+            settings: pricingAdj.settings,
+            cardMarkups: pricingAdj.cardMarkups,
+            customFinalPriceOverrides: pricingAdj.customFinalPriceOverrides,
+            renderedFinalPrices: pricingAdj.renderedFinalPrices,
             updatedAt: new Date().toISOString()
         };
 
@@ -4489,7 +4715,7 @@
         updateActivePresetStatusBar();
         renderPresetCardsGrid();
 
-        showNotification(`✅ Package "${title}" saved successfully!`, false);
+        showNotification(`✅ Package "${title}" saved successfully with all price adjustments!`, false);
     }
 
     async function deleteCostingPreset(key, event) {
@@ -4706,6 +4932,10 @@
         pctInput.dataset.manual = 'true';
         thbInput.dataset.manual = 'true';
         
+        if (customFinalPriceOverrides[suffix] && customFinalPriceOverrides[suffix][category]) {
+            delete customFinalPriceOverrides[suffix][category];
+        }
+
         if (type === 'thb') {
             let thbVal = parseFloat(thbInput.value) || 0;
             let pctVal = subtotal > 0 ? (thbVal / subtotal) * 100 : 0;
@@ -4721,8 +4951,11 @@
     function resetMarkup(category, suffix) {
         let pctInput = document.getElementById(`markup_pct_${category}_${suffix}`);
         let thbInput = document.getElementById(`markup_thb_${category}_${suffix}`);
-        pctInput.dataset.manual = 'false';
-        thbInput.dataset.manual = 'false';
+        if (pctInput) pctInput.dataset.manual = 'false';
+        if (thbInput) thbInput.dataset.manual = 'false';
+        if (customFinalPriceOverrides[suffix] && customFinalPriceOverrides[suffix][category]) {
+            delete customFinalPriceOverrides[suffix][category];
+        }
         calculate();
     }
 </script>

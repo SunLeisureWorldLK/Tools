@@ -73,6 +73,16 @@
             <i class="fas fa-magic"></i> <span>⚡ Live Master DB Editor</span>
             <span id="quickCardsChevron" class="text-[10px] ml-0.5">▼</span>
         </button>
+        <div class="border-l border-gray-300 h-10 mx-2 hidden lg:block"></div>
+        <button onclick="openQuotationHubModal()" class="py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2 text-xs">
+            <i class="fas fa-folder-open text-sm"></i>
+            <span>📂 INQ Quotation Hub</span>
+            <span id="quotationHubCountBadge" class="bg-white/25 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">0</span>
+        </button>
+        <button onclick="openSaveQuotationModal()" class="py-2 px-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-1.5 text-xs" title="Save current costing as INQ Quotation to Cloud">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>💾 Save as INQ</span>
+        </button>
         <div class="flex items-center">
              <button onclick="document.getElementById('logoUpload').click()" class="py-2 px-6 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
                 Upload Logo
@@ -845,9 +855,14 @@
                 </h4>
                 <p class="text-xs text-gray-500 mt-0.5">Generate the complete client itinerary with day-by-day activities, photos, and exact LKR rates.</p>
             </div>
-            <button onclick="generateItinerary()" class="w-full sm:w-auto py-2.5 px-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5">
-                <i class="fas fa-route text-base"></i> <span>Create Itinerary</span>
-            </button>
+            <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                <button onclick="openSaveQuotationModal()" class="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5" title="Save this costing with an INQ reference into Cloud">
+                    <i class="fas fa-save text-base"></i> <span>Save as INQ Quotation</span>
+                </button>
+                <button onclick="generateItinerary()" class="w-full sm:w-auto py-2.5 px-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-sm transform hover:-translate-y-0.5">
+                    <i class="fas fa-route text-base"></i> <span>Create Itinerary</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -1267,6 +1282,14 @@
                 <i class="fas fa-paper-plane text-base"></i> <span>🚀 Open in Tour Itinerary Builder (1-Click Auto-Load)</span>
             </button>
             <div class="grid grid-cols-2 gap-2">
+                <button onclick="saveAndOpenFromExportModal()" class="py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+                    <i class="fas fa-cloud-upload-alt"></i> <span>Save INQ &amp; Open Builder</span>
+                </button>
+                <button onclick="openSaveQuotationModal(true)" class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                    <i class="fas fa-save text-emerald-600"></i> <span>Save as INQ Quotation</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
                 <button onclick="downloadItineraryBuilderJson()" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
                     <i class="fas fa-download text-teal-600"></i> <span>Download JSON File</span>
                 </button>
@@ -1274,6 +1297,236 @@
                     <i class="fas fa-copy text-indigo-600"></i> <span>Copy JSON Code</span>
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     INQ QUOTATION SAVE MODAL
+     ══════════════════════════════════════════════════════════════ -->
+<div id="saveQuotationModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content overflow-y-auto max-h-[95vh] w-full max-w-xl p-6 bg-white rounded-2xl shadow-2xl border border-indigo-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-indigo-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-md">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        Save as INQ Quotation
+                    </h3>
+                    <p class="text-xs text-gray-500">Saves complete costing calculations and itinerary to Cloud &amp; Local Storage</p>
+                </div>
+            </div>
+            <button onclick="closeModal('saveQuotationModal')" class="text-gray-400 hover:text-gray-600 text-xl font-bold px-2 py-1">✕</button>
+        </div>
+
+        <form id="saveQuotationForm" onsubmit="event.preventDefault(); executeSaveQuotation();" class="space-y-4">
+            <!-- INQ Reference with Randomizer -->
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-bold text-gray-700">
+                        Inquiry Reference (INQ #) <span class="text-red-500">*</span>
+                    </label>
+                    <span class="text-[11px] text-gray-400">Searchable across all devices</span>
+                </div>
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-3 top-2.5 text-xs font-bold text-indigo-400">#</span>
+                        <input type="text" id="saveQuotationInqInput" required placeholder="e.g. INQ-58291 or 58291" class="w-full pl-7 pr-3 py-2.5 border-2 border-indigo-200 focus:border-indigo-500 rounded-lg text-sm font-extrabold text-indigo-950 uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-indigo-50/20">
+                    </div>
+                    <button type="button" onclick="generateNewInqNumber()" class="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5" title="Generate new random 5-digit INQ #">
+                        <i class="fas fa-dice"></i> <span>Randomize</span>
+                    </button>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">Use customer's 5-digit inquiry reference to search &amp; reopen later (e.g. 12345 or INQ-12345).</p>
+            </div>
+
+            <!-- Client Name & Contact -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Client Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="saveQuotationClientInput" required placeholder="e.g. Mr. Kasun Perera" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Phone / WhatsApp (Optional)</label>
+                    <input type="text" id="saveQuotationPhoneInput" placeholder="e.g. 077 123 4567" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Quotation Title -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Package Title / Destination <span class="text-red-500">*</span></label>
+                <input type="text" id="saveQuotationTitleInput" required placeholder="e.g. 05D 04N Bangkok &amp; Pattaya Tour" class="w-full p-2.5 border rounded-lg text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Date & Pax -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Quotation Date</label>
+                    <input type="date" id="saveQuotationDateInput" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pax Count</label>
+                    <input type="text" id="saveQuotationPaxInput" placeholder="e.g. 02 Pax" class="w-full p-2.5 border rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Quotation Snapshot Preview Card -->
+            <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+                <span class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider flex items-center justify-between">
+                    <span><i class="fas fa-check-circle text-teal-600 mr-1"></i> Data to be Preserved in Cloud</span>
+                    <span id="saveQuotationPreviewCounts" class="text-[10px] text-gray-500">2 Cities • 3 Tours • 4 Transfers</span>
+                </span>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="p-2 bg-blue-50/80 rounded border border-blue-100">
+                        <span class="block text-[10px] font-bold text-blue-700">3-STAR</span>
+                        <span id="savePreviewPrice3" class="text-xs font-extrabold text-blue-900">LKR 0</span>
+                    </div>
+                    <div class="p-2 bg-purple-50/80 rounded border border-purple-100">
+                        <span class="block text-[10px] font-bold text-purple-700">MIX PKG</span>
+                        <span id="savePreviewPriceMix" class="text-xs font-extrabold text-purple-900">-</span>
+                    </div>
+                    <div class="p-2 bg-indigo-50/80 rounded border border-indigo-100">
+                        <span class="block text-[10px] font-bold text-indigo-700">4-STAR</span>
+                        <span id="savePreviewPrice4" class="text-xs font-extrabold text-indigo-900">LKR 0</span>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-500 italic">Includes custom price adjustments, card markups, passenger count, itinerary days &amp; hotel choices.</p>
+            </div>
+
+            <!-- Cloud Sync Checkbox -->
+            <div class="flex items-center justify-between pt-1">
+                <label class="flex items-center text-xs text-indigo-950 font-semibold cursor-pointer select-none">
+                    <input type="checkbox" id="saveQuotationCloudSyncCheck" checked class="mr-2 h-4 w-4 text-indigo-600 rounded">
+                    <span>☁️ Sync to Firebase Cloud (Accessible anywhere on any PC)</span>
+                </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t">
+                <button type="submit" id="btnSaveQuotationSubmit" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fas fa-save"></i> <span>Save Quotation</span>
+                </button>
+                <button type="button" onclick="executeSaveQuotation(true)" class="py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fas fa-paper-plane"></i> <span>Save &amp; Open Itinerary</span>
+                </button>
+                <button type="button" onclick="closeModal('saveQuotationModal')" class="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition text-sm">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     INQ QUOTATION HUB & CLOUD ARCHIVE MODAL
+     ══════════════════════════════════════════════════════════════ -->
+<div id="quotationHubModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content overflow-y-auto max-h-[95vh] w-full max-w-5xl p-6 bg-white rounded-2xl shadow-2xl border border-blue-200">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 mb-4 border-b border-gray-200 gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+                        INQ Quotation Hub &amp; Cloud Archive
+                    </h3>
+                    <p class="text-xs text-gray-500">Instant lookup, costing recovery &amp; itinerary loader for client inquiries</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-auto">
+                <div id="hubCloudBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200 shadow-2xs">
+                    <i class="fas fa-cloud text-green-600"></i> <span id="hubCloudBadgeText">Cloud Synced</span>
+                </div>
+                <button onclick="closeModal('quotationHubModal')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold px-2 py-0.5" title="Close">✕</button>
+            </div>
+        </div>
+
+        <!-- Storage & Quota Monitor Bar -->
+        <div class="mb-5 p-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl shadow-md border border-indigo-900/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                        <i class="fas fa-database text-teal-400"></i> Cloud Storage &amp; Free Quota Monitor
+                    </span>
+                    <span id="hubStatBadgePlan" class="text-[10px] bg-teal-500/20 text-teal-300 font-extrabold px-2 py-0.5 rounded border border-teal-500/40 uppercase">SPARK FREE TIER</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="hubStatCountText" class="text-2xl font-black text-white">0</span>
+                    <span class="text-sm font-semibold text-gray-300">Quotations Stored</span>
+                    <span class="text-xs text-indigo-400">|</span>
+                    <span id="hubStatStorageText" class="text-sm font-bold text-teal-300">~0 KB</span>
+                    <span class="text-xs text-gray-400">/ 1,024 MB (1 GB Free Cloud Limit)</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar & Spark Safety Pill -->
+            <div class="w-full md:w-72 space-y-1.5">
+                <div class="flex justify-between text-[11px] font-bold">
+                    <span class="text-gray-300">Used: <span id="hubStatPercentText" class="text-teal-300">0.01%</span></span>
+                    <span class="text-gray-400">50,000 Reads/Day Free</span>
+                </div>
+                <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div id="hubStatStorageBar" class="bg-gradient-to-r from-teal-400 to-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 1%;"></div>
+                </div>
+                <p class="text-[10px] text-gray-400 text-right">Ultra-optimized (1-read index architecture)</p>
+            </div>
+        </div>
+
+        <!-- Search Bar, Filters & Global Actions -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5">
+            <!-- Search Input -->
+            <div class="relative flex-1">
+                <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                <input type="text" id="hubSearchInput" oninput="filterQuotationHub()" placeholder="🔍 Search by INQ # (e.g. 58291), Client Name, or Destination..." class="w-full pl-10 pr-9 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">
+                <button type="button" onclick="clearHubSearch()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-sm font-bold">✕</button>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="openSaveQuotationModal()" class="py-2.5 px-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center gap-1.5">
+                    <i class="fas fa-plus"></i> <span>Save Current Costing</span>
+                </button>
+                <button onclick="syncInqQuotationsFromCloud(true)" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-2xs" title="Force sync latest quotations from Firebase">
+                    <i class="fas fa-sync-alt"></i> <span>Sync Cloud</span>
+                </button>
+                <button onclick="exportAllInqQuotationsBackup()" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-2xs" title="Download backup of all saved quotations to JSON">
+                    <i class="fas fa-download text-teal-600"></i> <span>Backup JSON</span>
+                </button>
+                <button onclick="document.getElementById('importQuotationBackupFileInput').click()" class="py-2.5 px-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-2xs" title="Import quotation backup file">
+                    <i class="fas fa-upload text-purple-600"></i> <span>Import</span>
+                </button>
+                <input type="file" id="importQuotationBackupFileInput" style="display: none;" accept=".json" onchange="handleQuotationBackupImport(event)">
+            </div>
+        </div>
+
+        <!-- Filter Tags -->
+        <div class="flex items-center gap-2 mb-4 overflow-x-auto pb-1 text-xs">
+            <span class="text-gray-400 font-bold uppercase text-[10px]">Filter:</span>
+            <button onclick="setHubCategoryFilter('all')" id="hubFilterBtn-all" class="hub-filter-btn px-3 py-1 bg-indigo-600 text-white rounded-lg font-bold transition shadow-2xs">All Quotations</button>
+            <button onclick="setHubCategoryFilter('recent')" id="hubFilterBtn-recent" class="hub-filter-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition">This Month</button>
+            <button onclick="setHubCategoryFilter('pattaya')" id="hubFilterBtn-pattaya" class="hub-filter-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition">Pattaya</button>
+            <button onclick="setHubCategoryFilter('bangkok')" id="hubFilterBtn-bangkok" class="hub-filter-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition">Bangkok</button>
+            <button onclick="setHubCategoryFilter('phuket')" id="hubFilterBtn-phuket" class="hub-filter-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition">Phuket</button>
+        </div>
+
+        <!-- Quotation Cards Grid -->
+        <div id="quotationHubCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[220px]">
+            <!-- Dynamic cards rendered here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="quotationHubEmptyState" class="hidden text-center py-12 px-4 border-2 border-dashed border-gray-200 rounded-2xl">
+            <div class="text-4xl mb-3">📂</div>
+            <h4 class="text-base font-bold text-gray-700 mb-1">No Quotations Found</h4>
+            <p class="text-xs text-gray-500 max-w-sm mx-auto mb-4">No quotations match your search. You can save your current costing setup as an inquiry quotation anytime.</p>
+            <button onclick="openSaveQuotationModal()" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition">
+                ➕ Save Current Costing as INQ Quotation
+            </button>
         </div>
     </div>
 </div>
@@ -4929,10 +5182,802 @@
         document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // INQ QUOTATION HUB & CLOUD ARCHIVE ENGINE
+    // ══════════════════════════════════════════════════════════════
+    const SLW_INQ_INDEX_STORAGE_KEY = 'SLW_INQ_QUOTATION_INDEX';
+    const SLW_INQ_DOC_PREFIX = 'SLW_INQ_DOC_';
+    let inqQuotationIndex = [];
+    let activeHubFilterCategory = 'all';
+
+    async function initInqQuotationHub() {
+        // 1. Load from local cache first (0ms, 0 reads)
+        try {
+            const localRaw = localStorage.getItem(SLW_INQ_INDEX_STORAGE_KEY);
+            if (localRaw) {
+                inqQuotationIndex = JSON.parse(localRaw) || [];
+            }
+        } catch(e) {
+            console.warn("Failed reading local quotation index:", e);
+            inqQuotationIndex = [];
+        }
+
+        updateQuotationHubCountBadge();
+        updateQuotationStorageStats();
+
+        // 2. Background sync from Firebase Cloud (Single read: slw_settings/quotation_index)
+        syncInqQuotationsFromCloud(false).catch(err => {
+            console.warn("Initial cloud quotation index sync error:", err);
+        });
+    }
+
+    function updateQuotationHubCountBadge() {
+        const count = inqQuotationIndex.length;
+        const badge = document.getElementById('quotationHubCountBadge');
+        if (badge) badge.innerText = String(count);
+    }
+
+    function getQuotationStorageUsage() {
+        const items = inqQuotationIndex || [];
+        let totalBytes = 0;
+        items.forEach(item => {
+            totalBytes += (item.sizeBytes || 16000); // Average 16KB per doc
+        });
+        const kb = (totalBytes / 1024).toFixed(1);
+        const mb = (totalBytes / (1024 * 1024)).toFixed(2);
+        const maxMb = 1024; // 1 GB free Firestore Spark plan
+        const pctNum = (totalBytes / (1024 * 1024 * 1024)) * 100;
+        const pct = pctNum < 0.01 && items.length > 0 ? '0.01%' : pctNum.toFixed(2) + '%';
+        const barWidth = Math.max(1, Math.min(100, Math.round(pctNum)));
+
+        return {
+            count: items.length,
+            totalBytes,
+            kb,
+            mb,
+            maxMb,
+            pct,
+            barWidth
+        };
+    }
+
+    function updateQuotationStorageStats() {
+        const stats = getQuotationStorageUsage();
+        
+        const countText = document.getElementById('hubStatCountText');
+        if (countText) countText.innerText = String(stats.count);
+
+        const storageText = document.getElementById('hubStatStorageText');
+        if (storageText) {
+            if (parseFloat(stats.mb) >= 1) {
+                storageText.innerText = '~' + stats.mb + ' MB';
+            } else {
+                storageText.innerText = '~' + stats.kb + ' KB';
+            }
+        }
+
+        const pctText = document.getElementById('hubStatPercentText');
+        if (pctText) pctText.innerText = stats.pct;
+
+        const bar = document.getElementById('hubStatStorageBar');
+        if (bar) bar.style.width = stats.barWidth + '%';
+    }
+
+    async function syncInqQuotationsFromCloud(force = false) {
+        const badge = document.getElementById('hubCloudBadge');
+        const badgeText = document.getElementById('hubCloudBadgeText');
+        if (badgeText) badgeText.innerText = 'Syncing...';
+
+        try {
+            if (typeof db !== 'undefined' && db) {
+                const doc = await db.collection('slw_settings').doc('quotation_index').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const remoteItems = data.items || [];
+                    
+                    // Merge local and remote index by INQ key, favoring newer updatedAt
+                    const itemMap = new Map();
+                    inqQuotationIndex.forEach(item => {
+                        if (item.inq) itemMap.set(item.inq.toUpperCase().trim(), item);
+                    });
+                    remoteItems.forEach(item => {
+                        if (item.inq) {
+                            const key = item.inq.toUpperCase().trim();
+                            const existing = itemMap.get(key);
+                            if (!existing || !existing.updatedAt || (item.updatedAt && new Date(item.updatedAt) >= new Date(existing.updatedAt))) {
+                                itemMap.set(key, item);
+                            }
+                        }
+                    });
+
+                    inqQuotationIndex = Array.from(itemMap.values()).sort((a, b) => {
+                        const da = new Date(b.updatedAt || b.date || 0);
+                        const db = new Date(a.updatedAt || a.date || 0);
+                        return da - db;
+                    });
+
+                    localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqQuotationIndex));
+                    updateQuotationHubCountBadge();
+                    updateQuotationStorageStats();
+                    renderQuotationHubCards();
+
+                    if (badge) badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 border border-green-200 shadow-2xs";
+                    if (badgeText) badgeText.innerHTML = '<i class="fas fa-cloud text-green-600"></i> Cloud Synced';
+
+                    if (force) {
+                        showNotification('☁️ Successfully synced ' + inqQuotationIndex.length + ' Quotations from Firebase Cloud!', false);
+                    }
+                    return true;
+                } else {
+                    // Document doesn't exist yet on cloud, if we have local quotes, initialize it
+                    if (inqQuotationIndex.length > 0) {
+                        await db.collection('slw_settings').doc('quotation_index').set({
+                            items: inqQuotationIndex,
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn("Quotation Cloud sync warning:", e);
+            if (badge) badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs";
+            if (badgeText) badgeText.innerHTML = '<i class="fas fa-database text-amber-600"></i> Local Cache';
+            if (force) {
+                showNotification("⚠️ Working in offline/local mode: " + e.message, true);
+            }
+        }
+
+        renderQuotationHubCards();
+        return false;
+    }
+
+    function openQuotationHubModal() {
+        updateQuotationStorageStats();
+        renderQuotationHubCards();
+        openModal('quotationHubModal');
+        // Auto-focus search input
+        setTimeout(() => {
+            const inp = document.getElementById('hubSearchInput');
+            if (inp) inp.focus();
+        }, 150);
+    }
+
+    function generateNewInqNumber() {
+        const rand5 = Math.floor(10000 + Math.random() * 90000);
+        const inp = document.getElementById('saveQuotationInqInput');
+        if (inp) inp.value = 'INQ-' + rand5;
+    }
+
+    function openSaveQuotationModal(fromExport = false) {
+        // 1. Ensure current calculation is fresh
+        calculate();
+
+        // 2. Determine default values
+        let defaultTitle = '';
+        if (activeLoadedPresetKey && costingPresets[activeLoadedPresetKey] && costingPresets[activeLoadedPresetKey].title) {
+            defaultTitle = costingPresets[activeLoadedPresetKey].title.trim();
+        } else if (availableCities.length > 0) {
+            const parts = availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name);
+            defaultTitle = parts.join(' ');
+        } else {
+            defaultTitle = 'Thailand Tour Package';
+        }
+
+        const rawPax = Number(document.getElementById('num_people_hotel')?.value) || Number(document.getElementById('num_people_transfer')?.value) || 2;
+        const defaultPaxText = String(rawPax).padStart(2, '0') + ' Pax';
+
+        // 3. Pre-fill modal inputs
+        const inqInput = document.getElementById('saveQuotationInqInput');
+        const clientInput = document.getElementById('saveQuotationClientInput');
+        const phoneInput = document.getElementById('saveQuotationPhoneInput');
+        const titleInput = document.getElementById('saveQuotationTitleInput');
+        const dateInput = document.getElementById('saveQuotationDateInput');
+        const paxInput = document.getElementById('saveQuotationPaxInput');
+
+        // Check if export modal already has values
+        const exportInq = document.getElementById('exportItineraryInq')?.value.trim();
+        const exportClient = document.getElementById('exportItineraryClient')?.value.trim();
+        const exportTitle = document.getElementById('exportItineraryTitle')?.value.trim();
+
+        if (inqInput) inqInput.value = exportInq || ('INQ-' + Math.floor(10000 + Math.random() * 90000));
+        if (clientInput) clientInput.value = exportClient || '';
+        if (phoneInput) phoneInput.value = '';
+        if (titleInput) titleInput.value = exportTitle || defaultTitle;
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+        if (paxInput) paxInput.value = defaultPaxText;
+
+        // 4. Update preview counts and rates
+        const countsEl = document.getElementById('saveQuotationPreviewCounts');
+        if (countsEl) {
+            countsEl.innerText = availableCities.length + ' Cities • ' + availableTours.length + ' Tours • ' + availableTransfers.length + ' Transfers';
+        }
+
+        const p3 = document.getElementById('adult_final_lkr_3star')?.innerText || 'LKR 0';
+        const pMix = document.getElementById('adult_final_lkr_mix')?.innerText || '-';
+        const p4 = document.getElementById('adult_final_lkr_4star')?.innerText || 'LKR 0';
+
+        const prev3 = document.getElementById('savePreviewPrice3');
+        if (prev3) prev3.innerText = 'LKR ' + cleanLkrNumber(p3);
+        const prevMix = document.getElementById('savePreviewPriceMix');
+        if (prevMix) prevMix.innerText = pMix !== '-' ? ('LKR ' + cleanLkrNumber(pMix)) : '-';
+        const prev4 = document.getElementById('savePreviewPrice4');
+        if (prev4) prev4.innerText = 'LKR ' + cleanLkrNumber(p4);
+
+        if (fromExport) {
+            closeModal('itineraryExportModal');
+        }
+
+        openModal('saveQuotationModal');
+        setTimeout(() => {
+            const clientInp = document.getElementById('saveQuotationClientInput');
+            if (clientInp && !clientInp.value) clientInp.focus();
+        }, 150);
+    }
+
+    async function executeSaveQuotation(andOpenItinerary = false) {
+        const inqRaw = (document.getElementById('saveQuotationInqInput')?.value || '').trim().toUpperCase();
+        const clientName = (document.getElementById('saveQuotationClientInput')?.value || '').trim();
+        const clientPhone = (document.getElementById('saveQuotationPhoneInput')?.value || '').trim();
+        const title = (document.getElementById('saveQuotationTitleInput')?.value || '').trim() || 'Tour Quotation';
+        const date = document.getElementById('saveQuotationDateInput')?.value || new Date().toISOString().split('T')[0];
+        const paxText = (document.getElementById('saveQuotationPaxInput')?.value || '').trim() || '02 Pax';
+        const syncCloud = document.getElementById('saveQuotationCloudSyncCheck')?.checked ?? true;
+
+        if (!inqRaw) {
+            alert("Please enter a valid Inquiry Reference (e.g. 58291 or INQ-58291).");
+            return;
+        }
+        if (!clientName) {
+            alert("Please enter the client's name.");
+            return;
+        }
+
+        // Standardize INQ key (keep clean alphanumeric + hyphens)
+        const inqKey = inqRaw.replace(/\s+/g, '-');
+
+        // Submit button loading state
+        const btn = document.getElementById('btnSaveQuotationSubmit');
+        const origBtnText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+        }
+
+        try {
+            // 1. Recalculate and capture full costing state & adjustments
+            calculate();
+            const pricingAdj = captureAllPricingAdjustments();
+            const itineraryPayload = buildItineraryJsonPayload();
+            itineraryPayload.inq = inqKey;
+            itineraryPayload.clientName = clientName;
+            itineraryPayload.title = title;
+
+            const pricingSummary = saveLatestCostingPrices(itineraryPayload);
+
+            // Rate values
+            const p3Text = document.getElementById('adult_final_lkr_3star')?.innerText || '';
+            const pMixText = document.getElementById('adult_final_lkr_mix')?.innerText || '';
+            const p4Text = document.getElementById('adult_final_lkr_4star')?.innerText || '';
+            const p5Text = document.getElementById('adult_final_lkr_5star')?.innerText || '';
+
+            const rates = {
+                p3: p3Text ? cleanLkrNumber(p3Text) : '',
+                pMix: pMixText ? cleanLkrNumber(pMixText) : '',
+                p4: p4Text ? cleanLkrNumber(p4Text) : '',
+                p5: p5Text ? cleanLkrNumber(p5Text) : ''
+            };
+
+            const citiesSummary = availableCities.map(c => (c.numberOfNights || 1) + 'N ' + c.name).join(' + ');
+            const fullSummary = citiesSummary + ' • ' + availableTours.length + ' Tours • ' + availableTransfers.length + ' Transfers';
+
+            // 2. Build full document payload
+            const nowIso = new Date().toISOString();
+            const fullDoc = {
+                inq: inqKey,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                title: title,
+                date: date,
+                paxText: paxText,
+                pax: Number(document.getElementById('num_people_hotel')?.value) || 2,
+                cities: citiesSummary,
+                summary: fullSummary,
+                rates: rates,
+                costing: {
+                    availableCities: JSON.parse(JSON.stringify(availableCities)),
+                    availableTours: JSON.parse(JSON.stringify(availableTours)),
+                    availableTransfers: JSON.parse(JSON.stringify(availableTransfers)),
+                    pricingAdj: pricingAdj
+                },
+                itinerary: itineraryPayload,
+                pricingSummary: pricingSummary,
+                updatedAt: nowIso,
+                createdAt: nowIso
+            };
+
+            // Calculate byte size
+            const sizeBytes = new Blob([JSON.stringify(fullDoc)]).size;
+
+            // 3. Save full doc to LocalStorage
+            localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(fullDoc));
+
+            // 4. Update Index
+            const indexItem = {
+                inq: inqKey,
+                clientName: clientName,
+                clientPhone: clientPhone,
+                title: title,
+                date: date,
+                paxText: paxText,
+                cities: citiesSummary,
+                rates: rates,
+                sizeBytes: sizeBytes,
+                updatedAt: nowIso
+            };
+
+            // Remove existing index item with same inq
+            inqQuotationIndex = inqQuotationIndex.filter(item => item.inq !== inqKey);
+            inqQuotationIndex.unshift(indexItem);
+
+            // Save index locally
+            localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqQuotationIndex));
+            updateQuotationHubCountBadge();
+            updateQuotationStorageStats();
+
+            // 5. Cloud Sync if enabled
+            if (syncCloud && typeof db !== 'undefined' && db) {
+                // Save doc in slw_quotations collection
+                await db.collection('slw_quotations').doc(inqKey).set(fullDoc);
+
+                // Update index in slw_settings collection (only 1 doc updated for entire list!)
+                await db.collection('slw_settings').doc('quotation_index').set({
+                    items: inqQuotationIndex,
+                    updatedAt: nowIso
+                });
+
+                if (window.slwLogActivity) {
+                    window.slwLogActivity('Saved Quotation ' + inqKey + ' for ' + clientName);
+                }
+            }
+
+            // Sync with export modal inputs if open
+            if (document.getElementById('exportItineraryInq')) document.getElementById('exportItineraryInq').value = inqKey;
+            if (document.getElementById('exportItineraryClient')) document.getElementById('exportItineraryClient').value = clientName;
+            if (document.getElementById('exportItineraryTitle')) document.getElementById('exportItineraryTitle').value = title;
+
+            closeModal('saveQuotationModal');
+            showNotification('✅ Successfully saved Quotation [' + inqKey + '] for ' + clientName + ' to Cloud & Local Storage!', false);
+
+            // If user clicked "Save & Open Itinerary"
+            if (andOpenItinerary) {
+                localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(fullDoc.itinerary));
+                localStorage.setItem('SLW_LATEST_COSTING_PRICES', JSON.stringify(fullDoc.pricingSummary));
+                window.open('archives/Itinerary_Builder_App New.html', '_blank');
+            }
+
+        } catch(err) {
+            console.error("Error saving INQ quotation:", err);
+            alert("Error saving quotation: " + err.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origBtnText;
+            }
+        }
+    }
+
+    async function loadInqQuotationIntoCosting(inqKey) {
+        if (!inqKey) return;
+
+        let docData = null;
+
+        // 1. Check local storage first (0ms, 0 reads)
+        try {
+            const localRaw = localStorage.getItem(SLW_INQ_DOC_PREFIX + inqKey);
+            if (localRaw) {
+                docData = JSON.parse(localRaw);
+            }
+        } catch(e) {
+            console.warn("Local quotation read error:", e);
+        }
+
+        // 2. If not found locally, fetch from Firestore Cloud (1 read)
+        if (!docData) {
+            try {
+                if (typeof db !== 'undefined' && db) {
+                    showNotification('☁️ Fetching quotation [' + inqKey + '] from Cloud...', false);
+                    const snap = await db.collection('slw_quotations').doc(inqKey).get();
+                    if (snap.exists) {
+                        docData = snap.data();
+                        // Cache locally
+                        localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(docData));
+                    }
+                }
+            } catch(e) {
+                alert("Failed to fetch quotation from Cloud: " + e.message);
+                return;
+            }
+        }
+
+        if (!docData) {
+            alert('Quotation "' + inqKey + '" could not be found.');
+            return;
+        }
+
+        // 3. Confirm loading
+        if (!confirm('Load quotation "' + docData.inq + '" for ' + (docData.clientName || 'Client') + '?\n\nThis will restore all cities, hotels, tours, transfers, pax, markup settings, and price overrides into this calculator.')) {
+            return;
+        }
+
+        // 4. Restore Costing State
+        if (docData.costing) {
+            availableCities = JSON.parse(JSON.stringify(docData.costing.availableCities || []));
+            availableTours = JSON.parse(JSON.stringify(docData.costing.availableTours || []));
+            availableTransfers = JSON.parse(JSON.stringify(docData.costing.availableTransfers || []));
+
+            if (docData.costing.pricingAdj) {
+                restoreAllPricingAdjustments(docData.costing.pricingAdj);
+            }
+        }
+
+        renderAll();
+        calculate();
+
+        // 5. Update Export inputs
+        if (document.getElementById('exportItineraryTitle')) document.getElementById('exportItineraryTitle').value = docData.title || '';
+        if (document.getElementById('exportItineraryClient')) document.getElementById('exportItineraryClient').value = docData.clientName || '';
+        if (document.getElementById('exportItineraryInq')) document.getElementById('exportItineraryInq').value = docData.inq || '';
+        if (document.getElementById('exportItineraryPax')) document.getElementById('exportItineraryPax').value = docData.paxText || '';
+        if (document.getElementById('exportItineraryDate')) document.getElementById('exportItineraryDate').value = docData.date || '';
+
+        closeModal('quotationHubModal');
+        showNotification('⚡ Loaded Quotation [' + docData.inq + '] (' + docData.clientName + ') into Costing! All prices restored.', false);
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function openInqQuotationItinerary(inqKey) {
+        if (!inqKey) return;
+
+        let docData = null;
+        try {
+            const localRaw = localStorage.getItem(SLW_INQ_DOC_PREFIX + inqKey);
+            if (localRaw) docData = JSON.parse(localRaw);
+        } catch(e) {}
+
+        if (!docData && typeof db !== 'undefined' && db) {
+            try {
+                showNotification('☁️ Fetching itinerary for [' + inqKey + ']...', false);
+                const snap = await db.collection('slw_quotations').doc(inqKey).get();
+                if (snap.exists) {
+                    docData = snap.data();
+                    localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(docData));
+                }
+            } catch(e) {
+                alert("Failed to fetch from Cloud: " + e.message);
+                return;
+            }
+        }
+
+        if (!docData) {
+            alert('Quotation data for "' + inqKey + '" could not be found.');
+            return;
+        }
+
+        // Set pending itinerary and latest prices in localStorage
+        if (docData.itinerary) {
+            localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(docData.itinerary));
+        }
+        if (docData.pricingSummary) {
+            localStorage.setItem('SLW_LATEST_COSTING_PRICES', JSON.stringify(docData.pricingSummary));
+        }
+
+        showNotification('🚀 Opening Tour Itinerary Builder for [' + docData.inq + ']...', false);
+        window.open('archives/Itinerary_Builder_App New.html', '_blank');
+    }
+
+    async function deleteInqQuotation(inqKey) {
+        if (!inqKey) return;
+
+        const item = inqQuotationIndex.find(i => i.inq === inqKey);
+        const nameStr = item ? (' for ' + (item.clientName || 'Client')) : '';
+
+        if (!confirm('Are you sure you want to permanently delete quotation [' + inqKey + ']' + nameStr + '?\n\nThis will remove it from Firebase Cloud and local storage across all devices.')) {
+            return;
+        }
+
+        // 1. Remove from local storage
+        localStorage.removeItem(SLW_INQ_DOC_PREFIX + inqKey);
+        inqQuotationIndex = inqQuotationIndex.filter(i => i.inq !== inqKey);
+        localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqQuotationIndex));
+
+        updateQuotationHubCountBadge();
+        updateQuotationStorageStats();
+        renderQuotationHubCards();
+
+        // 2. Delete from Cloud
+        try {
+            if (typeof db !== 'undefined' && db) {
+                await db.collection('slw_quotations').doc(inqKey).delete();
+                await db.collection('slw_settings').doc('quotation_index').set({
+                    items: inqQuotationIndex,
+                    updatedAt: new Date().toISOString()
+                });
+                if (window.slwLogActivity) {
+                    window.slwLogActivity('Deleted Quotation ' + inqKey);
+                }
+            }
+            showNotification('🗑️ Deleted quotation [' + inqKey + '].', false);
+        } catch(e) {
+            console.error("Cloud deletion error:", e);
+            showNotification('⚠️ Deleted locally, but Cloud sync error: ' + e.message, true);
+        }
+    }
+
+    function renderQuotationHubCards() {
+        const container = document.getElementById('quotationHubCardsContainer');
+        const emptyState = document.getElementById('quotationHubEmptyState');
+        if (!container) return;
+
+        const query = (document.getElementById('hubSearchInput')?.value || '').trim().toLowerCase();
+        
+        let filtered = inqQuotationIndex || [];
+
+        // Apply category filter
+        if (activeHubFilterCategory === 'recent') {
+            const now = new Date();
+            const currentYearMonth = now.toISOString().slice(0, 7); // YYYY-MM
+            filtered = filtered.filter(i => (i.date || i.updatedAt || '').startsWith(currentYearMonth));
+        } else if (activeHubFilterCategory === 'pattaya') {
+            filtered = filtered.filter(i => (i.title || '').toLowerCase().includes('pattaya') || (i.cities || '').toLowerCase().includes('pattaya'));
+        } else if (activeHubFilterCategory === 'bangkok') {
+            filtered = filtered.filter(i => (i.title || '').toLowerCase().includes('bangkok') || (i.cities || '').toLowerCase().includes('bangkok'));
+        } else if (activeHubFilterCategory === 'phuket') {
+            filtered = filtered.filter(i => (i.title || '').toLowerCase().includes('phuket') || (i.cities || '').toLowerCase().includes('phuket'));
+        }
+
+        // Apply text search
+        if (query) {
+            filtered = filtered.filter(i => {
+                const inq = (i.inq || '').toLowerCase();
+                const name = (i.clientName || '').toLowerCase();
+                const phone = (i.clientPhone || '').toLowerCase();
+                const title = (i.title || '').toLowerCase();
+                const cities = (i.cities || '').toLowerCase();
+                return inq.includes(query) || name.includes(query) || phone.includes(query) || title.includes(query) || cities.includes(query);
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '';
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+
+        let html = '';
+        filtered.forEach(item => {
+            const rates = item.rates || {};
+            const p3 = rates.p3 ? ('LKR ' + rates.p3) : '-';
+            const pMix = rates.pMix ? ('LKR ' + rates.pMix) : '-';
+            const p4 = rates.p4 ? ('LKR ' + rates.p4) : '-';
+            const dateStr = item.date || 'Recent';
+            const paxStr = item.paxText || (item.pax ? (item.pax + ' Pax') : '2 Pax');
+
+            html += `
+            <div class="bg-white rounded-xl border border-gray-200 hover:border-indigo-300 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+                <!-- Top Card Banner -->
+                <div class="p-3.5 pb-2.5 border-b border-gray-100 bg-gradient-to-r from-gray-50/80 to-indigo-50/30">
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-indigo-100 text-indigo-900 border border-indigo-200 font-mono tracking-wide">
+                                <i class="fas fa-tag text-[10px] text-indigo-600"></i> ${item.inq}
+                            </span>
+                            <button onclick="copyInqNumber('${item.inq}')" class="text-gray-400 hover:text-indigo-600 text-xs p-1" title="Copy INQ #">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <span class="text-[11px] font-semibold text-gray-500">${dateStr}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-sm text-gray-900 truncate" title="${item.clientName || 'Client'}">
+                            <i class="fas fa-user-circle text-gray-400 mr-1"></i> ${item.clientName || 'Unnamed Client'}
+                        </h4>
+                        <span class="text-[11px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                            ${paxStr}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Middle Card Body -->
+                <div class="p-3.5 space-y-2.5 flex-1">
+                    <div>
+                        <p class="text-xs font-bold text-gray-800 line-clamp-1" title="${item.title}">
+                            ${item.title || 'Tour Package'}
+                        </p>
+                        <p class="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                            ${item.cities || item.summary || ''}
+                        </p>
+                    </div>
+
+                    <!-- Pricing Rates Grid -->
+                    <div class="grid grid-cols-3 gap-1.5 text-center text-[11px] bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <div class="bg-white p-1 rounded border border-gray-200">
+                            <span class="block text-[9px] font-bold text-blue-700 uppercase">3★ Rate</span>
+                            <span class="font-extrabold text-gray-900 text-[11px] block truncate">${p3}</span>
+                        </div>
+                        <div class="bg-white p-1 rounded border border-gray-200">
+                            <span class="block text-[9px] font-bold text-purple-700 uppercase">Mix Rate</span>
+                            <span class="font-extrabold text-gray-900 text-[11px] block truncate">${pMix}</span>
+                        </div>
+                        <div class="bg-white p-1 rounded border border-gray-200">
+                            <span class="block text-[9px] font-bold text-indigo-700 uppercase">4★ Rate</span>
+                            <span class="font-extrabold text-gray-900 text-[11px] block truncate">${p4}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Actions -->
+                <div class="p-2.5 bg-gray-50/60 border-t border-gray-100 flex items-center justify-between gap-1.5">
+                    <button onclick="loadInqQuotationIntoCosting('${item.inq}')" class="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-2xs transition flex items-center justify-center gap-1" title="Load into Tour Costing Calculator">
+                        <i class="fas fa-bolt text-amber-300"></i> <span>Costing</span>
+                    </button>
+                    <button onclick="openInqQuotationItinerary('${item.inq}')" class="flex-1 py-1.5 px-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs shadow-2xs transition flex items-center justify-center gap-1" title="Open in Tour Itinerary Builder">
+                        <i class="fas fa-route"></i> <span>Itinerary</span>
+                    </button>
+                    <button onclick="deleteInqQuotation('${item.inq}')" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete quotation">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function filterQuotationHub() {
+        renderQuotationHubCards();
+    }
+
+    function clearHubSearch() {
+        const inp = document.getElementById('hubSearchInput');
+        if (inp) inp.value = '';
+        renderQuotationHubCards();
+    }
+
+    function setHubCategoryFilter(category) {
+        activeHubFilterCategory = category;
+        document.querySelectorAll('.hub-filter-btn').forEach(btn => {
+            btn.className = 'hub-filter-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition';
+        });
+        const activeBtn = document.getElementById('hubFilterBtn-' + category);
+        if (activeBtn) {
+            activeBtn.className = 'hub-filter-btn px-3 py-1 bg-indigo-600 text-white rounded-lg font-bold transition shadow-2xs';
+        }
+        renderQuotationHubCards();
+    }
+
+    function copyInqNumber(inq) {
+        if (!inq) return;
+        navigator.clipboard.writeText(inq).then(() => {
+            showNotification('📋 Copied Inquiry #' + inq + ' to clipboard!', false);
+        }).catch(() => {
+            prompt("Copy Inquiry Reference:", inq);
+        });
+    }
+
+    function saveAndOpenFromExportModal() {
+        const inq = (document.getElementById('exportItineraryInq')?.value || '').trim() || ('INQ-' + Math.floor(10000 + Math.random() * 90000));
+        const client = (document.getElementById('exportItineraryClient')?.value || '').trim() || 'Valued Client';
+        const title = (document.getElementById('exportItineraryTitle')?.value || '').trim() || 'Tour Itinerary';
+
+        // Fill saveQuotationModal inputs
+        const inqInp = document.getElementById('saveQuotationInqInput');
+        if (inqInp) inqInp.value = inq;
+        const clientInp = document.getElementById('saveQuotationClientInput');
+        if (clientInp) clientInp.value = client;
+        const titleInp = document.getElementById('saveQuotationTitleInput');
+        if (titleInp) titleInp.value = title;
+
+        executeSaveQuotation(true);
+    }
+
+    // ── BACKUP EXPORT & IMPORT ──
+    function exportAllInqQuotationsBackup() {
+        const backupData = {
+            type: "SLW_QUOTATION_BACKUP",
+            version: "1.0",
+            exportedAt: new Date().toISOString(),
+            index: inqQuotationIndex,
+            quotations: {}
+        };
+
+        // Collect all locally cached quotations
+        inqQuotationIndex.forEach(item => {
+            const raw = localStorage.getItem(SLW_INQ_DOC_PREFIX + item.inq);
+            if (raw) {
+                try {
+                    backupData.quotations[item.inq] = JSON.parse(raw);
+                } catch(e) {}
+            }
+        });
+
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'slw_inq_quotations_backup_' + dateStr + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showNotification('💾 Exported backup of ' + inqQuotationIndex.length + ' quotations!', false);
+    }
+
+    function handleQuotationBackupImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data || (!data.index && !data.quotations)) {
+                    alert("Invalid quotation backup file format.");
+                    return;
+                }
+
+                const importedIndex = data.index || [];
+                const importedQuotes = data.quotations || {};
+
+                // Merge into local storage
+                const itemMap = new Map();
+                inqQuotationIndex.forEach(i => itemMap.set(i.inq, i));
+                importedIndex.forEach(i => itemMap.set(i.inq, i));
+                inqQuotationIndex = Array.from(itemMap.values());
+                localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqQuotationIndex));
+
+                Object.keys(importedQuotes).forEach(k => {
+                    localStorage.setItem(SLW_INQ_DOC_PREFIX + k, JSON.stringify(importedQuotes[k]));
+                });
+
+                updateQuotationHubCountBadge();
+                updateQuotationStorageStats();
+                renderQuotationHubCards();
+
+                if (confirm('Successfully imported ' + importedIndex.length + ' quotations locally!\n\nDo you also want to sync them to Firebase Cloud so they are available across all PCs?')) {
+                    if (typeof db !== 'undefined' && db) {
+                        showNotification("☁️ Uploading imported quotations to Cloud...", false);
+                        for (const k of Object.keys(importedQuotes)) {
+                            await db.collection('slw_quotations').doc(k).set(importedQuotes[k]);
+                        }
+                        await db.collection('slw_settings').doc('quotation_index').set({
+                            items: inqQuotationIndex,
+                            updatedAt: new Date().toISOString()
+                        });
+                        showNotification("☁️ All imported quotations synced to Cloud!", false);
+                    }
+                } else {
+                    showNotification('Restored ' + importedIndex.length + ' quotations to Local Storage!', false);
+                }
+
+            } catch(err) {
+                alert("Import failed: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
     window.onload = async () => {
         await loadMasterDatabase();
         updateMasterDbCounts();
         await loadCostingPresetsFromCloud();
+        await initInqQuotationHub();
         renderAll();
     };
 

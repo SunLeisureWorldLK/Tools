@@ -3754,6 +3754,11 @@
         const payload = buildItineraryJsonPayload();
         saveLatestCostingPrices(payload);
         try {
+            if (payload.inq) {
+                localStorage.setItem('SLW_ACTIVE_INQ', payload.inq);
+                localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', payload.clientName || '');
+                localStorage.setItem('SLW_ACTIVE_INQ_TITLE', payload.title || '');
+            }
             localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(payload));
         } catch(e) {
             console.warn("localStorage write error:", e);
@@ -5550,6 +5555,9 @@
 
             // If user clicked "Save & Open Itinerary"
             if (andOpenItinerary) {
+                localStorage.setItem('SLW_ACTIVE_INQ', inqKey);
+                localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', clientName || '');
+                localStorage.setItem('SLW_ACTIVE_INQ_TITLE', title || '');
                 localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(fullDoc.itinerary));
                 localStorage.setItem('SLW_LATEST_COSTING_PRICES', JSON.stringify(fullDoc.pricingSummary));
                 window.open('archives/Itinerary_Builder_App New.html', '_blank');
@@ -5623,7 +5631,11 @@
         renderAll();
         calculate();
 
-        // 5. Update Export inputs
+        // 5. Update Export inputs & active INQ state
+        localStorage.setItem('SLW_ACTIVE_INQ', docData.inq || inqKey);
+        localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', docData.clientName || '');
+        localStorage.setItem('SLW_ACTIVE_INQ_TITLE', docData.title || '');
+
         if (document.getElementById('exportItineraryTitle')) document.getElementById('exportItineraryTitle').value = docData.title || '';
         if (document.getElementById('exportItineraryClient')) document.getElementById('exportItineraryClient').value = docData.clientName || '';
         if (document.getElementById('exportItineraryInq')) document.getElementById('exportItineraryInq').value = docData.inq || '';
@@ -5663,7 +5675,10 @@
             return;
         }
 
-        // Set pending itinerary and latest prices in localStorage
+        // Set active INQ and pending itinerary and latest prices in localStorage
+        localStorage.setItem('SLW_ACTIVE_INQ', docData.inq || inqKey);
+        localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', docData.clientName || '');
+        localStorage.setItem('SLW_ACTIVE_INQ_TITLE', docData.title || '');
         if (docData.itinerary) {
             localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(docData.itinerary));
         }

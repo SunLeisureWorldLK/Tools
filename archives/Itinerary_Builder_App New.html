@@ -630,12 +630,16 @@ function slwGoHome() {
     #slw-float-btn,
     #slw-float-history-btn,
     #slw-float-costing-btn,
+    #slw-float-save-inq-btn,
+    #slw-inq-top-bar,
     #slw-sidebar-costing-btn,
+    #slw-sidebar-save-inq-btn,
     #slw-sidebar-history-btn,
     #slw-update-cloud-btn,
     #slw-quick-load-panel,
     #slw-panel-toggle,
     #slw-history-modal,
+    #slw-link-inq-modal,
     .slw-opt-apply-costing-btn,
     .slw-home-btn-container,
     .slw-costing-badge,
@@ -643,6 +647,60 @@ function slwGoHome() {
         display: none !important;
         visibility: hidden !important;
     }
+}
+
+/* SLW LINKED INQ TOP BAR */
+#slw-inq-top-bar {
+    position: fixed;
+    top: 14px;
+    left: calc(350px + 24px);
+    z-index: 999980;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    font-family: inherit;
+    font-size: 13px;
+    color: #ffffff;
+    transition: all 0.25s ease;
+    user-select: none;
+}
+#slw-inq-top-bar:hover {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* SLW LINK INQ MODAL */
+#slw-link-inq-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10000005;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+#slw-link-inq-modal .slw-inq-card {
+    background: #ffffff;
+    border-radius: 20px;
+    width: 94%;
+    max-width: 580px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.5);
+    animation: slwModalFadeIn 0.25s ease-out;
 }
 
 /* SLW Preset Row & History Styling */
@@ -766,6 +824,48 @@ function slwGoHome() {
     </div>
 </div>
 
+<!-- SLW LINK INQ QUOTATION MODAL -->
+<div id="slw-link-inq-modal" class="print:hidden">
+    <div class="slw-inq-card">
+        <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;">
+            <div>
+                <h3 style="margin:0;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:6px;">
+                    <span>🏷️</span> Link to Tour Costing INQ Quotation (Cloud)
+                </h3>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;">
+                    Connect this Itinerary directly to a Tour Costing Quotation in Firebase Cloud
+                </div>
+            </div>
+            <button onclick="document.getElementById('slw-link-inq-modal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:#94a3b8;padding:4px 8px;border-radius:6px;">✕</button>
+        </div>
+        <div style="padding:18px 20px;overflow-y:auto;flex:1;">
+            <div style="background:#f1f5f9;border-radius:12px;padding:14px;margin-bottom:16px;">
+                <label style="display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:6px;">
+                    Manual INQ Reference (e.g. INQ-34745):
+                </label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="slw-manual-inq-input" placeholder="e.g. INQ-34745 or 34745" style="flex:1;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-weight:700;font-size:14px;color:#0f172a;outline:none;" />
+                    <button onclick="window.slwSubmitManualInqLink()" style="background:#0284c7;color:white;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(2,132,199,0.3);">
+                        🔗 Link INQ
+                    </button>
+                </div>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+                <span>Recent Quotations (From Cloud / Local)</span>
+                <span id="slw-inq-list-count" style="font-size:11px;color:#94a3b8;"></span>
+            </div>
+            <div id="slw-recent-inq-list" style="display:flex;flex-direction:column;gap:8px;">
+                <!-- Populated dynamically via slwOpenLinkInqModal -->
+            </div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:#64748b;">💡 Once linked, 'Save to INQ Cloud' updates this exact quotation in Firebase.</span>
+            <button onclick="document.getElementById('slw-link-inq-modal').style.display='none'" style="padding:6px 14px;border:1px solid #cbd5e1;background:white;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;color:#475569;">Close</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
@@ -799,6 +899,15 @@ function slwGoHome() {
     window.__slwActivePreset = window.__slwActivePreset || null;
     window.__slwIsUpdatingCloud = false;
     window.__slwPendingPresetName = null;
+
+    // ── SLW INQ QUOTATION CLOUD SYNC STATE ──
+    const SLW_INQ_INDEX_STORAGE_KEY = 'SLW_INQ_QUOTATION_INDEX';
+    const SLW_INQ_DOC_PREFIX = 'SLW_INQ_DOC_';
+    window.__slwActiveInq = localStorage.getItem('SLW_ACTIVE_INQ') || null;
+    window.__slwActiveInqClient = localStorage.getItem('SLW_ACTIVE_INQ_CLIENT') || '';
+    window.__slwActiveInqTitle = localStorage.getItem('SLW_ACTIVE_INQ_TITLE') || '';
+    window.__slwIsSavingToInq = false;
+    window.__slwTargetInqKey = null;
 
     toggleBtn.addEventListener('click', () => {
         panel.classList.toggle('open');
@@ -1470,6 +1579,302 @@ function slwGoHome() {
         }
     }
 
+    // ── SLW INQ QUOTATION INTEGRATION ENGINE ──
+    function slwInjectItineraryIntoReact(itineraryObj, fileName = 'itinerary.json') {
+        let fileInput = document.querySelector('input[type="file"][accept=".json"]');
+        if (!fileInput) {
+            const allInputs = document.querySelectorAll('input[type="file"]');
+            fileInput = allInputs[allInputs.length - 1];
+        }
+        if (!fileInput) {
+            console.error('[SLW] React file input not found');
+            return false;
+        }
+
+        const finalJsonStr = typeof itineraryObj === 'string' ? itineraryObj : JSON.stringify(itineraryObj);
+        const file = new File([finalJsonStr], fileName, { type: 'application/json' });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+
+        const origAlert = window.alert;
+        window.alert = () => {};
+        try {
+            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
+            setter.call(fileInput, dt.files);
+            fileInput.files = dt.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } finally {
+            setTimeout(() => { window.alert = origAlert; }, 150);
+        }
+
+        try {
+            window.__slwBaseData = typeof itineraryObj === 'string' ? JSON.parse(itineraryObj) : JSON.parse(JSON.stringify(itineraryObj));
+        } catch(e) {}
+        return true;
+    }
+
+    function slwUpdateInqBadges() {
+        const inq = window.__slwActiveInq || localStorage.getItem('SLW_ACTIVE_INQ');
+        const client = window.__slwActiveInqClient || localStorage.getItem('SLW_ACTIVE_INQ_CLIENT') || '';
+        const title = window.__slwActiveInqTitle || localStorage.getItem('SLW_ACTIVE_INQ_TITLE') || '';
+
+        // 1. Update Top Floating Bar
+        let topBar = document.getElementById('slw-inq-top-bar');
+        if (!topBar) {
+            topBar = document.createElement('div');
+            topBar.id = 'slw-inq-top-bar';
+            topBar.className = 'print:hidden';
+            document.body.appendChild(topBar);
+        }
+
+        if (inq) {
+            topBar.innerHTML = `
+                <span style="font-size:14px;">🏷️</span>
+                <span style="font-weight:700;color:#38bdf8;letter-spacing:0.3px;">${inq}</span>
+                ${client ? `<span style="color:#94a3b8;font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${client}">| ${client}</span>` : ''}
+                <span style="background:rgba(16,185,129,0.2);color:#34d399;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700;border:1px solid rgba(16,185,129,0.35);">● Cloud Linked</span>
+                <button onclick="window.slwSaveItineraryToInqCloud()" style="background:linear-gradient(135deg, #059669, #047857);color:white;border:none;padding:5px 12px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(5,150,105,0.4);" title="Save current itinerary directly to this INQ in Firebase Cloud">
+                    💾 Save to INQ Cloud
+                </button>
+                <button onclick="window.slwApplyCostingPrices(0)" style="background:linear-gradient(135deg, #d97706, #b45309);color:white;border:none;padding:5px 10px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;" title="Apply Tour Costing prices into Option 01">
+                    ⚡ Costing
+                </button>
+                <button onclick="window.slwLoadItineraryFromInq()" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:4px 8px;border-radius:12px;font-weight:600;font-size:11px;cursor:pointer;" title="Re-load saved itinerary from this INQ">
+                    🔄 Re-load
+                </button>
+                <button onclick="window.slwOpenLinkInqModal()" style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;padding:4px 8px;border-radius:12px;font-weight:600;font-size:11px;cursor:pointer;" title="Switch or Link to another Quotation">
+                    🔗 Switch
+                </button>
+                <button onclick="window.slwUnlinkInq()" style="background:transparent;color:#94a3b8;border:none;font-size:14px;cursor:pointer;padding:0 4px;" title="Unlink this INQ">
+                    ✕
+                </button>
+            `;
+            topBar.title = `Linked to Quotation ${inq}${client ? ' (' + client + ')' : ''}`;
+        } else {
+            topBar.innerHTML = `
+                <span style="font-size:14px;">🏷️</span>
+                <span style="color:#94a3b8;font-size:12px;">INQ Quotation:</span>
+                <span style="color:#f59e0b;font-weight:600;font-size:12px;">Not Linked</span>
+                <button onclick="window.slwOpenLinkInqModal()" style="background:linear-gradient(135deg, #0284c7, #0369a1);color:white;border:none;padding:5px 12px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(2,132,199,0.4);" title="Link this Itinerary to a Tour Costing INQ Quotation in Cloud">
+                    🔗 Link to INQ Quotation
+                </button>
+            `;
+            topBar.title = "Click to link this itinerary to a Tour Costing quotation";
+        }
+
+        // 2. Update Sidebar Button
+        const sidebarBtn = document.getElementById('slw-sidebar-save-inq-btn');
+        if (sidebarBtn) {
+            if (inq) {
+                sidebarBtn.innerHTML = `<span style="font-size:14px;margin-right:4px;">💾</span> Save to INQ Cloud <span style="font-size:11px;opacity:0.9;background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:8px;margin-left:4px;">${inq}</span>`;
+                sidebarBtn.title = `Save current itinerary to Cloud quotation [${inq}]`;
+            } else {
+                sidebarBtn.innerHTML = `<span style="font-size:14px;margin-right:4px;">💾</span> Save to INQ Cloud <span style="font-size:11px;opacity:0.7;margin-left:4px;">(Link)</span>`;
+                sidebarBtn.title = "Link to a quotation and save to Cloud";
+            }
+        }
+
+        // 3. Update Float Button
+        const floatInqBtn = document.getElementById('slw-float-save-inq-btn');
+        if (floatInqBtn) {
+            if (inq) {
+                floatInqBtn.innerHTML = `💾 <span>Save ${inq}</span>`;
+                floatInqBtn.title = `Save to Cloud quotation [${inq}]`;
+            } else {
+                floatInqBtn.innerHTML = `💾 <span>Save INQ</span>`;
+                floatInqBtn.title = "Save to INQ quotation in Cloud";
+            }
+        }
+    }
+
+    window.slwSaveItineraryToInqCloud = function() {
+        let inq = window.__slwActiveInq || localStorage.getItem('SLW_ACTIVE_INQ');
+        if (!inq) {
+            window.slwOpenLinkInqModal();
+            return;
+        }
+
+        const allBtns = Array.from(document.querySelectorAll('button'));
+        const exportBtn = allBtns.find(b => {
+            const t = (b.textContent || b.innerText || '').trim();
+            return t.includes('Export JSON') || t.includes('Export Json');
+        });
+
+        if (!exportBtn) {
+            slwShowError('Export JSON බොත්තම හමු නොවීය. කරුණාකර පිටුව Refresh කරන්න.');
+            return;
+        }
+
+        slwOpenModal({
+            title: `Quotation [${inq}] වෙත සුරකිමින්...`,
+            preset: inq,
+            stage: "වත්මන් Itinerary දත්ත සකස් කරමින් (Preparing JSON)...",
+            percent: 15,
+            detail: "React State ලබාගනිමින්..."
+        });
+
+        window.__slwIsSavingToInq = true;
+        window.__slwTargetInqKey = inq;
+        exportBtn.click();
+    };
+
+    window.slwLoadItineraryFromInq = async function(inqKey) {
+        if (!inqKey) inqKey = window.__slwActiveInq || localStorage.getItem('SLW_ACTIVE_INQ');
+        if (!inqKey) return;
+
+        if (!confirm(`Quotation [${inqKey}] සඳහා Cloud / Local Storage හි සුරකින ලද Itinerary එක Editor එකට Load කිරීමට අවශ්‍යද?\n\nදැනට Editor හි ඇති වෙනස්කම් ප්‍රතිස්ථාපනය වේ.`)) {
+            return;
+        }
+
+        let docData = null;
+        try {
+            const raw = localStorage.getItem(SLW_INQ_DOC_PREFIX + inqKey);
+            if (raw) docData = JSON.parse(raw);
+        } catch(e) {}
+
+        if (!docData && typeof db !== 'undefined' && db) {
+            try {
+                slwOpenModal({ title: "Cloud වෙතින් බාගත කරමින්...", preset: inqKey, stage: "Quotation ලබාගනිමින්...", percent: 40 });
+                const snap = await db.collection('slw_quotations').doc(inqKey).get();
+                if (snap.exists) {
+                    docData = snap.data();
+                    localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, JSON.stringify(docData));
+                }
+                document.getElementById('slw-global-modal').style.display = 'none';
+            } catch(e) {
+                document.getElementById('slw-global-modal').style.display = 'none';
+                alert("Cloud fetch failed: " + e.message);
+                return;
+            }
+        }
+
+        if (!docData || !docData.itinerary) {
+            alert(`Quotation [${inqKey}] හි සුරැකි Itinerary එකක් හමු නොවීය.`);
+            return;
+        }
+
+        // Restore latest costing prices as well
+        if (docData.pricingSummary) {
+            localStorage.setItem('SLW_LATEST_COSTING_PRICES', JSON.stringify(docData.pricingSummary));
+        }
+
+        slwInjectItineraryIntoReact(docData.itinerary, inqKey + '.json');
+        window.__slwActiveInq = inqKey;
+        window.__slwActiveInqClient = docData.clientName || '';
+        window.__slwActiveInqTitle = docData.title || '';
+        localStorage.setItem('SLW_ACTIVE_INQ', inqKey);
+        localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', window.__slwActiveInqClient);
+        localStorage.setItem('SLW_ACTIVE_INQ_TITLE', window.__slwActiveInqTitle);
+        slwUpdateInqBadges();
+
+        slwShowSuccess("✅ Itinerary Loaded!", `Quotation [${inqKey}] හි Itinerary එක Editor එකට සාර්ථකව Load කරන ලදී.`);
+    };
+
+    window.slwOpenLinkInqModal = function() {
+        const modal = document.getElementById('slw-link-inq-modal');
+        if (!modal) return;
+
+        const listContainer = document.getElementById('slw-recent-inq-list');
+        const countEl = document.getElementById('slw-inq-list-count');
+        const manualInput = document.getElementById('slw-manual-inq-input');
+        if (manualInput) manualInput.value = window.__slwActiveInq || '';
+
+        let inqIndex = [];
+        try {
+            const raw = localStorage.getItem(SLW_INQ_INDEX_STORAGE_KEY);
+            if (raw) inqIndex = JSON.parse(raw);
+        } catch(e) {}
+
+        if (countEl) countEl.innerText = `${inqIndex.length} Quotations`;
+
+        if (listContainer) {
+            if (inqIndex.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;border:1px dashed #cbd5e1;border-radius:10px;">
+                        දැනට Saved Quotations හමු නොවීය. ඉහත කොටුවෙන් ඔබගේ INQ අංකය ඇතුළත් කරන්න.
+                    </div>
+                `;
+            } else {
+                listContainer.innerHTML = inqIndex.slice(0, 15).map(item => {
+                    const isCur = (item.inq === window.__slwActiveInq);
+                    const sizeStr = item.sizeBytes ? `${(item.sizeBytes / 1024).toFixed(1)} KB` : '';
+                    return `
+                        <div style="padding:10px 14px;border:1px solid ${isCur ? '#0284c7' : '#e2e8f0'};background:${isCur ? '#f0f9ff' : '#ffffff'};border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:all 0.2s;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="font-weight:700;color:#0284c7;font-size:13.5px;">${item.inq}</span>
+                                    <span style="font-weight:600;color:#0f172a;font-size:13px;">${item.clientName || 'Client'}</span>
+                                    ${isCur ? '<span style="background:#0284c7;color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;">CURRENT</span>' : ''}
+                                </div>
+                                <div style="font-size:11.5px;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    ${item.title || 'Tour Quotation'} ${item.date ? '• ' + item.date : ''} ${sizeStr ? '• ' + sizeStr : ''}
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:6px;shrink:0;">
+                                <button onclick="window.slwSetLinkedInq('${item.inq}', '${(item.clientName || '').replace(/'/g, "\'")}', '${(item.title || '').replace(/'/g, "\'")}', true)" style="background:#059669;color:white;border:none;padding:5px 10px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;" title="Link and load itinerary into editor">
+                                    📥 Link & Load
+                                </button>
+                                <button onclick="window.slwSetLinkedInq('${item.inq}', '${(item.clientName || '').replace(/'/g, "\'")}', '${(item.title || '').replace(/'/g, "\'")}', false)" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:5px 10px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;" title="Link to this inquiry without overwriting editor">
+                                    🔗 Link Only
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    window.slwSubmitManualInqLink = function() {
+        const input = document.getElementById('slw-manual-inq-input');
+        if (!input) return;
+        let val = (input.value || '').trim().toUpperCase();
+        if (!val) {
+            alert('කරුණාකර වලංගු INQ අංකයක් ඇතුළත් කරන්න (උදා: INQ-34745).');
+            return;
+        }
+        if (!val.startsWith('INQ-') && !val.startsWith('INQ')) {
+            val = 'INQ-' + val.replace(/[^A-Z0-9]/gi, '');
+        } else if (!val.includes('-')) {
+            val = val.replace('INQ', 'INQ-');
+        }
+
+        window.slwSetLinkedInq(val, '', '', false);
+    };
+
+    window.slwSetLinkedInq = function(inqKey, clientName = '', title = '', autoLoad = false) {
+        if (!inqKey) return;
+        window.__slwActiveInq = inqKey;
+        window.__slwActiveInqClient = clientName;
+        window.__slwActiveInqTitle = title;
+        localStorage.setItem('SLW_ACTIVE_INQ', inqKey);
+        localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', clientName);
+        localStorage.setItem('SLW_ACTIVE_INQ_TITLE', title);
+
+        document.getElementById('slw-link-inq-modal').style.display = 'none';
+        slwUpdateInqBadges();
+
+        if (autoLoad) {
+            slwLoadItineraryFromInq(inqKey);
+        } else {
+            slwShowSuccess("🔗 Linked to Quotation!", `මෙම Itinerary එක [${inqKey}] (${clientName || 'Client'}) සමඟ සාර්ථකව සම්බන්ධ විය. වෙනස්කම් සිදුකළ පසු 'Save to INQ Cloud' ඔබන්න.`);
+        }
+    };
+
+    window.slwUnlinkInq = function() {
+        if (!confirm('මෙම Itinerary එකෙහි Linked Quotation සම්බන්ධතාවය ඉවත් කිරීමට අවශ්‍යද?')) return;
+        window.__slwActiveInq = null;
+        window.__slwActiveInqClient = '';
+        window.__slwActiveInqTitle = '';
+        localStorage.removeItem('SLW_ACTIVE_INQ');
+        localStorage.removeItem('SLW_ACTIVE_INQ_CLIENT');
+        localStorage.removeItem('SLW_ACTIVE_INQ_TITLE');
+        slwUpdateInqBadges();
+    };
+
+
     // ── TRIGGER CLOUD UPDATE BUTTON ──
     window.slwTriggerCloudUpdate = function() {
         let presetName = window.__slwActivePreset;
@@ -1545,6 +1950,147 @@ function slwGoHome() {
     // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST REST DELTA PATCHING & COSTING INJECTION ──
     const _nativeAnchorClick = window.HTMLAnchorElement.prototype.click;
     window.HTMLAnchorElement.prototype.click = function() {
+        if (window.__slwIsSavingToInq && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
+            window.__slwIsSavingToInq = false;
+            const inqKey = window.__slwTargetInqKey;
+            const href = this.href;
+
+            (async () => {
+                try {
+                    let jsonStr = '';
+                    if (href.startsWith('data:')) {
+                        const commaIdx = href.indexOf(',');
+                        jsonStr = decodeURIComponent(href.substring(commaIdx + 1));
+                    } else {
+                        const r = await fetch(href);
+                        jsonStr = await r.text();
+                    }
+
+                    if (!jsonStr || jsonStr.length < 10) {
+                        throw new Error('Export වූ දත්ත වලංගු නොවේ (Invalid JSON export)');
+                    }
+
+                    const currentData = JSON.parse(jsonStr);
+
+                    slwUpdateModalProgress(35, "පෙර දත්ත පරීක්ෂා කරමින්...", "Quotation දත්ත Local / Cloud වෙතින් ලබාගනිමින්...");
+
+                    // 1. Fetch existing quotation doc if available
+                    let docData = null;
+                    try {
+                        const raw = localStorage.getItem(SLW_INQ_DOC_PREFIX + inqKey);
+                        if (raw) docData = JSON.parse(raw);
+                    } catch(e) {}
+
+                    if (!docData && typeof db !== 'undefined' && db) {
+                        try {
+                            const snap = await db.collection('slw_quotations').doc(inqKey).get();
+                            if (snap.exists) {
+                                docData = snap.data();
+                            }
+                        } catch(e) {
+                            console.warn("Cloud read failed:", e);
+                        }
+                    }
+
+                    const nowIso = new Date().toISOString();
+
+                    // 2. If new quotation, construct base doc
+                    if (!docData) {
+                        docData = {
+                            inq: inqKey,
+                            clientName: currentData.clientName || window.__slwActiveInqClient || 'Client',
+                            clientPhone: '',
+                            title: currentData.title || window.__slwActiveInqTitle || 'Custom Tour Package',
+                            date: currentData.date || nowIso.split('T')[0],
+                            paxText: currentData.pax || '02 Pax',
+                            pax: 2,
+                            cities: '',
+                            summary: currentData.title || '',
+                            rates: {},
+                            costing: null,
+                            createdAt: nowIso
+                        };
+                    }
+
+                    // 3. Update docData with current customized itinerary
+                    docData.itinerary = currentData;
+                    docData.updatedAt = nowIso;
+                    if (currentData.title && (!docData.title || docData.title === 'Tour Package' || docData.title === 'Tour Quotation')) {
+                        docData.title = currentData.title;
+                    }
+                    if (currentData.clientName && (!docData.clientName || docData.clientName === 'Client')) {
+                        docData.clientName = currentData.clientName;
+                    }
+
+                    window.__slwActiveInqClient = docData.clientName || '';
+                    window.__slwActiveInqTitle = docData.title || '';
+                    localStorage.setItem('SLW_ACTIVE_INQ_CLIENT', window.__slwActiveInqClient);
+                    localStorage.setItem('SLW_ACTIVE_INQ_TITLE', window.__slwActiveInqTitle);
+
+                    // 4. Calculate size
+                    const docJson = JSON.stringify(docData);
+                    const sizeBytes = new Blob([docJson]).size;
+                    const sizeKB = (sizeBytes / 1024).toFixed(1);
+
+                    // 5. Save to Local Storage
+                    localStorage.setItem(SLW_INQ_DOC_PREFIX + inqKey, docJson);
+
+                    // Update local quotation index
+                    let inqIndex = [];
+                    try {
+                        const rawIndex = localStorage.getItem(SLW_INQ_INDEX_STORAGE_KEY);
+                        if (rawIndex) inqIndex = JSON.parse(rawIndex);
+                    } catch(e) {}
+
+                    const existingIdx = inqIndex.findIndex(item => item.inq === inqKey);
+                    const indexItem = {
+                        inq: inqKey,
+                        clientName: docData.clientName || 'Client',
+                        clientPhone: docData.clientPhone || '',
+                        title: docData.title || 'Tour Quotation',
+                        date: docData.date || nowIso.split('T')[0],
+                        paxText: docData.paxText || currentData.pax || '02 Pax',
+                        cities: docData.cities || '',
+                        rates: docData.rates || {},
+                        sizeBytes: sizeBytes,
+                        updatedAt: nowIso
+                    };
+
+                    if (existingIdx !== -1) {
+                        inqIndex[existingIdx] = indexItem;
+                    } else {
+                        inqIndex.unshift(indexItem);
+                    }
+                    localStorage.setItem(SLW_INQ_INDEX_STORAGE_KEY, JSON.stringify(inqIndex));
+
+                    // 6. Push to Firebase Cloud (Single doc write!)
+                    slwUpdateModalProgress(75, `☁️ ${sizeKB} KB Cloud වෙත යවමින්...`, "Firebase Cloud Quotation යාවත්කාලීන කරමින්...");
+
+                    if (typeof db !== 'undefined' && db) {
+                        await db.collection('slw_quotations').doc(inqKey).set(docData);
+                        await db.collection('slw_settings').doc('quotation_index').set({
+                            items: inqIndex,
+                            updatedAt: nowIso
+                        });
+                    }
+
+                    slwUpdateModalProgress(100, "සාර්ථකයි!", "සුරැකීම සම්පූර්ණයි.");
+                    slwUpdateInqBadges();
+
+                    slwShowSuccess(
+                        "✅ Itinerary Saved to Cloud!",
+                        `Quotation [${inqKey}] (${docData.clientName || 'Client'}) සඳහා Itinerary එක Firebase Cloud සහ Local Storage හි සාර්ථකව සුරකින ලදී!\nදැන් ඕනෑම තැනක සිට Tour Costing Quotation Hub හරහා මෙය බැලිය හැක.`
+                    );
+
+                } catch(err) {
+                    console.error('[SLW] Save to INQ error:', err);
+                    slwShowError('INQ Quotation එකට සුරැකීමේදී දෝෂයක්: ' + err.message);
+                }
+            })();
+
+            return; // Block download to disk
+        }
+
         if (window.__slwIsApplyingCosting && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
             window.__slwIsApplyingCosting = false;
             const costingData = window.__slwTargetCostingData;
@@ -1919,6 +2465,20 @@ function slwGoHome() {
             histBtn.insertAdjacentElement('afterend', costingSidebarBtn);
         }
 
+        const costingSidebarBtn = document.getElementById('slw-sidebar-costing-btn');
+        if (exportBtn && costingSidebarBtn && !document.getElementById('slw-sidebar-save-inq-btn')) {
+            const saveInqSidebarBtn = document.createElement('button');
+            saveInqSidebarBtn.id = 'slw-sidebar-save-inq-btn';
+            saveInqSidebarBtn.innerHTML = '<span style="font-size:14px;margin-right:4px;">💾</span> Save to INQ Cloud';
+            saveInqSidebarBtn.className = (exportBtn.className || '') + ' print:hidden';
+            saveInqSidebarBtn.title = "Save this itinerary into the linked INQ Quotation in Firebase Cloud";
+            saveInqSidebarBtn.style.cssText = 'background:linear-gradient(135deg, #059669, #047857);color:white;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;cursor:pointer;font-weight:700;border:none;border-radius:6px;box-shadow:0 2px 6px rgba(5,150,105,0.35);';
+            saveInqSidebarBtn.onclick = function() {
+                window.slwSaveItineraryToInqCloud();
+            };
+            costingSidebarBtn.insertAdjacentElement('afterend', saveInqSidebarBtn);
+        }
+
         // 2. In Option Cards (Right beside "+ Add Hotel Category")
         const addCatBtns = Array.from(document.querySelectorAll('button')).filter(b => {
             const txt = (b.textContent || b.innerText || '').trim();
@@ -2045,6 +2605,21 @@ function slwGoHome() {
             };
             document.body.appendChild(floatCostingBtn);
         }
+
+        if (!document.getElementById('slw-float-save-inq-btn')) {
+            const floatInqBtn = document.createElement('button');
+            floatInqBtn.id = 'slw-float-save-inq-btn';
+            floatInqBtn.className = 'print:hidden';
+            floatInqBtn.innerHTML = '💾 <span>Save INQ</span>';
+            floatInqBtn.title = "Save to INQ Quotation in Cloud";
+            floatInqBtn.style.cssText = 'position:fixed;bottom:18px;right:495px;z-index:999998;background:linear-gradient(135deg, #059669, #047857);color:#ffffff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(5,150,105,0.45);display:flex;align-items:center;gap:6px;font-family:inherit;transition:all 0.2s;';
+            floatInqBtn.onclick = function() {
+                window.slwSaveItineraryToInqCloud();
+            };
+            document.body.appendChild(floatInqBtn);
+        }
+
+        slwUpdateInqBadges();
     }
 
     // Auto-detect when user manually imports a JSON file
@@ -2062,6 +2637,14 @@ function slwGoHome() {
     // ── NON-DESTRUCTIVE HANDOFF FROM TOUR COSTING CALCULATOR ──
     function slwCheckCostingHandoff() {
         try {
+            const inqFromStorage = localStorage.getItem('SLW_ACTIVE_INQ');
+            if (inqFromStorage) {
+                window.__slwActiveInq = inqFromStorage;
+                window.__slwActiveInqClient = localStorage.getItem('SLW_ACTIVE_INQ_CLIENT') || '';
+                window.__slwActiveInqTitle = localStorage.getItem('SLW_ACTIVE_INQ_TITLE') || '';
+                slwUpdateInqBadges();
+            }
+
             const pendingJson = localStorage.getItem('SLW_PENDING_COSTING_ITINERARY');
             if (!pendingJson) return;
 
@@ -2069,25 +2652,42 @@ function slwGoHome() {
             localStorage.removeItem('SLW_PENDING_COSTING_ITINERARY');
 
             let rawTitle = 'Tour Package';
+            let parsedData = null;
             try {
-                const dataObj = JSON.parse(pendingJson);
-                rawTitle = (dataObj.title || 'Tour Package').trim();
+                parsedData = JSON.parse(pendingJson);
+                rawTitle = (parsedData.title || 'Tour Package').trim();
             } catch(e) {}
 
-            console.log('[SLW] Detected incoming costing data for:', rawTitle);
+            console.log('[SLW] Detected incoming costing data for:', rawTitle, window.__slwActiveInq);
 
-            // Auto-open Quick Load Presets drawer so user can instantly pick their preset
-            setTimeout(() => {
-                const panel = document.getElementById('slw-quick-load-panel');
-                if (panel) panel.classList.add('open');
-            }, 600);
+            // If the pending data has complete days and options, offer direct loading
+            if (parsedData && parsedData.days && parsedData.days.length > 0 && parsedData.options && parsedData.options.length > 0) {
+                setTimeout(() => {
+                    const clientName = window.__slwActiveInqClient ? ` (${window.__slwActiveInqClient})` : '';
+                    const inqTag = window.__slwActiveInq ? ` [${window.__slwActiveInq}]` : '';
 
-            setTimeout(() => {
-                slwShowSuccess(
-                    "⚡ Tour Costing එකෙන් මිල ගණන් ලැබිණි!",
-                    `'${rawTitle}' සඳහා මිල ගණන් Costing එකෙන් ලැබී ඇත. Quick Load Presets වලින් ඔබට අවශ්‍ය Preset එක (උදා: 01N Pattaya 03N Bangkok) Load කරගත් පසු, Pricing කොටසේ ඇති '⚡ Apply Costing Prices' බොත්තම ඔබන්න.`
-                );
-            }, 800);
+                    if (confirm(`⚡ Tour Costing එකෙන් '${rawTitle}'${inqTag}${clientName} සඳහා සකස් කළ සම්පූර්ණ Itinerary එකක් ලැබී ඇත!\n\nමෙම Itinerary එක දැන්ම Editor එකට Load කිරීමට අවශ්‍යද?\n\n(OK = Load Itinerary, Cancel = Choose from Presets)`)) {
+                        slwInjectItineraryIntoReact(parsedData, (window.__slwActiveInq || 'Costing_Itinerary') + '.json');
+                        slwShowSuccess("⚡ Itinerary Loaded!", `'${rawTitle}' සාර්ථකව Editor එකට Load කරන ලදී. අවශ්‍ය පරිදි සංස්කරණය කර 'Save to INQ Cloud' ඔබන්න.`);
+                        return;
+                    }
+                    const panel = document.getElementById('slw-quick-load-panel');
+                    if (panel) panel.classList.add('open');
+                }, 600);
+            } else {
+                // Auto-open Quick Load Presets drawer so user can instantly pick their preset
+                setTimeout(() => {
+                    const panel = document.getElementById('slw-quick-load-panel');
+                    if (panel) panel.classList.add('open');
+                }, 600);
+
+                setTimeout(() => {
+                    slwShowSuccess(
+                        "⚡ Tour Costing එකෙන් මිල ගණන් ලැබිණි!",
+                        `'${rawTitle}' සඳහා මිල ගණන් Costing එකෙන් ලැබී ඇත. Quick Load Presets වලින් ඔබට අවශ්‍ය Preset එක (උදා: 01N Pattaya 03N Bangkok) Load කරගත් පසු, Pricing කොටසේ ඇති '⚡ Apply Costing Prices' බොත්තම ඔබන්න.`
+                    );
+                }, 800);
+            }
         } catch(e) {
             console.error('[SLW] Error in slwCheckCostingHandoff:', e);
         }
@@ -2102,12 +2702,16 @@ function slwGoHome() {
             '#slw-float-btn',
             '#slw-float-history-btn',
             '#slw-float-costing-btn',
+            '#slw-float-save-inq-btn',
+            '#slw-inq-top-bar',
             '#slw-sidebar-costing-btn',
+            '#slw-sidebar-save-inq-btn',
             '#slw-sidebar-history-btn',
             '#slw-update-cloud-btn',
             '#slw-quick-load-panel',
             '#slw-panel-toggle',
             '#slw-history-modal',
+            '#slw-link-inq-modal',
             '.slw-opt-apply-costing-btn',
             '.slw-costing-badge',
             '.slw-home-btn-container'

@@ -1494,9 +1494,189 @@ function slwGoHome() {
         exportBtn.click();
     };
 
-    // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST REST DELTA PATCHING ──
+    // ── APPLY TOUR COSTING PRICES TO CURRENT ITINERARY (OPTION 01 / TARGET OPTION) ──
+    window.slwApplyCostingPrices = function(targetOptionIndex = 0) {
+        const pricingJson = localStorage.getItem('SLW_LATEST_COSTING_PRICES');
+        if (!pricingJson) {
+            slwShowError("Tour Costing මිල ගණන් හමු නොවීය! කරුණාකර පළමුව Tour Costing Calculator එකෙන් මිල ගණන් ගණනය කර 'Create Itinerary' ලබා දෙන්න.");
+            return;
+        }
+        let costingData;
+        try {
+            costingData = JSON.parse(pricingJson);
+        } catch(e) {
+            slwShowError("Costing data parse error: " + e.message);
+            return;
+        }
+
+        const allBtns = Array.from(document.querySelectorAll('button'));
+        const exportBtn = allBtns.find(b => {
+            const t = (b.textContent || b.innerText || '').trim();
+            return t.includes('Export JSON') || t.includes('Export Json');
+        });
+
+        if (!exportBtn) {
+            slwShowError("Export JSON බොත්තම හමු නොවීය. කරුණාකර පිටුව Refresh කරන්න.");
+            return;
+        }
+
+        window.__slwIsApplyingCosting = true;
+        window.__slwTargetCostingOptionIndex = targetOptionIndex;
+        window.__slwTargetCostingData = costingData;
+        exportBtn.click();
+    };
+
+    // ── MONKEY PATCH ANCHOR CLICK: ULTRA-FAST REST DELTA PATCHING & COSTING INJECTION ──
     const _nativeAnchorClick = window.HTMLAnchorElement.prototype.click;
     window.HTMLAnchorElement.prototype.click = function() {
+        if (window.__slwIsApplyingCosting && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
+            window.__slwIsApplyingCosting = false;
+            const costingData = window.__slwTargetCostingData;
+            const targetOptIdx = window.__slwTargetCostingOptionIndex || 0;
+            const href = this.href;
+
+            (async () => {
+                try {
+                    let jsonStr = '';
+                    if (href.startsWith('data:')) {
+                        const commaIdx = href.indexOf(',');
+                        jsonStr = decodeURIComponent(href.substring(commaIdx + 1));
+                    } else {
+                        const r = await fetch(href);
+                        jsonStr = await r.text();
+                    }
+
+                    if (!jsonStr || jsonStr.length < 10) {
+                        throw new Error('Export වූ දත්ත වලංගු නොවේ (Invalid JSON export)');
+                    }
+
+                    const currentData = JSON.parse(jsonStr);
+
+                    if (!currentData.options || currentData.options.length === 0) {
+                        currentData.options = [{ id: 1, name: "Option 01 - Standard", description: "", hotels: [] }];
+                    }
+
+                    const opt = currentData.options[targetOptIdx] || currentData.options[0];
+                    if (!opt.hotels) opt.hotels = [];
+
+                    const pax = costingData.pax || currentData.pax || '02Pax';
+                    const childExtraLabel = costingData.childExtraLabel || 'PER CHILD (WITH EXTRA BED)';
+                    const childShareLabel = costingData.childShareLabel || 'PER CHILD (SHARING BED)';
+
+                    // 3-Star Hotel Option update
+                    let h3 = opt.hotels.find(h => h.rating && h.rating.includes('3*'));
+                    if (!h3 && opt.hotels.length > 0) h3 = opt.hotels[0];
+                    if (!h3 && costingData.prices3Star) {
+                        h3 = {
+                            rating: "3* Hotel Options",
+                            names: ["Standard 3* Hotel Accommodation"],
+                            price: "",
+                            prices: []
+                        };
+                        opt.hotels.push(h3);
+                    }
+                    if (h3 && costingData.prices3Star) {
+                        h3.price = `${costingData.prices3Star.adult} Per Person (Minimum ${pax})`;
+                        const p3List = [
+                            { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.prices3Star.adult }
+                        ];
+                        if (costingData.prices3Star.childExtra && costingData.prices3Star.childExtra !== 'LKR 0') {
+                            p3List.push({ label: childExtraLabel, amount: costingData.prices3Star.childExtra });
+                        }
+                        if (costingData.prices3Star.childShare && costingData.prices3Star.childShare !== 'LKR 0') {
+                            p3List.push({ label: childShareLabel, amount: costingData.prices3Star.childShare });
+                        }
+                        h3.prices = p3List;
+                    }
+
+                    // 4-Star Hotel Option update
+                    let h4 = opt.hotels.find(h => h.rating && h.rating.includes('4*'));
+                    if (!h4 && opt.hotels.length > 1 && opt.hotels[1] !== h3) h4 = opt.hotels[1];
+                    if (!h4 && costingData.prices4Star) {
+                        h4 = {
+                            rating: "4* Hotel Options",
+                            names: ["Standard 4* Hotel Accommodation"],
+                            price: "",
+                            prices: []
+                        };
+                        opt.hotels.push(h4);
+                    }
+                    if (h4 && costingData.prices4Star) {
+                        h4.price = `${costingData.prices4Star.adult} Per Person (Minimum ${pax})`;
+                        const p4List = [
+                            { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.prices4Star.adult }
+                        ];
+                        if (costingData.prices4Star.childExtra && costingData.prices4Star.childExtra !== 'LKR 0') {
+                            p4List.push({ label: childExtraLabel, amount: costingData.prices4Star.childExtra });
+                        }
+                        if (costingData.prices4Star.childShare && costingData.prices4Star.childShare !== 'LKR 0') {
+                            p4List.push({ label: childShareLabel, amount: costingData.prices4Star.childShare });
+                        }
+                        h4.prices = p4List;
+                    }
+
+                    // Mix Option update (if present)
+                    if (costingData.pricesMix) {
+                        let hMix = opt.hotels.find(h => h.rating && (h.rating.toLowerCase().includes('mix') || h.rating.toLowerCase().includes('custom')));
+                        if (hMix) {
+                            hMix.price = `${costingData.pricesMix.adult} Per Person (Minimum ${pax})`;
+                            const pMixList = [
+                                { label: `PER PERSON (MINIMUM ${pax.toUpperCase()})`, amount: costingData.pricesMix.adult }
+                            ];
+                            if (costingData.pricesMix.childExtra && costingData.pricesMix.childExtra !== 'LKR 0') {
+                                pMixList.push({ label: childExtraLabel, amount: costingData.pricesMix.childExtra });
+                            }
+                            if (costingData.pricesMix.childShare && costingData.pricesMix.childShare !== 'LKR 0') {
+                                pMixList.push({ label: childShareLabel, amount: costingData.pricesMix.childShare });
+                            }
+                            hMix.prices = pMixList;
+                        }
+                    }
+
+                    if (costingData.pax) {
+                        currentData.pax = costingData.pax;
+                    }
+
+                    let fileInput = document.querySelector('input[type="file"][accept=".json"]');
+                    if (!fileInput) {
+                        const allInputs = document.querySelectorAll('input[type="file"]');
+                        fileInput = allInputs[allInputs.length - 1];
+                    }
+
+                    if (fileInput) {
+                        const finalJsonStr = JSON.stringify(currentData);
+                        const presetName = window.__slwActivePreset || currentData.title || 'Itinerary';
+                        const file = new File([finalJsonStr], presetName + '.json', { type: 'application/json' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+
+                        const origAlert = window.alert;
+                        window.alert = () => {};
+                        try {
+                            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
+                            setter.call(fileInput, dt.files);
+                            fileInput.files = dt.files;
+                            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        } finally {
+                            setTimeout(() => { window.alert = origAlert; }, 150);
+                        }
+
+                        window.__slwBaseData = JSON.parse(JSON.stringify(currentData));
+
+                        slwShowSuccess(
+                            "⚡ Costing Prices සාර්ථකව Update විය!",
+                            `${opt.name || 'Option 01'} වෙත 3* (${costingData.prices3Star?.adult || '-'}) සහ 4* (${costingData.prices4Star?.adult || '-'}) මිල ගණන් යොදන ලදී.`
+                        );
+                    }
+                } catch(err) {
+                    console.error('[SLW] Apply Costing error:', err);
+                    slwShowError('Costing Prices යෙදීමේ දෝෂයක්: ' + err.message);
+                }
+            })();
+
+            return; // Prevent file download
+        }
+
         if (window.__slwIsUpdatingCloud && (this.download === 'itinerary_data.json' || (this.download && this.download.match(/\.json$/i)))) {
             window.__slwIsUpdatingCloud = false;
             const presetName = window.__slwPendingPresetName;
@@ -1628,13 +1808,13 @@ function slwGoHome() {
 
     // ── INJECT BUTTONS INTO REACT UI ──
     function injectUIControls() {
-        // 1. Sidebar Buttons
         const allBtns = Array.from(document.querySelectorAll('button'));
         const exportBtn = allBtns.find(b => {
             const t = (b.textContent || b.innerText || '').trim();
             return t.includes('Export JSON') || t.includes('Export Json');
         });
 
+        // 1. Sidebar Buttons
         if (exportBtn && !document.getElementById('slw-update-cloud-btn')) {
             const updateBtn = document.createElement('button');
             updateBtn.id = 'slw-update-cloud-btn';
@@ -1667,7 +1847,81 @@ function slwGoHome() {
             updateBtn.insertAdjacentElement('afterend', histBtn);
         }
 
-        // 2. Floating Bottom-Left Buttons
+        const histBtn = document.getElementById('slw-sidebar-history-btn');
+        if (exportBtn && histBtn && !document.getElementById('slw-sidebar-costing-btn')) {
+            const costingSidebarBtn = document.createElement('button');
+            costingSidebarBtn.id = 'slw-sidebar-costing-btn';
+            costingSidebarBtn.innerHTML = '<span style="font-size:14px;margin-right:4px;">⚡</span> Apply Costing Prices';
+            costingSidebarBtn.className = exportBtn.className;
+            costingSidebarBtn.title = "Tour Costing එකෙන් ගණනය කළ මිල ගණන් Option 01 වෙත යොදන්න";
+            costingSidebarBtn.style.cssText = 'background:linear-gradient(135deg, #d97706, #b45309)!important;color:white!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin-top:6px!important;cursor:pointer!important;font-weight:700!important;border:none!important;border-radius:6px!important;box-shadow:0 2px 6px rgba(217,119,6,0.35)!important;';
+            costingSidebarBtn.onclick = function() {
+                window.slwApplyCostingPrices(0);
+            };
+            histBtn.insertAdjacentElement('afterend', costingSidebarBtn);
+        }
+
+        // 2. In Option Cards (Right beside "+ Add Hotel Category")
+        const addCatBtns = Array.from(document.querySelectorAll('button')).filter(b => {
+            const txt = (b.textContent || b.innerText || '').trim();
+            return txt.includes('Add Hotel Category');
+        });
+
+        addCatBtns.forEach((catBtn, optIdx) => {
+            const parentContainer = catBtn.parentElement;
+            if (!parentContainer) return;
+
+            let optCostingBtn = parentContainer.querySelector('.slw-opt-apply-costing-btn');
+            if (!optCostingBtn) {
+                optCostingBtn = document.createElement('button');
+                optCostingBtn.className = 'slw-opt-apply-costing-btn';
+                optCostingBtn.innerHTML = `
+                    <span style="font-size:14px;">⚡</span>
+                    <span>Apply Costing Prices</span>
+                    <span class="slw-costing-badge" style="font-size:11px;font-weight:600;opacity:0.95;background:rgba(0,0,0,0.18);padding:2px 8px;border-radius:6px;margin-left:4px;"></span>
+                `;
+                optCostingBtn.style.cssText = 'background:linear-gradient(135deg, #d97706 0%, #b45309 100%)!important;color:#ffffff!important;font-size:13px!important;font-weight:700!important;padding:8px 16px!important;border-radius:8px!important;border:none!important;cursor:pointer!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-shadow:0 2px 8px rgba(217,119,6,0.35)!important;margin-right:8px!important;transition:all 0.2s!important;';
+                optCostingBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.slwApplyCostingPrices(optIdx);
+                };
+
+                parentContainer.style.display = 'flex';
+                parentContainer.style.justifyContent = 'center';
+                parentContainer.style.alignItems = 'center';
+                parentContainer.style.gap = '8px';
+                parentContainer.style.flexWrap = 'wrap';
+
+                parentContainer.insertBefore(optCostingBtn, catBtn);
+            }
+
+            // Dynamically update price badge on the button
+            const badgeEl = optCostingBtn.querySelector('.slw-costing-badge');
+            if (badgeEl) {
+                const raw = localStorage.getItem('SLW_LATEST_COSTING_PRICES');
+                if (raw) {
+                    try {
+                        const cd = JSON.parse(raw);
+                        const p3 = cd.prices3Star?.adult;
+                        const p4 = cd.prices4Star?.adult;
+                        if (p3 || p4) {
+                            badgeEl.innerText = `(3*: ${p3 || '-'} | 4*: ${p4 || '-'})`;
+                            badgeEl.style.display = 'inline-block';
+                            optCostingBtn.title = `Click to apply 3* (${p3}) and 4* (${p4}) into this Option`;
+                        } else {
+                            badgeEl.innerText = '(Ready)';
+                        }
+                    } catch(e) {
+                        badgeEl.innerText = '';
+                    }
+                } else {
+                    badgeEl.innerText = '(Costing Ready)';
+                }
+            }
+        });
+
+        // 3. Floating Bottom-Right Buttons
         if (!document.getElementById('slw-float-btn')) {
             const floatBtn = document.createElement('button');
             floatBtn.id = 'slw-float-btn';
@@ -1704,6 +1958,18 @@ function slwGoHome() {
             };
             document.body.appendChild(floatHistBtn);
         }
+
+        if (!document.getElementById('slw-float-costing-btn')) {
+            const floatCostingBtn = document.createElement('button');
+            floatCostingBtn.id = 'slw-float-costing-btn';
+            floatCostingBtn.innerHTML = '⚡ <span>Apply Costing</span>';
+            floatCostingBtn.title = "Tour Costing එකෙන් ගණනය කළ මිල ගණන් Option 01 වෙත යොදන්න";
+            floatCostingBtn.style.cssText = 'position:fixed;bottom:18px;right:365px;z-index:999998;background:linear-gradient(135deg, #d97706, #b45309);color:#ffffff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(217,119,6,0.45);display:flex;align-items:center;gap:6px;font-family:inherit;transition:all 0.2s;';
+            floatCostingBtn.onclick = function() {
+                window.slwApplyCostingPrices(0);
+            };
+            document.body.appendChild(floatCostingBtn);
+        }
     }
 
     // Auto-detect when user manually imports a JSON file
@@ -1718,58 +1984,35 @@ function slwGoHome() {
         }
     }, true);
 
-    // ── AUTO-LOAD HANDOFF FROM TOUR COSTING CALCULATOR ──
+    // ── NON-DESTRUCTIVE HANDOFF FROM TOUR COSTING CALCULATOR ──
     function slwCheckCostingHandoff() {
         try {
             const pendingJson = localStorage.getItem('SLW_PENDING_COSTING_ITINERARY');
             if (!pendingJson) return;
 
-            // Clear immediately so subsequent refreshes won't re-trigger unexpectedly
+            // Clear immediately so subsequent refreshes won't re-trigger
             localStorage.removeItem('SLW_PENDING_COSTING_ITINERARY');
 
-            const dataObj = JSON.parse(pendingJson);
-            const rawTitle = (dataObj.title || 'Tour_Itinerary').trim();
-            const cleanName = rawTitle.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Tour_Itinerary';
-            const fileName = cleanName + '.json';
+            let rawTitle = 'Tour Package';
+            try {
+                const dataObj = JSON.parse(pendingJson);
+                rawTitle = (dataObj.title || 'Tour Package').trim();
+            } catch(e) {}
 
-            console.log('[SLW] Detected incoming itinerary from Tour Costing:', rawTitle);
+            console.log('[SLW] Detected incoming costing data for:', rawTitle);
 
-            let attempts = 0;
-            const maxAttempts = 35; // wait up to 7 seconds for React to mount file input
-            const checkTimer = setInterval(() => {
-                attempts++;
-                let fileInput = document.querySelector('input[type="file"][accept=".json"]') || document.querySelector('input[type="file"]');
-                if (fileInput) {
-                    clearInterval(checkTimer);
-                    try {
-                        const finalJsonStr = JSON.stringify(dataObj);
-                        const file = new File([finalJsonStr], fileName, { type: 'application/json' });
-                        const dt = new DataTransfer();
-                        dt.items.add(file);
-                        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
-                        setter.call(fileInput, dt.files);
-                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            // Auto-open Quick Load Presets drawer so user can instantly pick their preset
+            setTimeout(() => {
+                const panel = document.getElementById('slw-quick-load-panel');
+                if (panel) panel.classList.add('open');
+            }, 600);
 
-                        window.__slwBaseData = JSON.parse(JSON.stringify(dataObj));
-                        window.__slwActivePreset = cleanName;
-                        if (typeof slwUpdateActiveBadge === 'function') {
-                            slwUpdateActiveBadge(cleanName);
-                        }
-
-                        if (typeof slwShowSuccess === 'function') {
-                            slwShowSuccess(
-                                "⚡ Tour Costing එකෙන් සාර්ථකව Load විය!",
-                                `'${rawTitle}' Itinerary එක Costing Builder වෙතින් සාර්ථකව Import කරන ලදී.`
-                            );
-                        }
-                    } catch(injectErr) {
-                        console.error('[SLW] Failed to inject file to input:', injectErr);
-                    }
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(checkTimer);
-                    console.warn('[SLW] Could not find file input for costing handoff within time limit.');
-                }
-            }, 200);
+            setTimeout(() => {
+                slwShowSuccess(
+                    "⚡ Tour Costing එකෙන් මිල ගණන් ලැබිණි!",
+                    `'${rawTitle}' සඳහා මිල ගණන් Costing එකෙන් ලැබී ඇත. Quick Load Presets වලින් ඔබට අවශ්‍ය Preset එක (උදා: 01N Pattaya 03N Bangkok) Load කරගත් පසු, Pricing කොටසේ ඇති '⚡ Apply Costing Prices' බොත්තම ඔබන්න.`
+                );
+            }, 800);
         } catch(e) {
             console.error('[SLW] Error in slwCheckCostingHandoff:', e);
         }

@@ -3420,8 +3420,72 @@
         return finalPayload;
     }
 
+    function saveLatestCostingPrices(payload = null) {
+        try {
+            const p3El = document.getElementById('adult_final_lkr_3star');
+            const p4El = document.getElementById('adult_final_lkr_4star');
+            const pMixEl = document.getElementById('adult_final_lkr_mix');
+
+            const p3ChildExtraEl = document.getElementById('child_final_lkr_3star');
+            const p3ChildShareEl = document.getElementById('child_sharing_final_lkr_3star');
+            const p4ChildExtraEl = document.getElementById('child_final_lkr_4star');
+            const p4ChildShareEl = document.getElementById('child_sharing_final_lkr_4star');
+            const pMixChildExtraEl = document.getElementById('child_final_lkr_mix');
+            const pMixChildShareEl = document.getElementById('child_sharing_final_lkr_mix');
+
+            const p3Amount = 'LKR ' + cleanLkrNumber(p3El?.innerText);
+            const p3ChildExtra = 'LKR ' + cleanLkrNumber(p3ChildExtraEl?.innerText);
+            const p3ChildShare = 'LKR ' + cleanLkrNumber(p3ChildShareEl?.innerText);
+
+            const p4Amount = 'LKR ' + cleanLkrNumber(p4El?.innerText);
+            const p4ChildExtra = 'LKR ' + cleanLkrNumber(p4ChildExtraEl?.innerText);
+            const p4ChildShare = 'LKR ' + cleanLkrNumber(p4ChildShareEl?.innerText);
+
+            const mixCard = document.getElementById('result_card_mix');
+            let mixObj = null;
+            if (mixCard && mixCard.style.display !== 'none' && pMixEl && pMixEl.innerText) {
+                mixObj = {
+                    adult: 'LKR ' + cleanLkrNumber(pMixEl.innerText),
+                    childExtra: 'LKR ' + cleanLkrNumber(pMixChildExtraEl?.innerText),
+                    childShare: 'LKR ' + cleanLkrNumber(pMixChildShareEl?.innerText),
+                    title: document.getElementById('mix_package_title')?.innerText || 'Custom Mix Option'
+                };
+            }
+
+            const pax = document.getElementById('exportItineraryPax')?.value.trim() || ((document.getElementById('num_people_hotel')?.value || '2') + 'Pax');
+            const childExtraLabel = document.getElementById('exportChildExtraBedLabel')?.value.trim() || 'PER CHILD (WITH EXTRA BED)';
+            const childShareLabel = document.getElementById('exportChildSharingBedLabel')?.value.trim() || 'PER CHILD (SHARING BED)';
+
+            const summary = {
+                title: payload?.title || document.getElementById('exportItineraryTitle')?.value || 'Tour Package',
+                pax: pax,
+                prices3Star: {
+                    adult: p3Amount,
+                    childExtra: p3ChildExtra,
+                    childShare: p3ChildShare
+                },
+                prices4Star: {
+                    adult: p4Amount,
+                    childExtra: p4ChildExtra,
+                    childShare: p4ChildShare
+                },
+                pricesMix: mixObj,
+                childExtraLabel: childExtraLabel,
+                childShareLabel: childShareLabel,
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('SLW_LATEST_COSTING_PRICES', JSON.stringify(summary));
+            return summary;
+        } catch(e) {
+            console.warn("Failed to save latest costing prices:", e);
+            return null;
+        }
+    }
+
     function launchInItineraryBuilder() {
         const payload = buildItineraryJsonPayload();
+        saveLatestCostingPrices(payload);
         try {
             localStorage.setItem('SLW_PENDING_COSTING_ITINERARY', JSON.stringify(payload));
         } catch(e) {
@@ -3429,7 +3493,7 @@
         }
 
         closeModal('itineraryExportModal');
-        showNotification("🚀 Launching Tour Itinerary Builder! Auto-loading your itinerary...", false);
+        showNotification("🚀 Launching Tour Itinerary Builder! You can load your preset and click 'Apply Costing Prices'.", false);
 
         window.open('archives/Itinerary_Builder_App New.html', '_blank');
     }
@@ -3619,6 +3683,9 @@
 
         // 6. Display results section
         document.getElementById('results').style.display = 'block';
+        if (typeof saveLatestCostingPrices === 'function') {
+            saveLatestCostingPrices();
+        }
     }
 
     // Initial render on page load

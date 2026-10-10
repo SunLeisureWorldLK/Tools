@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sl-tools-v2';
+const CACHE_NAME = 'sl-tools-v3';
 
 const ASSETS_TO_CACHE = [
   '.',
@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
   './tour_costing.html',
   './Domarco_Itinerary.html',
   './Evago_Smart_Itinerary.html',
+  './archives/Itinerary_Builder_App New.html',
   './Image/LOGO.png'
 ];
 
